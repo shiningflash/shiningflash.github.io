@@ -1,10 +1,12 @@
 # Amirul islam Al Mamun
-#### Competitive programmer and Mentor
+Competitive programmer and Mentor
 
+--------------------------------
 ### Study
-##### 4th Year, Computer Science
-###### BRAC University
-------------------------
+--------------------------------
+4th Year, Computer Science
+BRAC University
+
 
 - ## [Competitive-Programming-Resources](https://shiningflash.github.io/Competitive-Programming-Resources)
    - #### [Online-Judge-Solutions](https://shiningflash.github.io/Online-Judge-Solutions)
