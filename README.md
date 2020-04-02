@@ -3,9 +3,7 @@ Competitive programmer and Mentor
 
 --------------------------------
 ### Study
---------------------------------
-4th Year, Computer Science
-BRAC University
+4th Year, Computer Science at BRAC University
 
 
 - ## [Competitive-Programming-Resources](https://shiningflash.github.io/Competitive-Programming-Resources)
