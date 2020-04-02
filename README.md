@@ -1,5 +1,7 @@
 # Amirul islam Al Mamun
-Competitive programmer and Mentor
+- Competitive programmer and Mentor at BRACU ACM Chapter
+- Teaching Assistant at BRAC University
+- Problem setter at Toph Online Judge
 
 
 ### Study
