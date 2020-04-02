@@ -1,7 +1,7 @@
 # Amirul islam Al Mamun
 Competitive programmer and Mentor
 
---------------------------------
+
 ### Study
 4th Year, Computer Science at BRAC University
 
@@ -28,4 +28,4 @@ Competitive programmer and Mentor
 - [Blogspot](https://peculiaramirul.blogspot.com)
 
 ### Mail me
-- [amirulislam.bracu@gmail.com]
+- amirulislam.bracu@gmail.com
