@@ -1,12 +1,25 @@
 # Amirul islam Al Mamun
 ------------------------
 
-![profile_picture](https://user-images.githubusercontent.com/35567854/78210641-9f1f4b00-74cc-11ea-94e7-1f36e74ea097.jpg/200x180)
-
-------------------------
-
 - ## [Competitive-Programming-Resources](https://shiningflash.github.io/Competitive-Programming-Resources)
+   - #### [Online-Judge-Solutions](https://shiningflash.github.io/Online-Judge-Solutions)
 
 - ## Android project
    - ### [BRACU-ST-MANAGEMENT](https://shiningflash.github.io/BRACU-ST-MANAGEMENT)
 
+- ## Desktop project
+   - ### [Sorting-Algorithm-Visualization](https://shiningflash.github.io/Sorting-Algorithm-Visualization)
+   
+- ## Web project
+   - ### [Online-Voting-System](https://shiningflash.github.io/Online-Voting-System)
+   
+- ## [Computer_Graphics](https://shiningflash.github.io/Computer_Graphics)
+
+### Find me
+- [LinkedIn](https://www.linkedin.com/in/amirulislamalmamun/)
+- [Facebook](https://web.facebook.com/shiningflaash)
+- [Twitter](https://twitter.com/_shiningflash)
+- [Blogspot](https://peculiaramirul.blogspot.com)
+
+#### Mail me
+- amirulislam.bracu@gmail.com
