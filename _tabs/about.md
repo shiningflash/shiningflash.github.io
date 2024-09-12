@@ -9,6 +9,8 @@ order: 4
 
 [![Linkedin Badge](https://img.shields.io/badge/-amirulislamalmamun-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/amirulislamalmamun/)](https://www.linkedin.com/in/amirulislamalmamun/) [![Github Badge](https://img.shields.io/badge/-shiningflash-black?style=flat-square&logo=github&logoColor=white&link=https://github.com/shiningflash)](https://github.com/shiningflash) [![Medium Badge](https://img.shields.io/badge/-@amirulislamalmamun-03a57a?style=flat-square&labelColor=000000&logo=Medium&link=https://medium.com/@amirulislamalmamun)](https://medium.com/@amirulislamalmamun) [![Gmail Badge](https://img.shields.io/badge/-amirulislamalmamun@gmail.com-c14438?style=flat-square&logo=Gmail&logoColor=white&link=mailto:amirulislamalmamun@gmail.com)](mailto:amirulislamalmamun@gmail.com)
 
+![Open to work](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW9hanZtZjQxendhczIxd3NuY3ByZW5hamQ1YnJodmlrNjE5bTh3eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9dHM/DuNeivERgB3HLRd945/giphy.gif)
+
 ---
 
 ## **PROFESSIONAL SUMMARY**
