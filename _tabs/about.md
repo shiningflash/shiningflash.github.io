@@ -1,3 +1,10 @@
+---
+layout: about
+icon: fas fa-about
+order: 4
+---
+
+
 # 👋 Hi, I’m Amirul Islam Al Mamun
 
 [![Linkedin Badge](https://img.shields.io/badge/-amirulislamalmamun-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/amirulislamalmamun/)](https://www.linkedin.com/in/amirulislamalmamun/) [![Github Badge](https://img.shields.io/badge/-shiningflash-black?style=flat-square&logo=github&logoColor=white&link=https://github.com/shiningflash)](https://github.com/shiningflash) [![Medium Badge](https://img.shields.io/badge/-@amirulislamalmamun-03a57a?style=flat-square&labelColor=000000&logo=Medium&link=https://medium.com/@amirulislamalmamun)](https://medium.com/@amirulislamalmamun) [![Gmail Badge](https://img.shields.io/badge/-amirulislamalmamun@gmail.com-c14438?style=flat-square&logo=Gmail&logoColor=white&link=mailto:amirulislamalmamun@gmail.com)](mailto:amirulislamalmamun@gmail.com)
