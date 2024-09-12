@@ -11,9 +11,6 @@ order: 4
 
 I am a **Backend Engineer** currently based in **Lund, Sweden**, with over 4 years of hands-on experience in building scalable, high-performance backend systems. I’m passionate about solving complex problems and delivering efficient, clean code. 
 
----
-
-## 🚀 Actively Seeking New Opportunities
 
 ![Open to work](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW9hanZtZjQxendhczIxd3NuY3ByZW5hamQ1YnJodmlrNjE5bTh3eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9dHM/DuNeivERgB3HLRd945/giphy.gif)
 
