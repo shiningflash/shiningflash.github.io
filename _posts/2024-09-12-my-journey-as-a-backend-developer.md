@@ -8,7 +8,7 @@ author: amirulislam
 
 🎯 **My Journey as a Backend Developer** 💡
 
-<img src="images/amirul-developer.jpeg" alt="Random picture" width="400">
+<img src="_posts/images/amirul-developer.jpeg" alt="Random picture" width="400">
 
 Sometimes, the best opportunities come when you’re not even looking for them. When I started as an intern at **Leads Corporation**, I was supposed to join the Android development team. But I noticed a bigger challenge—the chance to work on the **VerifID (eKYC)** backend project. It was a huge responsibility, but I approached my manager and asked him to trust me with it. Taking on this challenge didn’t just transform the digital onboarding process for over **12 banks** in Bangladesh—it transformed my entire career. It marked the beginning of a journey where taking on big responsibilities became a central theme.
 
