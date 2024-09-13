@@ -8,6 +8,8 @@ author: amirulislam
 
 🎯 **My Journey as a Backend Developer** 💡
 
+<img src="images/amirul-developer.jpeg" alt="Random picture" width="400">
+
 Sometimes, the best opportunities come when you’re not even looking for them. When I started as an intern at **Leads Corporation**, I was supposed to join the Android development team. But I noticed a bigger challenge—the chance to work on the **VerifID (eKYC)** backend project. It was a huge responsibility, but I approached my manager and asked him to trust me with it. Taking on this challenge didn’t just transform the digital onboarding process for over **12 banks** in Bangladesh—it transformed my entire career. It marked the beginning of a journey where taking on big responsibilities became a central theme.
 
 At **Evaly**, one of the top e-commerce platforms in Bangladesh, I worked on two critical areas. I implemented advanced backend logic that reduced transaction discrepancies by **25%**, directly improving **customer trust** and **satisfaction** across all digital platforms. I also developed a **high-performance eHealth Order service** supporting over **1 million users**, optimizing data retrieval and reducing system load times by **40%** during peak sales events. These improvements played a crucial role in handling massive traffic during special sales periods like Evaly's discount events.
