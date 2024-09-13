@@ -1,5 +1,5 @@
 ---
-title: Django vs. Flask: Which Should You Choose?
+title: Django vs. Flask, Which Should You Choose?
 date: 2024-09-12 16:00 +0200
 categories: [English, Programming]
 tags: [programming, django, flask, tech-talk]
