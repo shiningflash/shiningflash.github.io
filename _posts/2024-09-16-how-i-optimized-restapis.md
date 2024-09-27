@@ -6,17 +6,9 @@ tags: [programming, backend-development, tech-talk, python, fastapi, rest-api, o
 author: amirulislam
 ---
 
----
-title: How I Optimized REST APIs by 40% Using Advanced Techniques
-date: 2024-09-16 17:00 +0200
-categories: [English, Programming]
-tags: [programming, backend-development, tech-talk, python, flask, fastapi]
-author: amirulislam
----
+<img src="/assets/img/plane.jpg" alt="optimized rest-apis" width="600">
 
-<img src="/assets/img/plane.jpg" alt="optimized rest-apis" width="400">
-
-### From a Propeller Plane to a Supersonic Jet: How I Turbocharged My REST APIs for Lightning-Fast Performance
+#### From a Propeller Plane to a Supersonic Jet: How I Turbocharged My REST APIs for Lightning-Fast Performance
 
 One of the most rewarding challenges I’ve tackled recently was optimizing a REST API to improve its performance by over 40%. By implementing **asynchronous programming**, optimizing **database queries**, and refining **algorithms**, the API transformed from a sluggish bottleneck to a high-performing machine. Here’s how I did it—and some tips for those facing similar challenges.
 
