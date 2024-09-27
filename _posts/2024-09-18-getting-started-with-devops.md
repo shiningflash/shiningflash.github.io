@@ -1,8 +1,8 @@
 ---
 title: Getting Started with DevOps for Your Projects
-date: 2024-09-18 17:00 +0200
+date: 2024-09-16 17:00 +0200
 categories: [English, Programming]
-tags: [programming, backend-development, DevOps, python, docker, terraform, jenkins, automation]
+tags: [programming, backend-development, DevOps, python, docker, automation]
 author: amirulislam
 ---
 

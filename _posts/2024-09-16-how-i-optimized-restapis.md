@@ -6,6 +6,14 @@ tags: [programming, backend-development, tech-talk, python, fastapi, rest-api, o
 author: amirulislam
 ---
 
+---
+title: How I Optimized REST APIs by 40% Using Advanced Techniques
+date: 2024-09-16 17:00 +0200
+categories: [English, Programming]
+tags: [programming, backend-development, tech-talk, python, flask, fastapi]
+author: amirulislam
+---
+
 <img src="/assets/img/plane.jpg" alt="optimized rest-apis" width="400">
 
 ### From a Propeller Plane to a Supersonic Jet: How I Turbocharged My REST APIs for Lightning-Fast Performance
