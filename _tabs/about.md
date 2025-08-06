@@ -9,12 +9,7 @@ order: 4
 
 [![Linkedin Badge](https://img.shields.io/badge/-amirulislamalmamun-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/amirulislamalmamun/)](https://www.linkedin.com/in/amirulislamalmamun/) [![Github Badge](https://img.shields.io/badge/-shiningflash-black?style=flat-square&logo=github&logoColor=white&link=https://github.com/shiningflash)](https://github.com/shiningflash) [![Medium Badge](https://img.shields.io/badge/-@amirulislamalmamun-03a57a?style=flat-square&labelColor=000000&logo=Medium&link=https://medium.com/@amirulislamalmamun)](https://medium.com/@amirulislamalmamun) [![Gmail Badge](https://img.shields.io/badge/-amirulislamalmamun@gmail.com-c14438?style=flat-square&logo=Gmail&logoColor=white&link=mailto:amirulislamalmamun@gmail.com)](mailto:amirulislamalmamun@gmail.com)
 
-I am a **Backend Engineer** currently based in **Lund, Sweden**, with over 4 years of hands-on experience in building scalable, high-performance backend systems. I’m passionate about solving complex problems and delivering efficient, clean code. 
-
-
-![Open to work](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW9hanZtZjQxendhczIxd3NuY3ByZW5hamQ1YnJodmlrNjE5bTh3eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9dHM/DuNeivERgB3HLRd945/giphy.gif)
-
-I am **actively looking to contribute** to new projects and opportunities that challenge my skills in backend development. Based in Malmö, Sweden, I am seeking roles in the Lund, Malmö, and Copenhagen areas, with a strong preference for remote opportunities across Europe and globally. Whether it’s a full-time, part-time, or contract position, I am eager to contribute my skills and expertise to your innovative team.
+I am a **Backend Engineer** currently based in **Lund, Sweden**, with over 5 years of hands-on experience in building scalable, high-performance backend systems. I’m passionate about solving complex problems and delivering efficient, clean code.
 
 ---
 
@@ -153,7 +148,6 @@ Presented at **10th International Conference on Natural Language Processing (NLP
 ## **CONTACT INFORMATION**
 
 - **Email:** amirulislamalmamun@gmail.com
-- **Phone:** +46 735532182 (whatsapp)
 
 ---
 
