@@ -6,7 +6,7 @@ tags: [programming, backend-development]
 author: amirulislam
 ---
 
-🎯 **My Journey as a Backend Developer** 💡
+🎯 **My Journey as a Backend Developer**
 
 <img src="/assets/img/amirul-developer.jpeg" alt="Random picture" width="400">
 

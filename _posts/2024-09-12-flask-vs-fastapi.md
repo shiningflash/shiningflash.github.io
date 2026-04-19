@@ -8,7 +8,7 @@ author: amirulislam
 
 <img src="/assets/img/1726586223358.png" alt="flask vs fastapi" width="400">
 
-🚀 **Flask vs. FastAPI: Which Should You Choose?** 🤔
+**Flask vs. FastAPI: Which Should You Choose?** 🤔
 
 Imagine you’re building an API, and you need it to be fast, reliable, and scalable. You’ve got two great options on your plate: **Flask**—the tried-and-true, minimalist framework, and **FastAPI**—the rising star that’s been blowing developers away with its speed and features. So, which one do you choose? It’s difficult, because both are fantastic frameworks, each with its own strengths. So, how do you pick between the two? Here’s where I’ve landed after working with both.
 

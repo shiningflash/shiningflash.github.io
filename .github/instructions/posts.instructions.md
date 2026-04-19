@@ -37,7 +37,7 @@ The author writes like he's talking to a friend who's also an engineer. Follow t
 
 ### Opening
 - Start with an emoji + bold restatement of the title, OR a personal anecdote
-- Example: `🚀 **Flask vs. FastAPI: Which Should You Choose?** 🤔`
+- Example: `**Flask vs. FastAPI: Which Should You Choose?** 🤔`
 - Example: `Sometimes, the best opportunities come when you're not even looking for them.`
 
 ### Hero Image (optional, near the top)

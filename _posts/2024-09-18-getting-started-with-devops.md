@@ -8,7 +8,7 @@ author: amirulislam
 
 <img src="/assets/img/devops1.jpg" alt="devops" width="400">
 
-# 🚀 Getting Started with DevOps for Python Projects: A Beginner’s Guide
+# Getting Started with DevOps for Python Projects: A Beginner’s Guide
 
 If you're starting a project and unsure how to bring development and operations together into one smooth, automated process—from writing code to deploying it—this post will guide you through the entire DevOps cycle for your Python project. Let’s take it step by step so that you can easily understand how to build and deploy your app, even if you're a beginner.
 
