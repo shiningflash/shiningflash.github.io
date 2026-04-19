@@ -14,7 +14,7 @@ order: 4
     padding: 2rem 1.8rem;
     margin-bottom: 2rem;
     border: 1px solid var(--main-border-color);
-    background: var(--card-header-bg);
+    background: var(--sidebar-bg);
   }
   .about-hero h1 { margin-bottom: 0.3rem; }
   .about-hero .subtitle {
@@ -73,7 +73,7 @@ order: 4
     font-size: 0.75rem;
     border-radius: 20px;
     border: 1px solid var(--main-border-color);
-    background: var(--card-header-bg);
+    background: var(--sidebar-bg);
     color: var(--text-color);
     white-space: nowrap;
   }
@@ -87,6 +87,7 @@ order: 4
   .skill-group h4 {
     font-size: 0.95rem;
     font-weight: 700;
+    margin-top: 0;
     margin-bottom: 0.5rem;
     color: var(--heading-color);
   }
@@ -97,7 +98,7 @@ order: 4
     border-radius: 0 8px 8px 0;
     background: var(--main-bg);
   }
-  .vol-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; color: var(--heading-color); }
+  .vol-card h4 { font-size: 1rem; font-weight: 700; margin-top: 0; margin-bottom: 0.2rem; color: var(--heading-color); }
   .vol-card .vol-org { font-weight: 600; opacity: 0.8; font-size: 0.9rem; }
   .vol-card .vol-date { font-size: 0.8rem; opacity: 0.55; }
   details { margin-bottom: 0; }
@@ -127,7 +128,7 @@ order: 4
     padding: 1.5rem 1.8rem;
     margin-top: 2rem;
     border: 1px solid var(--main-border-color);
-    background: var(--card-header-bg);
+    background: var(--sidebar-bg);
     text-align: center;
   }
   .connect-box p { margin-bottom: 0.5rem; color: var(--text-color); }
