@@ -1,56 +1,44 @@
-# Chirpy Starter
+# shiningflash.github.io
 
-[![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
-[![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+Personal tech blog by [Amirul Islam Al Mamun](https://www.linkedin.com/in/amirulislamalmamun/) — backend engineer, problem solver, and occasional writer.
 
-When installing the [**Chirpy**][chirpy] theme through [RubyGems.org][gem], Jekyll can only read files in the folders
-`_data`, `_layouts`, `_includes`, `_sass` and `assets`, as well as a small part of options of the `_config.yml` file
-from the theme's gem. If you have ever installed this theme gem, you can use the command
-`bundle info --path jekyll-theme-chirpy` to locate these files.
+**Live:** [shiningflash.github.io](https://shiningflash.github.io)
 
-The Jekyll team claims that this is to leave the ball in the user’s court, but this also results in users not being
-able to enjoy the out-of-the-box experience when using feature-rich themes.
+## What's Here
 
-To fully use all the features of **Chirpy**, you need to copy the other critical files from the theme's gem to your
-Jekyll site. The following is a list of targets:
+Posts about backend engineering, API design, DevOps, AI, career growth, and mental health — written from real experience, not textbook summaries. Some in English, some in Bangla.
 
-```shell
-.
-├── _config.yml
-├── _plugins
-├── _tabs
-└── index.html
+## Stack
+
+- **Jekyll** with the [Chirpy theme](https://github.com/cotes2020/jekyll-theme-chirpy) (`~> 6.5`)
+- GitHub Pages + GitHub Actions for deployment
+- Markdown posts in `_posts/`, config in `_config.yml`
+
+## Local Development
+
+```bash
+bundle install
+bundle exec jekyll serve
 ```
 
-To save you time, and also in case you lose some files while copying, we extract those files/configurations of the
-latest version of the **Chirpy** theme and the [CD][CD] workflow to here, so that you can start writing in minutes.
+Open `http://localhost:4000`.
 
-## Prerequisites
+## Writing a New Post
 
-Follow the instructions in the [Jekyll Docs](https://jekyllrb.com/docs/installation/) to complete the installation of
-the basic environment. [Git](https://git-scm.com/) also needs to be installed.
+Create `_posts/YYYY-MM-DD-your-slug.md` with:
 
-## Installation
-
-Sign in to GitHub and [**use this template**][use-template] to generate a brand new repository and name it
-`USERNAME.github.io`, where `USERNAME` represents your GitHub username.
-
-Then clone it to your local machine and run:
-
-```console
-$ bundle
+```yaml
+---
+title: "Your Title"
+date: YYYY-MM-DD HH:MM +0600
+categories: [English, Programming]
+tags: [your-tags]
+author: amirulislam
+---
 ```
 
-## Usage
-
-Please see the [theme's docs](https://github.com/cotes2020/jekyll-theme-chirpy#documentation).
+See `.github/instructions/posts.instructions.md` for the full writing guide.
 
 ## License
 
-This work is published under [MIT][mit] License.
-
-[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
-[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
-[use-template]: https://github.com/cotes2020/chirpy-starter/generate
-[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
-[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+Content © Amirul Islam Al Mamun. Theme under [MIT](LICENSE).
