@@ -5,13 +5,16 @@ order: 4
 ---
 
 <style>
-  /* ── About Page Custom Styles ── */
+  /* ── About Page Custom Styles ──
+     Uses Chirpy's own CSS variables so dark/light toggle works correctly.
+     Chirpy sets these via [data-mode="dark"] in typography-dark.scss.
+  ── */
   .about-hero {
     border-radius: 12px;
     padding: 2rem 1.8rem;
     margin-bottom: 2rem;
-    border: 1px solid var(--bs-border-color);
-    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--main-border-color);
+    background: var(--card-header-bg);
   }
   .about-hero h1 { margin-bottom: 0.3rem; }
   .about-hero .subtitle {
@@ -30,28 +33,28 @@ order: 4
     text-align: center;
     padding: 1rem 0.6rem;
     border-radius: 10px;
-    border: 1px solid var(--bs-border-color);
-    background: var(--bs-body-bg);
+    border: 1px solid var(--main-border-color);
+    background: var(--main-bg);
   }
-  .stat-card .num { font-size: 1.6rem; font-weight: 700; color: var(--bs-primary); }
+  .stat-card .num { font-size: 1.6rem; font-weight: 700; color: var(--link-color); }
   .stat-card .label { font-size: 0.82rem; opacity: 0.7; }
   .section-title {
     font-size: 1.35rem;
     font-weight: 700;
     margin: 2rem 0 1rem;
     padding-bottom: 0.4rem;
-    border-bottom: 2px solid var(--bs-primary);
+    border-bottom: 2px solid var(--link-color);
     display: inline-block;
   }
   .role-card {
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid var(--main-border-color);
     border-radius: 10px;
     padding: 1.2rem 1.4rem;
     margin-bottom: 1rem;
-    background: var(--bs-body-bg);
+    background: var(--main-bg);
     transition: box-shadow 0.2s;
   }
-  .role-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .role-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
   .role-header {
     display: flex;
     justify-content: space-between;
@@ -69,30 +72,32 @@ order: 4
     padding: 2px 10px;
     font-size: 0.75rem;
     border-radius: 20px;
-    border: 1px solid var(--bs-border-color);
-    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--main-border-color);
+    background: var(--card-header-bg);
+    color: var(--text-color);
     white-space: nowrap;
   }
   .skill-group {
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid var(--main-border-color);
     border-radius: 10px;
     padding: 1rem 1.2rem;
     margin-bottom: 0.8rem;
-    background: var(--bs-body-bg);
+    background: var(--main-bg);
   }
   .skill-group h4 {
     font-size: 0.95rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
+    color: var(--heading-color);
   }
   .vol-card {
-    border-left: 3px solid var(--bs-primary);
+    border-left: 3px solid var(--link-color);
     padding: 0.8rem 1.2rem;
     margin-bottom: 0.8rem;
     border-radius: 0 8px 8px 0;
-    background: var(--bs-body-bg);
+    background: var(--main-bg);
   }
-  .vol-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .vol-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; color: var(--heading-color); }
   .vol-card .vol-org { font-weight: 600; opacity: 0.8; font-size: 0.9rem; }
   .vol-card .vol-date { font-size: 0.8rem; opacity: 0.55; }
   details { margin-bottom: 0; }
@@ -103,6 +108,7 @@ order: 4
     opacity: 0.75;
     padding: 0.3rem 0;
     list-style: none;
+    color: var(--link-color);
   }
   details summary::before { content: "▸ "; }
   details[open] summary::before { content: "▾ "; }
@@ -120,11 +126,11 @@ order: 4
     border-radius: 12px;
     padding: 1.5rem 1.8rem;
     margin-top: 2rem;
-    border: 1px solid var(--bs-border-color);
-    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--main-border-color);
+    background: var(--card-header-bg);
     text-align: center;
   }
-  .connect-box p { margin-bottom: 0.5rem; }
+  .connect-box p { margin-bottom: 0.5rem; color: var(--text-color); }
 </style>
 
 <!-- ════════════════════════════════════════════════
