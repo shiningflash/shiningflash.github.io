@@ -8,7 +8,7 @@ author: amirulislam
 
 <img src="/assets/img/serverless.png" alt="devops" width="600">
 
-🚀 **Serverless architecture** is changing how we build applications, and choosing the right platform is crucial. In my latest post, I break down the key differences between AWS Lambda, Azure Functions, and Google Cloud Functions, so you can make an informed choice for your next project. 🌐
+**Serverless architecture** is changing how we build applications, and choosing the right platform is crucial. In my latest post, I break down the key differences between AWS Lambda, Azure Functions, and Google Cloud Functions, so you can make an informed choice for your next project. 🌐
 
 Whether you're just getting started with **serverless** or looking to optimize your cloud strategy, this post will give you valuable insights. Check it out!
 

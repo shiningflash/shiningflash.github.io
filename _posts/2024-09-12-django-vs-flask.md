@@ -6,7 +6,7 @@ tags: [programming, django, flask, tech-talk]
 author: amirulislam
 ---
 
-🚀 **Django vs. Flask: Which Should You Choose?** 🤔
+**Django vs. Flask: Which Should You Choose?** 🤔
 
 When I built my first project, *eBilling*, I went with Django. Why? Because it gave me everything I needed in one package—authentication, an admin panel, and tools to handle complex database tasks. It was perfect for my project, which needed to get up and running quickly with many built-in features. Django is like a toolkit where everything is ready to go. But later, when I worked on smaller projects, Django felt a bit too heavy. That’s when I discovered Flask.
 
