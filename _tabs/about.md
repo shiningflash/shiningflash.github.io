@@ -13,6 +13,7 @@ order: 4
     border-radius: 12px;
     padding: 2rem 1.8rem;
     margin-bottom: 2rem;
+    margin-top: 0;
     border: 1px solid var(--main-border-color);
     background: var(--sidebar-bg);
   }
