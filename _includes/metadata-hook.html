@@ -1,0 +1,46 @@
+<!-- Custom metadata hook — called from Chirpy's head.html on every page -->
+
+{% comment %} Load home.css only on pages that use the home layout {% endcomment %}
+{% if page.layout == 'home' %}
+  <link rel="stylesheet" href="/assets/css/home.css">
+{% endif %}
+
+{% comment %}
+  Panel toggle JS — active on every page that has #panel-wrapper.
+  Adds a collapse/expand button above the Trending Tags + Recently Updated panel.
+  State persists in localStorage across page loads.
+{% endcomment %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var panel = document.getElementById('panel-wrapper');
+  if (!panel) return;
+  var access = panel.querySelector('.access');
+  if (!access) return;
+
+  var btn = document.createElement('button');
+  btn.id = 'panel-toggle';
+  btn.setAttribute('aria-label', 'Toggle side panel');
+  btn.innerHTML =
+    '<i class="fas fa-chevron-left"></i>' +
+    '<span class="pnl-txt">Collapse panel</span>';
+
+  panel.insertBefore(btn, panel.firstChild);
+
+  if (localStorage.getItem('hp-panel-collapsed') === '1') {
+    panel.classList.add('panel-collapsed');
+    btn.querySelector('i').className = 'fas fa-chevron-right';
+    btn.querySelector('.pnl-txt').textContent = 'Expand panel';
+  }
+
+  btn.addEventListener('click', function () {
+    var isCollapsed = panel.classList.toggle('panel-collapsed');
+    localStorage.setItem('hp-panel-collapsed', isCollapsed ? '1' : '0');
+    btn.querySelector('i').className = isCollapsed
+      ? 'fas fa-chevron-right'
+      : 'fas fa-chevron-left';
+    btn.querySelector('.pnl-txt').textContent = isCollapsed
+      ? 'Expand panel'
+      : 'Collapse panel';
+  });
+});
+</script>

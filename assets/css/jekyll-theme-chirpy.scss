@@ -3,6 +3,50 @@
 
 @import 'main';
 
+/* ═══════════════════════════════════════════════════
+   Global accent palette — available on every page.
+   home.css, about.css and future pages use these.
+═══════════════════════════════════════════════════ */
+
+:root {
+  --c-green:  #10b981; --c-green-bg:  rgba(16,185,129,.09);
+  --c-blue:   #3b82f6; --c-blue-bg:   rgba(59,130,246,.09);
+  --c-amber:  #f59e0b; --c-amber-bg:  rgba(245,158,11,.09);
+  --c-violet: #8b5cf6; --c-violet-bg: rgba(139,92,246,.09);
+  --c-pink:   #ec4899; --c-pink-bg:   rgba(236,72,153,.09);
+  --c-teal:   #14b8a6; --c-teal-bg:   rgba(20,184,166,.09);
+  --c-orange: #f97316; --c-orange-bg: rgba(249,115,22,.09);
+  --h-g1: rgba(59,130,246,.10); --h-g2: rgba(139,92,246,.08);
+  --h-g3: rgba(16,185,129,.07); --h-g4: rgba(236,72,153,.05);
+  --h-dot: rgba(0,0,0,.055);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    --c-green:  #34d399; --c-green-bg:  rgba(52,211,153,.11);
+    --c-blue:   #60a5fa; --c-blue-bg:   rgba(96,165,250,.11);
+    --c-amber:  #fbbf24; --c-amber-bg:  rgba(251,191,36,.11);
+    --c-violet: #a78bfa; --c-violet-bg: rgba(167,139,250,.11);
+    --c-pink:   #f472b6; --c-pink-bg:   rgba(244,114,182,.11);
+    --c-teal:   #2dd4bf; --c-teal-bg:   rgba(45,212,191,.11);
+    --c-orange: #fb923c; --c-orange-bg: rgba(251,146,60,.11);
+    --h-g1: rgba(96,165,250,.13); --h-g2: rgba(167,139,250,.11);
+    --h-g3: rgba(52,211,153,.09); --h-g4: rgba(244,114,182,.07);
+    --h-dot: rgba(255,255,255,.045);
+  }
+}
+[data-mode="dark"] {
+  --c-green:  #34d399; --c-green-bg:  rgba(52,211,153,.11);
+  --c-blue:   #60a5fa; --c-blue-bg:   rgba(96,165,250,.11);
+  --c-amber:  #fbbf24; --c-amber-bg:  rgba(251,191,36,.11);
+  --c-violet: #a78bfa; --c-violet-bg: rgba(167,139,250,.11);
+  --c-pink:   #f472b6; --c-pink-bg:   rgba(244,114,182,.11);
+  --c-teal:   #2dd4bf; --c-teal-bg:   rgba(45,212,191,.11);
+  --c-orange: #fb923c; --c-orange-bg: rgba(251,146,60,.11);
+  --h-g1: rgba(96,165,250,.13); --h-g2: rgba(167,139,250,.11);
+  --h-g3: rgba(52,211,153,.09); --h-g4: rgba(244,114,182,.07);
+  --h-dot: rgba(255,255,255,.045);
+}
+
 /* ═══════════════════════════════════════
    Global overrides — Inter font + polish
    Appended after theme CSS so these win
@@ -37,3 +81,71 @@ h1, h2, h3 {
 h4, h5, h6 {
   letter-spacing: -0.015em;
 }
+
+/* ─────────────────────────────────────────────────
+   Panel collapse/expand toggle (all pages globally)
+───────────────────────────────────────────────── */
+
+/* Smooth collapse animation on .access */
+#panel-wrapper .access {
+  overflow: hidden;
+  max-height: 2000px;
+  opacity: 1;
+  transition: max-height .38s ease, opacity .28s ease;
+}
+#panel-wrapper.panel-collapsed .access {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Toggle button injected by metadata-hook.html */
+#panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .5rem;
+  width: 100%;
+  padding: .48rem .85rem;
+  margin-bottom: .9rem;
+  border-radius: 10px;
+  border: 1px solid var(--main-border-color);
+  background: var(--sidebar-bg);
+  color: var(--text-color);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+  font-family: inherit;
+  text-align: left;
+}
+#panel-toggle:hover {
+  background: var(--c-blue-bg);
+  border-color: var(--c-blue);
+  color: var(--c-blue);
+}
+#panel-toggle i { font-size: .72rem; flex-shrink: 0; }
+.pnl-txt { font-size: .76rem; letter-spacing: .01em; }
+
+/* Panel section headings */
+#panel-wrapper .panel-heading {
+  font-size: .74rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .55;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--main-border-color);
+  margin-bottom: .7rem;
+  margin-top: 1.2rem;
+}
+#panel-wrapper section:first-of-type .panel-heading {
+  margin-top: 0;
+}
+
+/* Recently updated links */
+#access-lastmod ul li {
+  padding: .2rem 0;
+  border-bottom: 1px solid var(--main-border-color);
+  font-size: .83rem;
+}
+#access-lastmod ul li:last-child { border-bottom: none; }
