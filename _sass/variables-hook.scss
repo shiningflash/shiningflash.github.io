@@ -1,0 +1,8 @@
+/*
+  Override Chirpy font variables to use Inter.
+  These override the !default values in _sass/addon/variables.scss.
+  Loaded after addon/variables, so these win without needing !default.
+*/
+
+$font-family-base: 'Inter', 'Microsoft Yahei', sans-serif;
+$font-family-heading: 'Inter', 'Microsoft Yahei', sans-serif;

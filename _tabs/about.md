@@ -4,402 +4,35 @@ icon: fas fa-info-circle
 order: 4
 ---
 
-<style>
-/* ══════════════════════════════════════════════
-   ABOUT PAGE — Premium Design
-   Chirpy CSS variables ensure dark/light support.
-   Custom accent palette layered on top.
-══════════════════════════════════════════════ */
-
-:root {
-  --c-green:  #10b981; --c-green-bg:  rgba(16,185,129,.09);
-  --c-blue:   #3b82f6; --c-blue-bg:   rgba(59,130,246,.09);
-  --c-amber:  #f59e0b; --c-amber-bg:  rgba(245,158,11,.09);
-  --c-violet: #8b5cf6; --c-violet-bg: rgba(139,92,246,.09);
-  --c-pink:   #ec4899; --c-pink-bg:   rgba(236,72,153,.09);
-  --c-teal:   #14b8a6; --c-teal-bg:   rgba(20,184,166,.09);
-  --c-orange: #f97316; --c-orange-bg: rgba(249,115,22,.09);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-mode="light"]) {
-    --c-green:  #34d399; --c-green-bg:  rgba(52,211,153,.11);
-    --c-blue:   #60a5fa; --c-blue-bg:   rgba(96,165,250,.11);
-    --c-amber:  #fbbf24; --c-amber-bg:  rgba(251,191,36,.11);
-    --c-violet: #a78bfa; --c-violet-bg: rgba(167,139,250,.11);
-    --c-pink:   #f472b6; --c-pink-bg:   rgba(244,114,182,.11);
-    --c-teal:   #2dd4bf; --c-teal-bg:   rgba(45,212,191,.11);
-    --c-orange: #fb923c; --c-orange-bg: rgba(251,146,60,.11);
-  }
-}
-[data-mode="dark"] {
-  --c-green:  #34d399; --c-green-bg:  rgba(52,211,153,.11);
-  --c-blue:   #60a5fa; --c-blue-bg:   rgba(96,165,250,.11);
-  --c-amber:  #fbbf24; --c-amber-bg:  rgba(251,191,36,.11);
-  --c-violet: #a78bfa; --c-violet-bg: rgba(167,139,250,.11);
-  --c-pink:   #f472b6; --c-pink-bg:   rgba(244,114,182,.11);
-  --c-teal:   #2dd4bf; --c-teal-bg:   rgba(45,212,191,.11);
-  --c-orange: #fb923c; --c-orange-bg: rgba(251,146,60,.11);
-}
-
-/* ─── Hero ─── */
-.ap-hero {
-  position: relative;
-  border-radius: 18px;
-  padding: 2.5rem 2.2rem;
-  margin-bottom: 2.5rem;
-  border: 1px solid var(--main-border-color);
-  background: var(--sidebar-bg);
-  overflow: hidden;
-}
-.ap-hero::before {
-  content: "";
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(circle, rgba(0,0,0,.04) 1px, transparent 1px) center/22px 22px,
-    linear-gradient(135deg, rgba(59,130,246,.08) 0%, rgba(139,92,246,.06) 50%, rgba(16,185,129,.05) 100%);
-  pointer-events: none;
-}
-.ap-hero > * { position: relative; }
-
-.ap-hero-name {
-  font-size: clamp(1.7rem, 4vw, 2.2rem);
-  font-weight: 800;
-  margin: 0 0 0.25rem;
-  background: linear-gradient(90deg, var(--c-blue) 0%, var(--c-violet) 55%, var(--c-green) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
-}
-.ap-hero-title {
-  font-size: 1rem; font-weight: 500;
-  color: var(--text-color); opacity: .82; margin: 0 0 .3rem;
-}
-.ap-hero-loc {
-  font-size: .85rem; opacity: .6; margin-bottom: .9rem;
-}
-.ap-hero-loc i { margin-right: 4px; color: var(--c-pink); }
-
-.ap-badges { display: flex; flex-wrap: wrap; gap: 7px; margin: .8rem 0 1.2rem; }
-
-.ap-hero-bio {
-  font-size: .96rem; line-height: 1.78;
-  color: var(--text-color); opacity: .88;
-  margin-bottom: 1.4rem; max-width: 700px;
-}
-
-/* Stat grid */
-.ap-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: .8rem; margin: 1.2rem 0 1.5rem;
-}
-.ap-stat {
-  text-align: center; padding: 1rem .5rem;
-  border-radius: 12px; border: 1px solid var(--main-border-color);
-  background: var(--main-bg); transition: transform .2s, box-shadow .2s;
-}
-.ap-stat:hover { transform: translateY(-3px); box-shadow: 0 6px 22px rgba(0,0,0,.12); }
-.ap-stat-num {
-  font-size: 1.65rem; font-weight: 800; line-height: 1;
-  background: linear-gradient(135deg, var(--c-blue), var(--c-violet));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.ap-stat-lbl { font-size: .74rem; opacity: .62; margin-top: 4px; line-height: 1.3; }
-
-/* Focus bullets */
-.ap-focus { display: flex; flex-direction: column; gap: .35rem; margin-top: 1rem; }
-.ap-focus-item { display: flex; align-items: flex-start; gap: .65rem; font-size: .93rem; opacity: .9; }
-.ap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
-.dot-green { background: var(--c-green); }
-.dot-blue  { background: var(--c-blue); }
-.dot-violet{ background: var(--c-violet); }
-
-/* ─── Section headers ─── */
-.ap-section { display: flex; align-items: center; gap: .7rem; margin: 2.8rem 0 1.2rem; }
-.ap-sec-icon {
-  width: 38px; height: 38px; border-radius: 11px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .92rem; flex-shrink: 0;
-}
-.ap-sec-title {
-  font-size: 1.3rem; font-weight: 700;
-  color: var(--heading-color); margin: 0;
-  padding-bottom: 3px; border-bottom: 2px solid;
-}
-
-/* Color utility classes */
-.ic-blue   { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--c-blue); }
-.ic-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green); }
-.ic-amber  { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber); }
-.ic-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--c-violet); }
-.ic-pink   { background: var(--c-pink-bg);   color: var(--c-pink);   border: 1px solid var(--c-pink); }
-.ic-teal   { background: var(--c-teal-bg);   color: var(--c-teal);   border: 1px solid var(--c-teal); }
-.ic-orange { background: var(--c-orange-bg); color: var(--c-orange); border: 1px solid var(--c-orange); }
-
-.bc-blue   { border-color: var(--c-blue)!important; }
-.bc-green  { border-color: var(--c-green)!important; }
-.bc-amber  { border-color: var(--c-amber)!important; }
-.bc-violet { border-color: var(--c-violet)!important; }
-.bc-pink   { border-color: var(--c-pink)!important; }
-.bc-teal   { border-color: var(--c-teal)!important; }
-.bc-orange { border-color: var(--c-orange)!important; }
-
-.c-blue   { color: var(--c-blue)!important; }
-.c-green  { color: var(--c-green)!important; }
-.c-amber  { color: var(--c-amber)!important; }
-.c-violet { color: var(--c-violet)!important; }
-.c-pink   { color: var(--c-pink)!important; }
-.c-teal   { color: var(--c-teal)!important; }
-.c-orange { color: var(--c-orange)!important; }
-
-/* ─── Experience cards ─── */
-.ap-exp-card {
-  border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--main-border-color);
-  border-radius: 0 14px 14px 0;
-  padding: 1.3rem 1.5rem; margin-bottom: 1.1rem;
-  background: var(--main-bg); transition: box-shadow .2s, transform .2s;
-}
-.ap-exp-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.1); transform: translateX(3px); }
-
-.ap-exp-head {
-  display: flex; justify-content: space-between;
-  align-items: flex-start; flex-wrap: wrap; gap: .4rem; margin-bottom: .45rem;
-}
-.ap-exp-role  { font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--heading-color); }
-.ap-exp-co    { font-size: .92rem; font-weight: 600; }
-.ap-exp-loc   { font-size: .82rem; opacity: .6; }
-.ap-exp-date  {
-  font-size: .79rem; opacity: .65; white-space: nowrap;
-  background: var(--sidebar-bg); padding: 2px 9px;
-  border-radius: 20px; border: 1px solid var(--main-border-color); align-self: flex-start;
-}
-.ap-exp-summary { font-size: .91rem; margin: .35rem 0 .5rem; opacity: .87; line-height: 1.65; }
-
-.ap-badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: .71rem; font-weight: 700; padding: 2px 9px;
-  border-radius: 20px; vertical-align: middle; margin-left: 5px;
-}
-.badge-amber  { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber); }
-.badge-blue   { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--c-blue); }
-.badge-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green); }
-.badge-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--c-violet); }
-
-/* Tech tags */
-.ap-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: .7rem; }
-.ap-tag {
-  display: inline-block; padding: 2px 10px; font-size: .73rem;
-  border-radius: 20px; border: 1px solid var(--main-border-color);
-  background: var(--sidebar-bg); color: var(--text-color); white-space: nowrap;
-}
-
-/* details / summary */
-details { margin-top: .55rem; }
-details summary {
-  cursor: pointer; list-style: none; padding: .3rem 0;
-  font-size: .84rem; font-weight: 600; color: var(--link-color);
-  display: inline-flex; align-items: center; gap: 5px; user-select: none;
-}
-details summary::-webkit-details-marker { display: none; }
-details summary .chev { font-size: .72rem; transition: transform .2s; display: inline-block; }
-details[open] summary .chev { transform: rotate(90deg); }
-details ul { margin-top: .55rem; font-size: .87rem; padding-left: 1.3rem; }
-details ul li { margin-bottom: .28rem; line-height: 1.55; }
-details .det-body { margin-top: .55rem; }
-
-/* ─── Skill grid ─── */
-.ap-skill-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-  gap: .9rem;
-}
-.ap-skill-card {
-  border: 1px solid var(--main-border-color);
-  border-radius: 12px; padding: 1rem 1.2rem; background: var(--main-bg);
-}
-.ap-skill-card h4 {
-  font-size: .88rem; font-weight: 700; margin: 0 0 .6rem;
-  color: var(--heading-color); display: flex; align-items: center; gap: 6px;
-}
-
-/* ─── Project cards ─── */
-.ap-proj-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-}
-.ap-proj-card {
-  border: 1px solid var(--main-border-color); border-radius: 14px;
-  padding: 1.2rem 1.4rem; background: var(--main-bg);
-  transition: box-shadow .2s, transform .2s;
-  display: flex; flex-direction: column;
-}
-.ap-proj-card:hover { box-shadow: 0 5px 22px rgba(0,0,0,.11); transform: translateY(-3px); }
-.ap-proj-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .4rem; }
-.ap-proj-icon {
-  width: 34px; height: 34px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .9rem; flex-shrink: 0;
-}
-.ap-proj-name { font-size: .97rem; font-weight: 700; margin: 0; color: var(--heading-color); }
-.ap-proj-desc { font-size: .85rem; opacity: .8; flex: 1; margin: 0 0 .8rem; line-height: 1.62; }
-.ap-proj-links { display: flex; gap: .7rem; margin-top: auto; }
-.ap-proj-links a {
-  font-size: .8rem; font-weight: 600; color: var(--link-color);
-  text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
-}
-.ap-proj-links a:hover { text-decoration: underline; }
-
-/* ─── Certification grid ─── */
-.ap-cert-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: .8rem;
-}
-.ap-cert-card {
-  border: 1px solid var(--main-border-color); border-radius: 11px;
-  padding: .9rem 1rem; background: var(--main-bg);
-  display: flex; align-items: flex-start; gap: .7rem;
-  transition: box-shadow .2s, transform .2s;
-}
-.ap-cert-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,.09); transform: translateY(-2px); }
-.ap-cert-logo {
-  width: 34px; height: 34px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .75rem; font-weight: 800; flex-shrink: 0; text-align: center; line-height: 1.1;
-}
-.ap-cert-name   { font-size: .83rem; font-weight: 700; color: var(--heading-color); line-height: 1.3; }
-.ap-cert-issuer { font-size: .76rem; opacity: .6; margin-top: 2px; }
-.ap-cert-year   { font-size: .71rem; opacity: .5; margin-top: 1px; }
-
-/* ─── Award items ─── */
-.ap-award-list { display: flex; flex-direction: column; gap: .75rem; }
-.ap-award-item {
-  display: flex; align-items: flex-start; gap: .9rem;
-  padding: .9rem 1.1rem; border-radius: 11px;
-  border: 1px solid var(--main-border-color); background: var(--main-bg);
-  transition: transform .2s;
-}
-.ap-award-item:hover { transform: translateX(4px); }
-.ap-award-ic {
-  width: 38px; height: 38px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; flex-shrink: 0;
-}
-.ap-award-title { font-size: .93rem; font-weight: 700; color: var(--heading-color); }
-.ap-award-sub   { font-size: .79rem; opacity: .62; margin-top: 2px; line-height: 1.4; }
-
-/* ─── Volunteer cards ─── */
-.ap-vol-card {
-  border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--c-violet);
-  border-radius: 0 12px 12px 0; padding: 1.1rem 1.4rem; margin-bottom: 1rem;
-  background: var(--main-bg); transition: box-shadow .2s;
-}
-.ap-vol-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,.09); }
-.ap-vol-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .3rem; }
-.ap-vol-role { font-size: 1rem; font-weight: 700; margin: 0; color: var(--heading-color); }
-.ap-vol-date { font-size: .78rem; opacity: .55; align-self: center; }
-.ap-vol-org  { font-size: .87rem; font-weight: 600; opacity: .8; margin: .2rem 0 .4rem; }
-
-.ap-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .6rem; }
-.ap-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 10px; border-radius: 20px; font-size: .76rem; font-weight: 600;
-}
-.chip-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--c-violet); }
-.chip-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green); }
-.chip-pink   { background: var(--c-pink-bg);   color: var(--c-pink);   border: 1px solid var(--c-pink); }
-
-/* ─── Language cards ─── */
-.ap-lang-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: .85rem;
-}
-.ap-lang-card {
-  border: 1px solid var(--main-border-color); border-radius: 12px;
-  padding: 1.1rem 1rem; background: var(--main-bg);
-  text-align: center; transition: transform .2s;
-}
-.ap-lang-card:hover { transform: translateY(-2px); }
-.ap-lang-flag  { font-size: 2rem; line-height: 1; margin-bottom: .35rem; }
-.ap-lang-name  { font-size: .95rem; font-weight: 700; color: var(--heading-color); }
-.ap-lang-level { font-size: .76rem; opacity: .6; margin-top: 2px; }
-.ap-lang-bar {
-  height: 5px; background: var(--main-border-color);
-  border-radius: 4px; margin-top: .55rem; overflow: hidden;
-}
-.ap-lang-fill { height: 100%; border-radius: 4px; }
-
-/* ─── Connect ─── */
-.ap-connect {
-  border-radius: 18px; padding: 2.2rem 2rem; margin-top: 2.8rem;
-  text-align: center; background: var(--sidebar-bg);
-  border: 1px solid var(--main-border-color);
-  position: relative; overflow: hidden;
-}
-.ap-connect::before {
-  content: ""; position: absolute; inset: 0;
-  background:
-    radial-gradient(circle, rgba(0,0,0,.04) 1px, transparent 1px) center/22px 22px,
-    linear-gradient(135deg, rgba(59,130,246,.07) 0%, rgba(139,92,246,.05) 55%, rgba(16,185,129,.04) 100%);
-  pointer-events: none;
-}
-.ap-connect > * { position: relative; }
-.ap-connect-quote {
-  font-size: 1.07rem; font-weight: 600; line-height: 1.65;
-  max-width: 560px; margin: 0 auto 1.2rem; color: var(--text-color);
-}
-.ap-connect-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
-.ap-connect-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: .5rem 1.3rem; border-radius: 24px;
-  font-size: .87rem; font-weight: 600;
-  border: 1px solid var(--main-border-color); background: var(--main-bg);
-  color: var(--text-color); text-decoration: none; transition: all .2s;
-}
-.ap-connect-btn:hover {
-  background: var(--c-blue-bg); border-color: var(--c-blue);
-  color: var(--c-blue); transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,.1);
-}
-
-/* misc */
-.ap-pub-card {
-  border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--c-teal);
-  border-radius: 0 12px 12px 0;
-  padding: 1.3rem 1.5rem; background: var(--main-bg);
-}
-.ap-cp-card {
-  border: 1px solid var(--main-border-color);
-  border-radius: 12px; padding: 1.2rem 1.5rem; background: var(--main-bg);
-}
-.ap-cp-card ul { margin: 0; font-size: .92rem; padding-left: 1.3rem; }
-.ap-cp-card ul li { margin-bottom: .3rem; }
-</style>
+<link rel="stylesheet" href="/assets/css/about.css">
 
 <!-- ══════════════════════════════════════════
      HERO
 ══════════════════════════════════════════ -->
 <div class="ap-hero">
+
+  <div class="ap-avatar-wrap">
+    <img src="https://avatars.githubusercontent.com/u/35567854?v=4"
+         alt="Amirul Islam Al Mamun" class="ap-avatar-img" loading="lazy">
+  </div>
+
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
-  <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer &nbsp;·&nbsp; Python · Cloud · Microservices · System Design</div>
-  <div class="ap-hero-loc"><i class="fas fa-map-marker-alt"></i> Malmö, Sweden</div>
+  <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
+  <div class="ap-hero-sub">Python · Cloud · Microservices · System Design</div>
+  <div class="ap-hero-loc">
+    <i class="fas fa-map-marker-alt"></i> Malmö, Sweden
+  </div>
 
   <div class="ap-badges">
-    <a href="https://www.linkedin.com/in/amirulislamalmamun/"><img src="https://img.shields.io/badge/-amirulislamalmamun-blue?style=flat-square&logo=Linkedin&logoColor=white" alt="LinkedIn"></a>
-    <a href="https://github.com/shiningflash"><img src="https://img.shields.io/badge/-shiningflash-black?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
-    <a href="https://medium.com/@amirulislamalmamun"><img src="https://img.shields.io/badge/-@amirulislamalmamun-03a57a?style=flat-square&labelColor=000000&logo=Medium" alt="Medium"></a>
+    <a href="https://www.linkedin.com/in/amirulislamalmamun/"><img src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white" alt="LinkedIn"></a>
+    <a href="https://github.com/shiningflash"><img src="https://img.shields.io/badge/-GitHub-black?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
+    <a href="https://medium.com/@amirulislamalmamun"><img src="https://img.shields.io/badge/-Medium-03a57a?style=flat-square&labelColor=000000&logo=Medium" alt="Medium"></a>
     <a href="mailto:amirulislamalmamun@gmail.com"><img src="https://img.shields.io/badge/-Email-c14438?style=flat-square&logo=Gmail&logoColor=white" alt="Email"></a>
   </div>
 
   <p class="ap-hero-bio">
     I care about how things work — and how they keep working. My job as a data engineer is to make complexity disappear and reliability feel effortless. I started as a backend developer obsessed with clean code and fell in love with data. Today I design systems that move it faster, safer, and with purpose.<br><br>
-    With nearly <strong>6 years</strong> of experience, I've built high-performance, cloud-native data platforms and backends powering products used by <strong>1M+ users</strong> across Europe and Southeast Asia. At <strong>Truxel</strong>, I architect real-time IoT pipelines with sub-second latency for renewable energy. At <strong>Supertal</strong>, I scaled e-commerce platforms to a million users — and earned a <strong>double promotion in 7 months</strong>. I lead with clarity, build with intention, and ship systems teams can trust.
+    With nearly <strong>6 years</strong> of experience, I've built high-performance, cloud-native data platforms and backends powering products used by <strong>1M+ users</strong> across Europe and Southeast Asia. At <strong>Truxel</strong> I architect real-time IoT pipelines with sub-second latency. At <strong>Supertal</strong> I scaled e-commerce to a million users — and earned a <strong>double promotion in 7 months</strong>. I lead with clarity, build with intention, and ship systems teams can trust.
   </p>
 
   <div class="ap-stats">
@@ -434,6 +67,7 @@ details .det-body { margin-top: .55rem; }
     <div class="ap-focus-item"><span class="ap-dot dot-blue"></span> Bringing engineering discipline to AI-driven, real-time data environments.</div>
     <div class="ap-focus-item"><span class="ap-dot dot-violet"></span> Writing code that's not only fast — but easy for teams to trust and extend.</div>
   </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -441,8 +75,10 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-blue"><i class="fas fa-briefcase"></i></div>
-  <h2 class="ap-sec-title bc-blue">Professional Experience</h2>
+  <h2 class="ap-sec-title">Professional Experience</h2>
 </div>
+
+<div class="ap-timeline">
 
 <!-- Truxel -->
 <div class="ap-exp-card bc-green">
@@ -465,8 +101,8 @@ details .det-body { margin-top: .55rem; }
       <li>Implemented <strong>Dagster</strong> and <strong>Airflow</strong> orchestration for energy market, grid frequency, and FCR-N/FCR-D balancing data — improving transparency and scheduling efficiency.</li>
       <li>Designed schemas using <strong>Avro</strong> and <strong>BigQuery</strong> optimised for OLAP queries; modelled data with <strong>dbt</strong> for reporting and analytics layers.</li>
       <li>Built <strong>Grafana</strong> dashboards and alerting pipelines for grid performance and battery diagnostics, enabling proactive maintenance decisions.</li>
-      <li>Contributed to backend architecture, CI/CD pipelines (<strong>Docker</strong>, <strong>Kubernetes</strong>, <strong>GitHub Actions</strong>), and system documentation for long-term maintainability.</li>
-      <li>Enabling data-driven insights and predictive control for renewable energy — helping drive Europe's transition to smarter, greener, and more resilient power infrastructure.</li>
+      <li>Contributed to backend architecture, CI/CD (<strong>Docker</strong>, <strong>Kubernetes</strong>, <strong>GitHub Actions</strong>), schema design, and system documentation.</li>
+      <li>Enabling data-driven insights for renewable energy — helping drive Europe's transition to smarter, greener, and more resilient power infrastructure.</li>
     </ul>
   </details>
   <div class="ap-tags">
@@ -484,7 +120,7 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Sep 2024 – Jan 2025</span>
   </div>
   <p class="ap-exp-summary">
-    Delivered backend development and automation solutions for international clients, building RESTful services and integration workflows with Python-based architectures.
+    Delivered backend development and automation solutions for international clients, building RESTful services and integration workflows using Python-based architectures.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> View contributions &amp; impact</summary>
@@ -492,11 +128,10 @@ details .det-body { margin-top: .55rem; }
       <li>Built and optimised <strong>RESTful APIs</strong> using Python, improving backend performance and maintainability across client projects.</li>
       <li>Scripted and automated <strong>Printful</strong> platform workflows, enhancing operational efficiency in daily fulfilment tasks.</li>
       <li>Conducted analysis, design, and development of user functional requirements — ensuring seamless user experience across delivered systems.</li>
-      <li>Delivered Python backend solutions for web services, data processing, and automation pipelines.</li>
     </ul>
   </details>
   <div class="ap-tags">
-    <span class="ap-tag">Python</span><span class="ap-tag">REST APIs</span><span class="ap-tag">Automation</span><span class="ap-tag">FastAPI</span>
+    <span class="ap-tag">Python</span><span class="ap-tag">REST APIs</span><span class="ap-tag">FastAPI</span><span class="ap-tag">Automation</span>
   </div>
 </div>
 
@@ -510,24 +145,23 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Jan 2024 – Aug 2024</span>
   </div>
   <p class="ap-exp-summary">
-    Led backend engineering across enterprise document processing and NLP-based analytics platforms. Boosted API performance by <strong>35%</strong>, slashed code complexity by <strong>50%</strong>, hit <strong>100% unit test coverage</strong>, and introduced <strong>JWT-based multi-tenant security</strong>. Also supported talent acquisition through technical interviews.
+    Led backend engineering across enterprise document processing and NLP-based analytics platforms. Boosted API performance by <strong>35%</strong>, slashed code complexity by <strong>50%</strong>, achieved <strong>100% unit test coverage</strong>, and introduced <strong>JWT-based multi-tenant security</strong>. Also contributed to talent acquisition via technical interviews.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> View contributions &amp; impact</summary>
     <ul>
-      <li><strong>API Performance:</strong> Boosted API speed by <strong>35%</strong> by optimising <strong>FastAPI</strong> services, <strong>PostgreSQL</strong> queries, and <strong>Redis</strong> caching.</li>
+      <li><strong>API Performance:</strong> Boosted API speed by <strong>35%</strong> via <strong>FastAPI</strong> optimisation, <strong>PostgreSQL</strong> query tuning, and <strong>Redis</strong> caching.</li>
       <li><strong>Document Management System:</strong> Developed a document management solution with AWS integration, enhancing performance by <strong>30%</strong>.</li>
-      <li><strong>Code Quality:</strong> Led a major project refactor — reduced code complexity by <strong>50%</strong> and improved overall system performance by <strong>30%</strong>.</li>
-      <li><strong>Test Coverage:</strong> Achieved <strong>100% unit test coverage</strong> on critical services; raised overall project coverage from <strong>60% → 90%</strong> via PyTest and CI/CD pipelines.</li>
-      <li><strong>Microservices:</strong> Improved scalability and service performance by <strong>30%</strong> with Docker and Kubernetes orchestration.</li>
-      <li><strong>Security &amp; Multi-Tenancy:</strong> Built custom middleware with <strong>JWT</strong> auth, <strong>OAuth 2.0</strong>, and role-based multi-tenancy across enterprise clients.</li>
-      <li><strong>NLP Pipeline:</strong> Refined text analysis platform using Python and TensorFlow for natural language processing workloads.</li>
-      <li><strong>Python Library:</strong> Optimised an internal Python library for file and log management, achieving near 100% coverage and scalable microservices architecture.</li>
-      <li><strong>Leadership:</strong> Supported team management, mentored junior engineers, conducted technical interviews for talent acquisition, and led security code reviews.</li>
+      <li><strong>Refactor:</strong> Led a major project refactor — reduced code complexity by <strong>50%</strong> and improved system performance by <strong>30%</strong>.</li>
+      <li><strong>Test Coverage:</strong> Achieved <strong>100% unit test coverage</strong> on critical services; raised overall project coverage from <strong>60% → 90%</strong> via PyTest and CI/CD.</li>
+      <li><strong>Microservices:</strong> Improved scalability and service performance by <strong>30%</strong> using Docker and Kubernetes container orchestration.</li>
+      <li><strong>Security &amp; Multi-Tenancy:</strong> Built custom middleware with <strong>JWT</strong>, <strong>OAuth 2.0</strong>, and role-based multi-tenancy for enterprise clients.</li>
+      <li><strong>NLP Pipeline:</strong> Refined a text analysis platform using Python and TensorFlow for natural language processing workloads.</li>
+      <li><strong>Leadership:</strong> Mentored junior engineers, conducted technical interviews for talent acquisition, led security code reviews.</li>
     </ul>
   </details>
   <div class="ap-tags">
-    <span class="ap-tag">Python</span><span class="ap-tag">FastAPI</span><span class="ap-tag">PostgreSQL</span><span class="ap-tag">Redis</span><span class="ap-tag">Docker</span><span class="ap-tag">Kubernetes</span><span class="ap-tag">AWS</span><span class="ap-tag">RabbitMQ</span><span class="ap-tag">Celery</span><span class="ap-tag">TensorFlow</span><span class="ap-tag">PyTest</span><span class="ap-tag">JWT</span><span class="ap-tag">OAuth 2.0</span>
+    <span class="ap-tag">Python</span><span class="ap-tag">FastAPI</span><span class="ap-tag">PostgreSQL</span><span class="ap-tag">Redis</span><span class="ap-tag">Docker</span><span class="ap-tag">Kubernetes</span><span class="ap-tag">AWS</span><span class="ap-tag">RabbitMQ</span><span class="ap-tag">TensorFlow</span><span class="ap-tag">PyTest</span><span class="ap-tag">JWT</span><span class="ap-tag">OAuth 2.0</span>
   </div>
 </div>
 
@@ -541,25 +175,23 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Nov 2021 – Dec 2023 · 2 yrs</span>
   </div>
   <p class="ap-exp-summary">
-    Joined as Software Engineer; earned a <strong>65% salary increase and promotion to Senior in just 7 months</strong> due to outstanding impact. Led backend development across warehouse management, e-commerce, and agritech platforms targeting Southeast Asia's fast-growing market. Scaled platforms to <strong>1M+ users</strong>.
+    Joined as Software Engineer; earned a <strong>65% salary increase and promotion to Senior in just 7 months</strong> due to outstanding impact. Led backend development across warehouse management, e-commerce, and agritech platforms in Southeast Asia. Scaled platforms to <strong>1M+ users</strong>.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> View projects, contributions &amp; impact</summary>
     <div class="det-body">
-      <p style="font-size:.88rem;font-weight:700;margin-bottom:.3rem;color:var(--heading-color);">Projects</p>
+      <p style="font-size:.87rem;font-weight:700;margin-bottom:.3rem;color:var(--heading-color);">Projects</p>
       <ul>
-        <li><strong>Coolkas WMS (Jakarta):</strong> Developed a Warehouse Management System MVP using Django, FastAPI, and PostgreSQL, handling millions of transactions. Integrated MongoDB and Redis — achieved <strong>20% improvement in order fulfilment speed</strong>.</li>
-        <li><strong>Saturdays Lifestyle E-commerce (Jakarta):</strong> Boosted platform performance by <strong>40%</strong>, reduced customer-facing latency, and introduced CI/CD pipelines reducing service downtime.</li>
-        <li><strong>Beleaf Agritech (Indonesia):</strong> Led development of an Agritech MVP using <strong>Node.js</strong>, <strong>Nest.js</strong>, and MongoDB. Implemented cloud solutions with AWS and GCP, enhancing scalability in the agricultural tech sector.</li>
-        <li><strong>Mamba Retail (Jakarta):</strong> Spearheaded the development team for a Retail Chain Store system — introduced CI/CD automation and delivered efficiency improvements across the chain.</li>
+        <li><strong>Coolkas WMS (Jakarta):</strong> Warehouse Management System MVP using Django, FastAPI, and PostgreSQL, handling millions of transactions. Integrated MongoDB and Redis — achieved <strong>20% improvement in order fulfilment speed</strong>.</li>
+        <li><strong>Saturdays Lifestyle E-commerce (Jakarta):</strong> Boosted platform performance by <strong>40%</strong>, reduced customer-facing latency, and introduced CI/CD pipelines that cut service downtime.</li>
+        <li><strong>Beleaf Agritech (Indonesia):</strong> Led Agritech MVP development using <strong>Node.js</strong>, <strong>Nest.js</strong>, and MongoDB with AWS/GCP cloud infrastructure.</li>
+        <li><strong>Mamba Retail (Jakarta):</strong> Spearheaded development for a Retail Chain Store system — introduced CI/CD automation and delivered efficiency improvements across the chain.</li>
       </ul>
-      <p style="font-size:.88rem;font-weight:700;margin:.6rem 0 .3rem;color:var(--heading-color);">Leadership &amp; Team</p>
+      <p style="font-size:.87rem;font-weight:700;margin:.6rem 0 .3rem;color:var(--heading-color);">Leadership</p>
       <ul>
         <li>Led cross-functional teams across multiple time zones — handling architecture decisions, stakeholder communication, and delivery planning.</li>
-        <li>Mentored junior engineers through technical challenges and career growth; conducted in-depth code and security reviews.</li>
-        <li>Played a key role in recruitment — conducted technical interviews and supported team planning and reporting.</li>
+        <li>Mentored junior engineers; conducted in-depth code and security reviews; played a key role in recruitment through technical interviews.</li>
         <li>Integrated <strong>ERPNext</strong> into WMS and e-commerce platforms to streamline operational workflows.</li>
-        <li>Designed <strong>CI/CD</strong> with <strong>Jenkins</strong> and implemented event-driven services with <strong>RabbitMQ</strong> and <strong>Celery</strong>.</li>
       </ul>
     </div>
   </details>
@@ -578,18 +210,16 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Feb 2021 – Oct 2021</span>
   </div>
   <p class="ap-exp-summary">
-    Led backend development for one of Bangladesh's largest e-commerce platforms — handling millions of transactions during high-traffic events like <em>Evaly-Cyclone</em> (Bangladesh's equivalent of Black Friday). Improved transaction accuracy by <strong>25%</strong> and reduced eHealth load times by <strong>40%</strong>.
+    Led backend for one of Bangladesh's largest e-commerce platforms handling millions of transactions during high-traffic <em>Evaly-Cyclone</em> events. Improved transaction accuracy by <strong>25%</strong> and eHealth platform load times by <strong>40%</strong>.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> View projects &amp; impact</summary>
-    <div class="det-body">
-      <ul>
-        <li><strong>eBilling Platform:</strong> Designed a scalable eBilling system handling millions of transactions. Improved transaction accuracy by <strong>25%</strong> through order reconciliation; introduced database sharding and load balancing for peak traffic. Deployed with Celery + RabbitMQ on AWS via Docker.</li>
-        <li><strong>Evaly Core 2.0:</strong> Optimised the core platform to v2.0 — enabled scaling to millions of transactions during Evaly-Cyclone events with system stability and Celery-based async processing.</li>
-        <li><strong>eHealth Order System:</strong> Led backend development of an order management system for Evaly's eHealth platform — reduced load times by <strong>40%</strong> using AsyncIO, PostgreSQL, and Redis for high availability.</li>
-        <li>Built scalable microservices using Django and DRF; automated testing and deployment with Jenkins and PyTest.</li>
-      </ul>
-    </div>
+    <ul>
+      <li><strong>eBilling Platform:</strong> Designed a scalable eBilling system with <strong>25%</strong> improvement in transaction accuracy via order reconciliation; introduced database sharding and load balancing. Deployed with Celery + RabbitMQ on AWS.</li>
+      <li><strong>Evaly Core 2.0:</strong> Optimised the core platform to handle millions of transactions during Evaly-Cyclone events with Celery-based async processing for peak load.</li>
+      <li><strong>eHealth Order System:</strong> Led backend development — reduced load times by <strong>40%</strong> using AsyncIO, PostgreSQL, and Redis for high availability and responsiveness.</li>
+      <li>Automated testing and deployment pipelines using Jenkins and PyTest; built scalable microservices with Django and DRF.</li>
+    </ul>
   </details>
   <div class="ap-tags">
     <span class="ap-tag">Python</span><span class="ap-tag">Django</span><span class="ap-tag">DRF</span><span class="ap-tag">PostgreSQL</span><span class="ap-tag">Redis</span><span class="ap-tag">Celery</span><span class="ap-tag">RabbitMQ</span><span class="ap-tag">AsyncIO</span><span class="ap-tag">AWS</span><span class="ap-tag">Docker</span>
@@ -606,16 +236,15 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Sep 2020 – Dec 2020</span>
   </div>
   <p class="ap-exp-summary">
-    Contributed to the <strong>VerifID eKYC platform</strong> — now used by <strong>12+ banks in Bangladesh</strong>, allowing customers to open bank accounts from home. Reduced verification time by <strong>30%</strong> through OCR and facial recognition integration.
+    Contributed to the <strong>VerifID eKYC platform</strong> — now used by <strong>12+ banks in Bangladesh</strong> for remote digital onboarding. Reduced verification time by <strong>30%</strong> through OCR and facial recognition integration.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> View contributions &amp; impact</summary>
     <ul>
-      <li>Developed the backend for a digital identity verification and bank onboarding service supporting thousands of daily requests.</li>
-      <li>Integrated <strong>OpenCV</strong>, <strong>Pytesseract</strong>, and Face Recognition to ensure secure and accurate identity verification — reduced verification time by <strong>30%</strong>.</li>
-      <li>Built RESTful APIs with <strong>Python Flask</strong> and <strong>MySQL</strong>; deployed on <strong>Azure</strong> with Redis for fast data access.</li>
-      <li>Optimised the system to scale across multiple financial institutions, enhancing the remote onboarding experience.</li>
-      <li>Implemented unit testing for reliable and secure code operations across financial institutions.</li>
+      <li>Developed backend for a digital identity verification service supporting thousands of daily onboarding requests.</li>
+      <li>Integrated <strong>OpenCV</strong>, <strong>Pytesseract</strong>, and Face Recognition — reduced verification time by <strong>30%</strong>.</li>
+      <li>Built REST APIs with <strong>Python Flask</strong> and <strong>MySQL</strong>; deployed on <strong>Azure</strong> with Redis for fast data access.</li>
+      <li>Optimised the system to scale across multiple financial institutions for seamless remote onboarding.</li>
     </ul>
   </details>
   <div class="ap-tags">
@@ -633,14 +262,13 @@ details .det-body { margin-top: .55rem; }
     <span class="ap-exp-date">Oct 2019 – Oct 2020 · 1 yr</span>
   </div>
   <p class="ap-exp-summary">
-    Assisted in teaching and mentoring students across <strong>Discrete Mathematics</strong> and <strong>Object-Oriented Programming</strong>, helping them build strong foundations in problem-solving and software development.
+    Assisted in teaching and mentoring students across <strong>Discrete Mathematics</strong> and <strong>Object-Oriented Programming</strong>, building strong foundations in problem-solving and software development.
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> Courses &amp; topics</summary>
     <ul>
-      <li><strong>Discrete Mathematics [CSE230]:</strong> Combinatorics, Logic, Boolean Algebra, Functions, Advanced Probability, Number Theory, Graph Theory, Trees, and Relations.</li>
+      <li><strong>Discrete Mathematics [CSE230]:</strong> Combinatorics, Logic, Boolean Algebra, Functions, Probability, Number Theory, Graph Theory, Trees, and Relations.</li>
       <li><strong>Object-Oriented Programming [CSE310]:</strong> Abstraction, Encapsulation, Inheritance, Polymorphism, and Functional Programming using Java and Python.</li>
-      <li>Taught foundational topics including Data Structures, Algorithms, and Graph Theory — ensuring students developed thorough understanding for future coursework and careers.</li>
     </ul>
   </details>
   <div class="ap-tags">
@@ -648,12 +276,14 @@ details .det-body { margin-top: .55rem; }
   </div>
 </div>
 
+</div><!-- .ap-timeline -->
+
 <!-- ══════════════════════════════════════════
-     OPEN SOURCE PROJECTS
+     OPEN SOURCE & PROJECTS
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-teal"><i class="fas fa-code-branch"></i></div>
-  <h2 class="ap-sec-title bc-teal">Open Source &amp; Projects</h2>
+  <h2 class="ap-sec-title">Open Source &amp; Projects</h2>
 </div>
 
 <div class="ap-proj-grid">
@@ -663,8 +293,8 @@ details .det-body { margin-top: .55rem; }
       <div class="ap-proj-icon ic-blue"><i class="fas fa-paper-plane"></i></div>
       <h4 class="ap-proj-name">messaging-sdk</h4>
     </div>
-    <p class="ap-proj-desc">A Python SDK simplifying interaction with messaging APIs and webhook functionality. Features automatic signature validation and a robust foundation for scalable messaging applications.</p>
-    <div class="ap-tags" style="margin-bottom:.7rem;">
+    <p class="ap-proj-desc">A Python SDK simplifying interaction with messaging APIs and webhook functionality. Features automatic signature validation and a robust foundation for scalable messaging applications. Published on PyPI.</p>
+    <div class="ap-tags" style="margin-bottom:.75rem;">
       <span class="ap-tag">Python</span><span class="ap-tag">FastAPI</span><span class="ap-tag">SDK</span><span class="ap-tag">Webhooks</span>
     </div>
     <div class="ap-proj-links">
@@ -679,7 +309,7 @@ details .det-body { margin-top: .55rem; }
       <h4 class="ap-proj-name">fastapi-backend-starter-kit</h4>
     </div>
     <p class="ap-proj-desc">A modern FastAPI starter with PostgreSQL, Docker, Alembic, and Pytest — for building scalable async API applications and microservices. Designed for developers, by developers.</p>
-    <div class="ap-tags" style="margin-bottom:.7rem;">
+    <div class="ap-tags" style="margin-bottom:.75rem;">
       <span class="ap-tag">Python</span><span class="ap-tag">FastAPI</span><span class="ap-tag">PostgreSQL</span><span class="ap-tag">Docker</span><span class="ap-tag">Alembic</span><span class="ap-tag">Pytest</span>
     </div>
     <div class="ap-proj-links">
@@ -692,8 +322,8 @@ details .det-body { margin-top: .55rem; }
       <div class="ap-proj-icon ic-amber"><i class="fas fa-calendar-check"></i></div>
       <h4 class="ap-proj-name">django-reservation-system</h4>
     </div>
-    <p class="ap-proj-desc">A powerful Django Reservation System with REST APIs for managing users, rooms, bookings, and payments. Fully Dockerized with Swagger documentation and production-ready scalability.</p>
-    <div class="ap-tags" style="margin-bottom:.7rem;">
+    <p class="ap-proj-desc">Powerful Django Reservation System with REST APIs for managing users, rooms, bookings, and payments. Fully Dockerized with Swagger docs and production-ready scalability.</p>
+    <div class="ap-tags" style="margin-bottom:.75rem;">
       <span class="ap-tag">Python</span><span class="ap-tag">Django</span><span class="ap-tag">DRF</span><span class="ap-tag">Docker</span><span class="ap-tag">Swagger</span>
     </div>
     <div class="ap-proj-links">
@@ -706,8 +336,8 @@ details .det-body { margin-top: .55rem; }
       <div class="ap-proj-icon ic-pink"><i class="fas fa-heartbeat"></i></div>
       <h4 class="ap-proj-name">VH Online Hospital</h4>
     </div>
-    <p class="ap-proj-desc">An Android platform connecting patients with remote doctors — built during COVID-19. Integrated real-time chat and video calling for remote medical consultations, especially for underserved communities.</p>
-    <div class="ap-tags" style="margin-bottom:.7rem;">
+    <p class="ap-proj-desc">Android platform connecting patients with remote doctors — built during COVID-19. Integrated real-time chat and video calling for remote medical consultations, especially for underserved communities.</p>
+    <div class="ap-tags" style="margin-bottom:.75rem;">
       <span class="ap-tag">Android</span><span class="ap-tag">Java</span><span class="ap-tag">REST APIs</span><span class="ap-tag">Video Call</span>
     </div>
     <div class="ap-proj-links">
@@ -722,7 +352,7 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-green"><i class="fas fa-terminal"></i></div>
-  <h2 class="ap-sec-title bc-green">Skills &amp; Tech Stack</h2>
+  <h2 class="ap-sec-title">Skills &amp; Tech Stack</h2>
 </div>
 
 <div class="ap-skill-grid">
@@ -776,7 +406,7 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-amber"><i class="fas fa-graduation-cap"></i></div>
-  <h2 class="ap-sec-title bc-amber">Education</h2>
+  <h2 class="ap-sec-title">Education</h2>
 </div>
 
 <div class="ap-exp-card bc-amber">
@@ -796,7 +426,7 @@ details .det-body { margin-top: .55rem; }
       <p style="font-size:.88rem;margin-bottom:.4rem;"><strong>Thesis:</strong> <em>A Deep Learning Approach to Integrate Human-Level Understanding in a Chatbot</em></p>
       <p style="font-size:.88rem;margin-bottom:.4rem;"><strong>Roles:</strong> ACM Programmer · Programming Mentor · Problem Setter · Contest Judge · Undergraduate Teaching Assistant</p>
       <p style="font-size:.88rem;font-weight:700;margin:.5rem 0 .3rem;color:var(--heading-color);">Relevant Coursework</p>
-      <div class="ap-tags" style="margin-bottom:.6rem;">
+      <div class="ap-tags" style="margin-bottom:.65rem;">
         <span class="ap-tag">Data Structures</span><span class="ap-tag">Algorithms</span><span class="ap-tag">Neural Networks</span><span class="ap-tag">Artificial Intelligence</span><span class="ap-tag">Software Engineering</span><span class="ap-tag">OOP</span><span class="ap-tag">Database Systems</span><span class="ap-tag">Operating Systems</span><span class="ap-tag">Computer Architecture</span><span class="ap-tag">Data Communication</span><span class="ap-tag">Calculus</span>
       </div>
       <p style="font-size:.88rem;font-weight:700;margin:.5rem 0 .3rem;color:var(--heading-color);">Extracurriculars</p>
@@ -818,21 +448,21 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-teal"><i class="fas fa-book-open"></i></div>
-  <h2 class="ap-sec-title bc-teal">Research &amp; Publications</h2>
+  <h2 class="ap-sec-title">Research &amp; Publications</h2>
 </div>
 
 <div class="ap-pub-card">
-  <p style="font-size:1rem;font-weight:700;margin:0 0 .3rem;color:var(--heading-color);">A Deep Learning Approach to Integrate Human-Level Understanding in a Chatbot</p>
-  <p style="font-size:.84rem;opacity:.65;margin:0 0 .7rem;">
+  <p style="font-size:1rem;font-weight:700;margin:0 0 .3rem;color:var(--heading-color);letter-spacing:-0.01em;">A Deep Learning Approach to Integrate Human-Level Understanding in a Chatbot</p>
+  <p style="font-size:.83rem;opacity:.65;margin:0 0 .7rem;">
     10th International Conference on Natural Language Processing (NLP 2021) &nbsp;·&nbsp; Sydney, Australia &nbsp;·&nbsp; Oct 10, 2021
   </p>
   <details>
     <summary><i class="fas fa-chevron-right chev"></i> Abstract &amp; details</summary>
     <div class="det-body">
-      <p style="font-size:.88rem;line-height:1.68;margin-bottom:.6rem;">
+      <p style="font-size:.88rem;line-height:1.7;margin-bottom:.65rem;">
         Implemented <strong>Sentiment Analysis</strong>, <strong>Emotion Detection</strong>, <strong>Intent Classification</strong>, and <strong>Named-Entity Recognition (NER)</strong> to build a chatbot with human-level conversational understanding. Demonstrated a <strong>30% improvement in interaction quality</strong>. Long-term vision: a fully human-like chatbot that is more interactive and contextually aware.
       </p>
-      <div class="ap-tags" style="margin-bottom:.6rem;">
+      <div class="ap-tags" style="margin-bottom:.65rem;">
         <span class="ap-tag">Python</span><span class="ap-tag">NLP</span><span class="ap-tag">TensorFlow</span><span class="ap-tag">PyTorch</span><span class="ap-tag">Scikit-learn</span><span class="ap-tag">NLTK</span><span class="ap-tag">NumPy</span><span class="ap-tag">Pandas</span>
       </div>
       <p style="font-size:.85rem;">
@@ -848,199 +478,60 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-orange"><i class="fas fa-certificate"></i></div>
-  <h2 class="ap-sec-title bc-orange">Certifications</h2>
+  <h2 class="ap-sec-title">Certifications</h2>
 </div>
 
-<!-- Featured certs -->
 <div class="ap-cert-grid">
-
   <div class="ap-cert-card">
-    <div class="ap-cert-logo ic-blue" style="font-size:.65rem;">IBM</div>
-    <div>
-      <div class="ap-cert-name">SQL for Data Engineers</div>
-      <div class="ap-cert-issuer">IBM</div>
-      <div class="ap-cert-year">Dec 2025</div>
-    </div>
+    <div class="ap-cert-logo ic-blue" style="font-size:.62rem;">IBM</div>
+    <div><div class="ap-cert-name">SQL for Data Engineers</div><div class="ap-cert-issuer">IBM</div><div class="ap-cert-year">Dec 2025</div></div>
   </div>
-
   <div class="ap-cert-card">
-    <div class="ap-cert-logo ic-violet" style="font-size:.6rem;">edX</div>
-    <div>
-      <div class="ap-cert-name">Advanced Data Engineering</div>
-      <div class="ap-cert-issuer">edX</div>
-      <div class="ap-cert-year">Jul 2025</div>
-    </div>
+    <div class="ap-cert-logo ic-violet" style="font-size:.62rem;">edX</div>
+    <div><div class="ap-cert-name">Advanced Data Engineering</div><div class="ap-cert-issuer">edX</div><div class="ap-cert-year">Jul 2025</div></div>
   </div>
-
   <div class="ap-cert-card">
-    <div class="ap-cert-logo ic-green" style="font-size:.6rem;">HR</div>
-    <div>
-      <div class="ap-cert-name">Rest API (Intermediate) Certificate</div>
-      <div class="ap-cert-issuer">HackerRank</div>
-      <div class="ap-cert-year">Feb 2025</div>
-    </div>
+    <div class="ap-cert-logo ic-green" style="font-size:.62rem;">HR</div>
+    <div><div class="ap-cert-name">Rest API (Intermediate)</div><div class="ap-cert-issuer">HackerRank</div><div class="ap-cert-year">Feb 2025</div></div>
   </div>
-
   <div class="ap-cert-card">
-    <div class="ap-cert-logo ic-green" style="font-size:.6rem;">HR</div>
-    <div>
-      <div class="ap-cert-name">Problem Solving (Intermediate)</div>
-      <div class="ap-cert-issuer">HackerRank</div>
-      <div class="ap-cert-year">Dec 2024</div>
-    </div>
+    <div class="ap-cert-logo ic-green" style="font-size:.62rem;">HR</div>
+    <div><div class="ap-cert-name">Problem Solving (Intermediate)</div><div class="ap-cert-issuer">HackerRank</div><div class="ap-cert-year">Dec 2024</div></div>
   </div>
-
   <div class="ap-cert-card">
     <div class="ap-cert-logo ic-teal" style="font-size:.55rem;">DL.AI</div>
-    <div>
-      <div class="ap-cert-name">Neural Networks &amp; Deep Learning</div>
-      <div class="ap-cert-issuer">DeepLearning.AI</div>
-      <div class="ap-cert-year">Jul 2020</div>
-    </div>
+    <div><div class="ap-cert-name">Neural Networks &amp; Deep Learning</div><div class="ap-cert-issuer">DeepLearning.AI</div><div class="ap-cert-year">Jul 2020</div></div>
   </div>
-
   <div class="ap-cert-card">
     <div class="ap-cert-logo ic-amber" style="font-size:.55rem;">UMN</div>
-    <div>
-      <div class="ap-cert-name">Software Dev Processes &amp; Methodologies</div>
-      <div class="ap-cert-issuer">University of Minnesota</div>
-      <div class="ap-cert-year">Oct 2020</div>
-    </div>
+    <div><div class="ap-cert-name">Software Dev Processes &amp; Methodologies</div><div class="ap-cert-issuer">University of Minnesota</div><div class="ap-cert-year">Oct 2020</div></div>
   </div>
-
   <div class="ap-cert-card">
     <div class="ap-cert-logo ic-pink" style="font-size:.55rem;">NASA</div>
-    <div>
-      <div class="ap-cert-name">Global Problem-Solver</div>
-      <div class="ap-cert-issuer">NASA Space Apps COVID-19 Challenge</div>
-      <div class="ap-cert-year">May 2020</div>
-    </div>
+    <div><div class="ap-cert-name">Global Problem-Solver</div><div class="ap-cert-issuer">NASA Space Apps COVID-19</div><div class="ap-cert-year">May 2020</div></div>
   </div>
-
   <div class="ap-cert-card">
     <div class="ap-cert-logo ic-orange" style="font-size:.55rem;">UMich</div>
-    <div>
-      <div class="ap-cert-name">Web App Technologies &amp; Django</div>
-      <div class="ap-cert-issuer">University of Michigan</div>
-      <div class="ap-cert-year">Aug 2020</div>
-    </div>
+    <div><div class="ap-cert-name">Web App Technologies &amp; Django</div><div class="ap-cert-issuer">University of Michigan</div><div class="ap-cert-year">Aug 2020</div></div>
   </div>
-
 </div>
 
-<details style="margin-top:.8rem;">
+<details style="margin-top:.85rem;">
   <summary><i class="fas fa-chevron-right chev"></i> Show all 20 certifications</summary>
   <div class="det-body">
-    <div class="ap-cert-grid" style="margin-top:.6rem;">
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-blue" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Advanced PostgreSQL</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Oct 2024</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-blue" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Python Automation and Testing</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Oct 2024</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-teal" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Azure Essential Training for Developers</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Oct 2024</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-blue" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Learning Kubernetes</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Sep 2024</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-orange" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">DevOps Foundations: Your First Project</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Sep 2024</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-green" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Elasticsearch Essential Training</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Sep 2023</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-orange" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">AWS Essential Training for Developers</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Aug 2023</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-violet" style="font-size:.6rem;">LI</div>
-        <div>
-          <div class="ap-cert-name">Programming Foundations: Design Patterns</div>
-          <div class="ap-cert-issuer">LinkedIn</div>
-          <div class="ap-cert-year">Aug 2023</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-amber" style="font-size:.6rem;">Udemy</div>
-        <div>
-          <div class="ap-cert-name">NodeJS Complete Course</div>
-          <div class="ap-cert-issuer">Udemy</div>
-          <div class="ap-cert-year">May 2022</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-green" style="font-size:.55rem;">Google</div>
-        <div>
-          <div class="ap-cert-name">Introduction to Git and GitHub</div>
-          <div class="ap-cert-issuer">Google</div>
-          <div class="ap-cert-year">Sep 2020</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-teal" style="font-size:.55rem;">ICPC</div>
-        <div>
-          <div class="ap-cert-name">IUBAT National Collegiate Programming Contest</div>
-          <div class="ap-cert-issuer">ICPC</div>
-          <div class="ap-cert-year">Aug 2018</div>
-        </div>
-      </div>
-
-      <div class="ap-cert-card">
-        <div class="ap-cert-logo ic-violet" style="font-size:.55rem;">BRACU</div>
-        <div>
-          <div class="ap-cert-name">Programming Skill Bootcamp Trainer</div>
-          <div class="ap-cert-issuer">BRAC University</div>
-          <div class="ap-cert-year">Aug 2019</div>
-        </div>
-      </div>
-
+    <div class="ap-cert-grid" style="margin-top:.65rem;">
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-blue" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Advanced PostgreSQL</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Oct 2024</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-blue" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Python Automation and Testing</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Oct 2024</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-teal" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Azure Essential Training for Developers</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Oct 2024</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-blue" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Learning Kubernetes</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Sep 2024</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-orange" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">DevOps Foundations: Your First Project</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Sep 2024</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-green" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Elasticsearch Essential Training</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Sep 2023</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-orange" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">AWS Essential Training for Developers</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Aug 2023</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-violet" style="font-size:.62rem;">LI</div><div><div class="ap-cert-name">Programming Foundations: Design Patterns</div><div class="ap-cert-issuer">LinkedIn</div><div class="ap-cert-year">Aug 2023</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-amber" style="font-size:.62rem;">Udemy</div><div><div class="ap-cert-name">NodeJS Complete Course</div><div class="ap-cert-issuer">Udemy</div><div class="ap-cert-year">May 2022</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-green" style="font-size:.6rem;">Google</div><div><div class="ap-cert-name">Introduction to Git and GitHub</div><div class="ap-cert-issuer">Google</div><div class="ap-cert-year">Sep 2020</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-teal" style="font-size:.6rem;">ICPC</div><div><div class="ap-cert-name">National Collegiate Programming Contest</div><div class="ap-cert-issuer">ICPC</div><div class="ap-cert-year">Aug 2018</div></div></div>
+      <div class="ap-cert-card"><div class="ap-cert-logo ic-violet" style="font-size:.6rem;">BRACU</div><div><div class="ap-cert-name">Programming Skill Bootcamp Trainer</div><div class="ap-cert-issuer">BRAC University</div><div class="ap-cert-year">Aug 2019</div></div></div>
     </div>
   </div>
 </details>
@@ -1050,16 +541,15 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-pink"><i class="fas fa-trophy"></i></div>
-  <h2 class="ap-sec-title bc-pink">Competitive Programming</h2>
+  <h2 class="ap-sec-title">Competitive Programming</h2>
 </div>
 
 <div class="ap-cp-card">
   <ul>
     <li><strong>Judge, Moderator &amp; Problem Setter</strong> of <strong>6+</strong> national programming contests at <a href="https://toph.co/u/amirul_islam">Toph</a> — including 16th December Contest 2019, BRACU Intra-University, Girls Programming Contest 2019.</li>
-    <li><strong>Authored 12+ original problems</strong> spanning number theory, graph theory, dynamic programming, and data structures — with brute-force to optimised solution sets.</li>
-    <li><strong>Solved 1500+ online problems</strong> across <a href="https://leetcode.com/shiningflash/">LeetCode</a>, <a href="https://www.hackerrank.com/shiningflash">HackerRank</a>, Codeforces, UVa, SPOJ, LightOJ, and others.</li>
+    <li><strong>Authored 12+ original problems</strong> spanning number theory, graph theory, dynamic programming, and data structures — with brute-force to highly optimised solution sets and comprehensive test cases.</li>
+    <li><strong>Solved 1500+ problems</strong> across <a href="https://leetcode.com/shiningflash/">LeetCode</a>, <a href="https://www.hackerrank.com/shiningflash">HackerRank</a>, Codeforces, UVa, SPOJ, LightOJ, and others.</li>
     <li>Participated in <strong>18+ national programming contests</strong> and <strong>5+ hackathons</strong> representing BRAC University.</li>
-    <li>Managed contest test cases covering edge cases, stress tests, and multiple solution approaches per problem.</li>
   </ul>
 </div>
 
@@ -1068,24 +558,24 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-amber"><i class="fas fa-award"></i></div>
-  <h2 class="ap-sec-title bc-amber">Honors &amp; Awards</h2>
+  <h2 class="ap-sec-title">Honors &amp; Awards</h2>
 </div>
 
 <div class="ap-award-list">
-
-  <div class="ap-award-item">
-    <div class="ap-award-ic ic-green"><i class="fas fa-arrow-up"></i></div>
-    <div>
-      <div class="ap-award-title">Double Promotion at Supertal — 65% Salary Increase</div>
-      <div class="ap-award-sub">Recognised as a key performer and leader within 7 months — promoted from Software Engineer to Senior Software Engineer ahead of schedule · 2022</div>
-    </div>
-  </div>
 
   <div class="ap-award-item">
     <div class="ap-award-ic ic-amber"><i class="fas fa-star"></i></div>
     <div>
       <div class="ap-award-title">100% Full-Funded Scholarship — BRAC University</div>
       <div class="ap-award-sub">Awarded for outstanding academic performance, programming competitions, and prior achievements · Jan 2017</div>
+    </div>
+  </div>
+
+  <div class="ap-award-item">
+    <div class="ap-award-ic ic-green"><i class="fas fa-arrow-up"></i></div>
+    <div>
+      <div class="ap-award-title">Double Promotion at Supertal — 65% Salary Increase</div>
+      <div class="ap-award-sub">Recognised as key performer and leader within 7 months — promoted from Software Engineer to Senior ahead of schedule · 2022</div>
     </div>
   </div>
 
@@ -1101,7 +591,7 @@ details .det-body { margin-top: .55rem; }
     <div class="ap-award-ic ic-amber"><i class="fas fa-trophy"></i></div>
     <div>
       <div class="ap-award-title">Champion — BUCC Intra-University Programming Contest (Junior)</div>
-      <div class="ap-award-sub">Solved all problems and claimed first place · Fall 2017 · BRAC University</div>
+      <div class="ap-award-sub">Solved all problems and claimed first place as team leader · Fall 2017 · BRAC University</div>
     </div>
   </div>
 
@@ -1109,7 +599,7 @@ details .det-body { margin-top: .55rem; }
     <div class="ap-award-ic ic-violet"><i class="fas fa-medal"></i></div>
     <div>
       <div class="ap-award-title">2nd Runner Up — BUCC Intra-University Programming Contest (Senior)</div>
-      <div class="ap-award-sub">Team Leader &amp; Contestant, team: SketchUP &amp; sketchUP · Fall 2018 &amp; Spring 2019</div>
+      <div class="ap-award-sub">Team Leader &amp; Contestant · Fall 2018 &amp; Spring 2019 · BRAC University</div>
     </div>
   </div>
 
@@ -1137,14 +627,6 @@ details .det-body { margin-top: .55rem; }
     </div>
   </div>
 
-  <div class="ap-award-item">
-    <div class="ap-award-ic ic-orange"><i class="fas fa-check-circle"></i></div>
-    <div>
-      <div class="ap-award-title">Solved 1500+ Online Problems</div>
-      <div class="ap-award-sub">Across Codeforces, UVA, LightOJ, LeetCode, HackerRank, SPOJ and more · Jul 2021</div>
-    </div>
-  </div>
-
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -1152,7 +634,7 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-violet"><i class="fas fa-hands-helping"></i></div>
-  <h2 class="ap-sec-title bc-violet">Volunteering &amp; Community Leadership</h2>
+  <h2 class="ap-sec-title">Volunteering &amp; Leadership</h2>
 </div>
 
 <div class="ap-vol-card">
@@ -1174,7 +656,7 @@ details .det-body { margin-top: .55rem; }
       <li>Engaged in thought leadership on the <em>"Future of Tech"</em>, influencing decision-making and innovation strategies in universities and professional organisations.</li>
       <li>Provided tailored advice on resume building, technical interview prep, and engineering practices — helping hundreds secure industry roles.</li>
       <li><strong>IEEE Seminar at BRAC University:</strong> Keynote on <em>"Guidelines for Future Software Engineers"</em> and <em>"Preparation for the Software Industry"</em> for 100+ students and faculty. <a href="https://www.facebook.com/ieeebracuCS/posts/pfbid07hjcybLssRSNCGm7EPHJXpzrAoa1iTdcLsu7KYp12JgKUo3pTENRghhNu1cAXMU5l">Event Post</a></li>
-      <li>Conducted corporate sessions on clean coding, DevOps, and CI/CD practices — inspiring improvements in engineering workflows at software companies.</li>
+      <li>Conducted corporate sessions on clean coding, DevOps, and CI/CD practices.</li>
     </ul>
   </details>
 </div>
@@ -1194,7 +676,7 @@ details .det-body { margin-top: .55rem; }
     <ul style="font-size:.87rem;">
       <li>Guided junior contestants through classes, workshops, CSE Boot Camps, and programming contests.</li>
       <li>Introduced students to data structures, algorithms, and software engineering best practices.</li>
-      <li><strong>Skills taught:</strong> Competitive Programming, Problem Solving, C++, Python, Dynamic Programming, Graph Theory, Number Theory.</li>
+      <li><strong>Topics:</strong> Competitive Programming, Problem Solving, C++, Python, Dynamic Programming, Graph Theory, Number Theory.</li>
     </ul>
   </details>
 </div>
@@ -1213,7 +695,7 @@ details .det-body { margin-top: .55rem; }
     <summary><i class="fas fa-chevron-right chev"></i> Details</summary>
     <ul style="font-size:.87rem;">
       <li>Mobilised <strong>100+ professional doctors</strong> and <strong>400+ volunteers</strong> to provide free and emergency medical support during the COVID-19 crisis.</li>
-      <li>Currently focused on supporting disabled individuals, street children, and underprivileged rural communities with free medical care, education, and food.</li>
+      <li>Currently supporting disabled individuals, street children, and underprivileged rural communities with free medical care, education, and food.</li>
     </ul>
   </details>
 </div>
@@ -1242,7 +724,7 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════ -->
 <div class="ap-section">
   <div class="ap-sec-icon ic-teal"><i class="fas fa-language"></i></div>
-  <h2 class="ap-sec-title bc-teal">Languages</h2>
+  <h2 class="ap-sec-title">Languages</h2>
 </div>
 
 <div class="ap-lang-grid">
@@ -1250,19 +732,25 @@ details .det-body { margin-top: .55rem; }
     <div class="ap-lang-flag">🇧🇩</div>
     <div class="ap-lang-name">Bangla</div>
     <div class="ap-lang-level">Native</div>
-    <div class="ap-lang-bar"><div class="ap-lang-fill" style="width:100%;background:linear-gradient(90deg,var(--c-green),var(--c-teal));"></div></div>
+    <div class="ap-lang-bar">
+      <div class="ap-lang-fill" style="width:100%;background:linear-gradient(90deg,var(--c-green),var(--c-teal));"></div>
+    </div>
   </div>
   <div class="ap-lang-card">
     <div class="ap-lang-flag">🇬🇧</div>
     <div class="ap-lang-name">English</div>
     <div class="ap-lang-level">Fluent — Professional</div>
-    <div class="ap-lang-bar"><div class="ap-lang-fill" style="width:92%;background:linear-gradient(90deg,var(--c-blue),var(--c-violet));"></div></div>
+    <div class="ap-lang-bar">
+      <div class="ap-lang-fill" style="width:92%;background:linear-gradient(90deg,var(--c-blue),var(--c-violet));"></div>
+    </div>
   </div>
   <div class="ap-lang-card">
     <div class="ap-lang-flag">🇸🇪</div>
     <div class="ap-lang-name">Swedish</div>
     <div class="ap-lang-level">Learner · SFI</div>
-    <div class="ap-lang-bar"><div class="ap-lang-fill" style="width:28%;background:linear-gradient(90deg,var(--c-amber),var(--c-orange));"></div></div>
+    <div class="ap-lang-bar">
+      <div class="ap-lang-fill" style="width:28%;background:linear-gradient(90deg,var(--c-amber),var(--c-orange));"></div>
+    </div>
   </div>
 </div>
 
@@ -1273,7 +761,7 @@ details .det-body { margin-top: .55rem; }
   <p class="ap-connect-quote">
     💬 I believe good systems are built the same way good teams are —<br>with <strong>clarity</strong>, <strong>consistency</strong>, and <strong>care</strong>.
   </p>
-  <p style="font-size:.9rem;opacity:.75;margin-bottom:1.2rem;">Open to data engineering discussions, speaking invitations, and collaboration opportunities.</p>
+  <p class="ap-connect-sub">Open to data engineering discussions, speaking invitations, and collaboration opportunities.</p>
   <div class="ap-connect-btns">
     <a class="ap-connect-btn" href="mailto:amirulislamalmamun@gmail.com"><i class="fas fa-envelope"></i> Email</a>
     <a class="ap-connect-btn" href="https://www.linkedin.com/in/amirulislamalmamun/"><i class="fab fa-linkedin"></i> LinkedIn</a>
