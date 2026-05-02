@@ -1,0 +1,39 @@
+---
+---
+
+@import 'main';
+
+/* ═══════════════════════════════════════
+   Global overrides — Inter font + polish
+   Appended after theme CSS so these win
+   without needing !important.
+═══════════════════════════════════════ */
+
+/* Apply Inter everywhere Chirpy sets Lato/Source Sans */
+h1, h2, h3, h4, h5, h6,
+#search-results a, .site-title, .site-subtitle,
+#sidebar .site-title a {
+  font-family: 'Inter', 'Microsoft Yahei', sans-serif;
+}
+
+body,
+.content,
+.post-content,
+p, li, td, th, label, input, textarea, button {
+  font-family: 'Inter', 'Microsoft Yahei', sans-serif;
+}
+
+/* Better rendering for Inter */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tighter letter-spacing for Inter headings */
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+h4, h5, h6 {
+  letter-spacing: -0.015em;
+}
