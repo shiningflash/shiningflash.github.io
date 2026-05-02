@@ -11,10 +11,10 @@ order: 4
 ══════════════════════════════════════════ -->
 <div class="ap-hero">
 
-  <div class="ap-avatar-wrap">
+  <!-- <div class="ap-avatar-wrap">
     <img src="https://avatars.githubusercontent.com/u/35567854?v=4"
          alt="Amirul Islam Al Mamun" class="ap-avatar-img" loading="lazy">
-  </div>
+  </div> -->
 
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
   <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
