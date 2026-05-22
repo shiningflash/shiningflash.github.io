@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 55
+problem_id: 55
 title: Partitioning Clustering Materialized Views
 slug: 055-partitioning-clustering-materialized-views
 category: Cost & Performance

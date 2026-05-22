@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 45
+problem_id: 45
 title: Current State and Full History
 slug: 045-current-state-and-full-history
 category: Data Modeling

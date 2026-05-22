@@ -101,7 +101,7 @@ def emit_frontmatter(meta: dict) -> str:
     lines = ["---"]
     # Stable key order — easier to diff
     order = [
-        "layout", "track", "id", "title", "slug",
+        "layout", "track", "problem_id", "title", "slug",
         "category", "difficulty", "topics",
         "source_url", "solution_lang",
     ]
@@ -201,7 +201,9 @@ def sync(source: Path, track: str, *, source_repo_url: str | None = None,
         out_meta = {
             "layout": "practice-problem",
             "track": track,
-            "id": meta["id"],
+            # Use "problem_id" (not "id") to avoid Jekyll's built-in `page.id`
+            # which always resolves to the document URL, not the frontmatter value.
+            "problem_id": meta["id"],
             "title": meta["title"],
             "slug": folder.name,
             "category": meta.get("category", "Uncategorized"),

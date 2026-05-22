@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 48
+problem_id: 48
 title: Query Suddenly 80x Slower
 slug: 048-query-suddenly-80x-slower
 category: Debugging

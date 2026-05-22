@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 11
+problem_id: 11
 title: Data Contracts in Plain Words
 slug: 011-data-contracts-in-plain-words
 category: Fundamentals

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 56
+problem_id: 56
 title: Watermarks in Plain Words
 slug: 056-watermarks-in-plain-words
 category: Streaming

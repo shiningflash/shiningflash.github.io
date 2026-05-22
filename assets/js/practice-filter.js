@@ -17,6 +17,8 @@
   const activeFiltersEl = document.getElementById('pr-active-filters');
   const diffChips = Array.from(document.querySelectorAll('[data-filter-difficulty]'));
   const catChips = Array.from(document.querySelectorAll('[data-filter-category]'));
+  const catGroup = document.getElementById('pr-cat-chips');
+  const catExpandBtn = document.getElementById('pr-cat-expand');
   const total = cards.length;
 
   const state = {
@@ -39,9 +41,18 @@
     diffChips.forEach(c => {
       if (state.difficulties.has(c.dataset.filterDifficulty)) c.classList.add('is-active');
     });
+    let activeHiddenCat = false;
     catChips.forEach(c => {
-      if (state.categories.has(c.dataset.filterCategory)) c.classList.add('is-active');
+      if (state.categories.has(c.dataset.filterCategory)) {
+        c.classList.add('is-active');
+        if (c.classList.contains('pr-chip-hidden')) activeHiddenCat = true;
+      }
     });
+    // If a category that's normally collapsed is preselected via hash, expand.
+    if (activeHiddenCat && catGroup) {
+      catGroup.classList.add('is-expanded');
+      catExpandBtn?.setAttribute('aria-expanded', 'true');
+    }
   }
 
   function writeHash() {
@@ -126,6 +137,11 @@
   diffChips.forEach(c => c.addEventListener('click', () => toggleChip(c, state.difficulties, 'filterDifficulty')));
   catChips.forEach(c => c.addEventListener('click', () => toggleChip(c, state.categories, 'filterCategory')));
 
+  catExpandBtn?.addEventListener('click', () => {
+    const expanded = catGroup.classList.toggle('is-expanded');
+    catExpandBtn.setAttribute('aria-expanded', String(expanded));
+  });
+
   function resetAll() {
     state.search = '';
     state.difficulties.clear();
@@ -133,6 +149,8 @@
     searchInput.value = '';
     diffChips.forEach(c => c.classList.remove('is-active'));
     catChips.forEach(c => c.classList.remove('is-active'));
+    catGroup?.classList.remove('is-expanded');
+    catExpandBtn?.setAttribute('aria-expanded', 'false');
     applyFilters();
   }
   resetBtn.addEventListener('click', resetAll);

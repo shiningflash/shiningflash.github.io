@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 32
+problem_id: 32
 title: Inheriting a Pipeline No One Owns
 slug: 032-inheriting-a-pipeline-no-one-owns
 category: Scenarios

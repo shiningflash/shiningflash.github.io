@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 59
+problem_id: 59
 title: Onboarding a New Analyst
 slug: 059-onboarding-a-new-analyst
 category: People & Process

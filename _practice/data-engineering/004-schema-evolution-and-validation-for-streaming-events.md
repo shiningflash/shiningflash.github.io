@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 4
+problem_id: 4
 title: Schema Evolution and Validation for Streaming Events
 slug: 004-schema-evolution-and-validation-for-streaming-events
 category: Schema Validation

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 41
+problem_id: 41
 title: Tables for an Airbnb Like App
 slug: 041-tables-for-an-airbnb-like-app
 category: Data Modeling

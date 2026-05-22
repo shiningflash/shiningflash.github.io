@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 34
+problem_id: 34
 title: Three Days of Data Lost
 slug: 034-three-days-of-data-lost
 category: Scenarios

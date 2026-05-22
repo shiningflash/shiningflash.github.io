@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 8
+problem_id: 8
 title: OLTP vs OLAP
 slug: 008-oltp-vs-olap
 category: Fundamentals

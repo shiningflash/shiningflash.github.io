@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 39
+problem_id: 39
 title: Managed Airflow vs Self Hosted
 slug: 039-managed-airflow-vs-self-hosted
 category: Cloud Decisions

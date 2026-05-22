@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 14
+problem_id: 14
 title: Exactly Once Delivery
 slug: 014-exactly-once-delivery
 category: Fundamentals

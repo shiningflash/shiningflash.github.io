@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 62
+problem_id: 62
 title: Postmortem After a Bad Day
 slug: 062-postmortem-after-a-bad-day
 category: People & Process

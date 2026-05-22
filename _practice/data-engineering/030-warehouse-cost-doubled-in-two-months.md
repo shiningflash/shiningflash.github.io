@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 30
+problem_id: 30
 title: Warehouse Cost Doubled in Two Months
 slug: 030-warehouse-cost-doubled-in-two-months
 category: Scenarios

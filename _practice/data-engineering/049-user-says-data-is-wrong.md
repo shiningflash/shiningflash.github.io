@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 49
+problem_id: 49
 title: User Says Data Is Wrong
 slug: 049-user-says-data-is-wrong
 category: Debugging

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 26
+problem_id: 26
 title: Delivery Idle Driver Tracking
 slug: 026-delivery-idle-driver-tracking
 category: System Design

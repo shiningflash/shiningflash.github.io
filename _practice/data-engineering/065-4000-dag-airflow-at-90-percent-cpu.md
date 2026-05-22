@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 65
+problem_id: 65
 title: 4000 DAG Airflow at 90 Percent CPU
 slug: 065-4000-dag-airflow-at-90-percent-cpu
 category: People & Process

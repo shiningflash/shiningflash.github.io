@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 28
+problem_id: 28
 title: Low Balance Notification Pipeline
 slug: 028-low-balance-notification-pipeline
 category: System Design

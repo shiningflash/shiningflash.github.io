@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 51
+problem_id: 51
 title: BigQuery Bill Eight Times Higher
 slug: 051-bigquery-bill-eight-times-higher
 category: Cost & Performance

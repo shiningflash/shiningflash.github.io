@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 36
+problem_id: 36
 title: Scheduled Pipeline Pay Only When Run
 slug: 036-scheduled-pipeline-pay-only-when-run
 category: Cloud Decisions

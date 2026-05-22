@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 57
+problem_id: 57
 title: Kafka Ordering Guarantee
 slug: 057-kafka-ordering-guarantee
 category: Streaming

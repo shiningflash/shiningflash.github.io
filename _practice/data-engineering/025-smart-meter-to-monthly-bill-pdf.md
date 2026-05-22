@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 25
+problem_id: 25
 title: Smart Meter to Monthly Bill PDF
 slug: 025-smart-meter-to-monthly-bill-pdf
 category: System Design

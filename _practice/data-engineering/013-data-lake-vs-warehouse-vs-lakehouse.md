@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 13
+problem_id: 13
 title: Data Lake vs Warehouse vs Lakehouse
 slug: 013-data-lake-vs-warehouse-vs-lakehouse
 category: Fundamentals

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 9
+problem_id: 9
 title: Idempotency in Data Pipelines
 slug: 009-idempotency-in-data-pipelines
 category: Fundamentals

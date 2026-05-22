@@ -6,11 +6,17 @@ layout: page
 #   title, description, hero_eyebrow
 ---
 
-{%- assign problems = site.practice | where: "track", page.track | sort: "id" -%}
+{%- assign problems = site.practice | where: "track", page.track | sort: "problem_id" -%}
 {%- assign total = problems | size -%}
 
-{%- comment -%} Compute unique categories and difficulties for filter chips {%- endcomment -%}
-{%- assign categories = problems | map: "category" | uniq | sort -%}
+{%- comment -%}
+  Group by category so we can show each chip with a count badge and order
+  by popularity (most problems first), then take the top 4 for the default
+  collapsed view. The remaining categories reveal via the expand button.
+{%- endcomment -%}
+{%- assign cat_groups = problems | group_by: "category" | sort: "size" | reverse -%}
+{%- assign top_cats_count = 4 -%}
+{%- assign hidden_cat_count = cat_groups | size | minus: top_cats_count -%}
 {%- assign difficulties = "Easy,Medium,Hard" | split: "," -%}
 
 <link rel="stylesheet" href="/assets/css/practice.css">
@@ -24,7 +30,7 @@ layout: page
     {% endif %}
     <div class="pr-stats">
       <div class="pr-stat"><strong>{{ total }}</strong><span>Problems</span></div>
-      <div class="pr-stat"><strong>{{ categories | size }}</strong><span>Categories</span></div>
+      <div class="pr-stat"><strong>{{ cat_groups | size }}</strong><span>Categories</span></div>
       <div class="pr-stat"><strong>3</strong><span>Levels</span></div>
       {% if page.source_repo %}
         <a class="pr-stat pr-stat-link" href="{{ page.source_repo }}" target="_blank" rel="noopener">
@@ -36,28 +42,43 @@ layout: page
 </section>
 
 <section class="pr-toolbar" aria-label="Filter problems">
-  <div class="pr-search">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <circle cx="11" cy="11" r="7"></circle>
-      <path d="m20 20-3.5-3.5"></path>
-    </svg>
-    <input id="pr-search-input" type="search" placeholder="Search by title or topic…" aria-label="Search problems">
-    <button type="button" id="pr-clear" class="pr-clear-btn" aria-label="Clear search" hidden>×</button>
+
+  <div class="pr-toolbar-row">
+    <div class="pr-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </svg>
+      <input id="pr-search-input" type="search" placeholder="Search title or topic..." aria-label="Search problems">
+      <button type="button" id="pr-clear" class="pr-clear-btn" aria-label="Clear search" hidden>×</button>
+    </div>
+
+    <div class="pr-chip-group pr-chip-difficulty" role="group" aria-label="Difficulty filter">
+      {% for d in difficulties %}
+        <button type="button" class="pr-chip pr-chip-diff pr-chip-diff-{{ d | downcase }}" data-filter-difficulty="{{ d }}">{{ d }}</button>
+      {% endfor %}
+    </div>
+
+    <button type="button" id="pr-reset" class="pr-reset" hidden>Reset</button>
   </div>
 
-  <div class="pr-chip-group" role="group" aria-label="Difficulty filter">
-    {% for d in difficulties %}
-      <button type="button" class="pr-chip pr-chip-diff" data-filter-difficulty="{{ d }}">{{ d }}</button>
+  <div class="pr-chip-group pr-chip-categories" id="pr-cat-chips" role="group" aria-label="Category filter">
+    {% for g in cat_groups %}
+      {%- assign visible = forloop.index0 | minus: top_cats_count -%}
+      <button type="button"
+              class="pr-chip pr-chip-cat{% if forloop.index0 >= top_cats_count %} pr-chip-hidden{% endif %}"
+              data-filter-category="{{ g.name }}">
+        {{ g.name }}<span class="pr-chip-count">{{ g.size }}</span>
+      </button>
     {% endfor %}
+    {% if hidden_cat_count > 0 %}
+      <button type="button" class="pr-chip pr-chip-expand" id="pr-cat-expand" aria-expanded="false">
+        <span class="pr-expand-show">+ {{ hidden_cat_count }} more</span>
+        <span class="pr-expand-hide">Show fewer</span>
+      </button>
+    {% endif %}
   </div>
 
-  <div class="pr-chip-group" role="group" aria-label="Category filter">
-    {% for cat in categories %}
-      <button type="button" class="pr-chip pr-chip-cat" data-filter-category="{{ cat }}">{{ cat }}</button>
-    {% endfor %}
-  </div>
-
-  <button type="button" id="pr-reset" class="pr-reset" hidden>Reset filters</button>
 </section>
 
 <div id="pr-meta-bar" class="pr-meta-bar">
@@ -71,13 +92,13 @@ layout: page
     {%- assign topics_csv = p.topics | join: ", " -%}
     <a class="pr-card"
        href="{{ p.url | relative_url }}"
-       data-id="{{ p.id }}"
+       data-id="{{ p.problem_id }}"
        data-title="{{ p.title | downcase }}"
        data-category="{{ p.category }}"
        data-difficulty="{{ diff }}"
        data-topics="{{ topics_csv | downcase }}">
       <div class="pr-card-head">
-        <span class="pr-card-id">#{{ p.id }}</span>
+        <span class="pr-card-id">#{{ p.problem_id }}</span>
         <span class="pr-diff pr-diff-{{ diff | downcase }}">{{ diff }}</span>
       </div>
       <h3 class="pr-card-title">{{ p.title }}</h3>

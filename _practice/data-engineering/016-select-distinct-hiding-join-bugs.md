@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 16
+problem_id: 16
 title: SELECT DISTINCT Hiding Join Bugs
 slug: 016-select-distinct-hiding-join-bugs
 category: SQL Thinking

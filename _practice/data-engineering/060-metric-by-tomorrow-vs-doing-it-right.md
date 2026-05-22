@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 60
+problem_id: 60
 title: Metric by Tomorrow vs Doing It Right
 slug: 060-metric-by-tomorrow-vs-doing-it-right
 category: People & Process

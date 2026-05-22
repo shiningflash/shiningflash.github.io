@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 7
+problem_id: 7
 title: ETL vs ELT and Why ELT Won
 slug: 007-etl-vs-elt-and-why-elt-won
 category: Fundamentals

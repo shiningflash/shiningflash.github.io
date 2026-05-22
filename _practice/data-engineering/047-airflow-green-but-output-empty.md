@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 47
+problem_id: 47
 title: Airflow Green but Output Empty
 slug: 047-airflow-green-but-output-empty
 category: Debugging

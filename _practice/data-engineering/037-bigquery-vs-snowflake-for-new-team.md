@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 37
+problem_id: 37
 title: BigQuery vs Snowflake for New Team
 slug: 037-bigquery-vs-snowflake-for-new-team
 category: Cloud Decisions

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 18
+problem_id: 18
 title: CTE vs Subquery
 slug: 018-cte-vs-subquery
 category: SQL Thinking

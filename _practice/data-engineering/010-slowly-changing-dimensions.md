@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 10
+problem_id: 10
 title: Slowly Changing Dimensions
 slug: 010-slowly-changing-dimensions
 category: Fundamentals

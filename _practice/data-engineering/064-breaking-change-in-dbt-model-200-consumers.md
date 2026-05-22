@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 64
+problem_id: 64
 title: Breaking Change in dbt Model 200 Consumers
 slug: 064-breaking-change-in-dbt-model-200-consumers
 category: People & Process

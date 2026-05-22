@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 22
+problem_id: 22
 title: Banking App Monthly Spending Widget
 slug: 022-banking-app-monthly-spending-widget
 category: System Design

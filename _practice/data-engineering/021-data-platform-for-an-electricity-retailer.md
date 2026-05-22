@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 21
+problem_id: 21
 title: Data Platform for an Electricity Retailer
 slug: 021-data-platform-for-an-electricity-retailer
 category: System Design

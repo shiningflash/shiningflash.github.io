@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 40
+problem_id: 40
 title: BigQuery Access Control for 50 Person Company
 slug: 040-bigquery-access-control-for-50-person-company
 category: Cloud Decisions

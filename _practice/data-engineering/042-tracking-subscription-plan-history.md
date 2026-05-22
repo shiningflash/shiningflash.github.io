@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 42
+problem_id: 42
 title: Tracking Subscription Plan History
 slug: 042-tracking-subscription-plan-history
 category: Data Modeling

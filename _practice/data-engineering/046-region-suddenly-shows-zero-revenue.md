@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 46
+problem_id: 46
 title: Region Suddenly Shows Zero Revenue
 slug: 046-region-suddenly-shows-zero-revenue
 category: Debugging

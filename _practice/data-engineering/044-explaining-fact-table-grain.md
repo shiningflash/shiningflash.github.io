@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 44
+problem_id: 44
 title: Explaining Fact Table Grain
 slug: 044-explaining-fact-table-grain
 category: Data Modeling

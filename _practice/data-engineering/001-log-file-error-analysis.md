@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 1
+problem_id: 1
 title: Log File Error Analysis
 slug: 001-log-file-error-analysis
 category: Logs and Monitoring

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 24
+problem_id: 24
 title: Spotify Minutes Listened This Week
 slug: 024-spotify-minutes-listened-this-week
 category: System Design

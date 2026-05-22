@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 2
+problem_id: 2
 title: Rolling Average of Sensor Readings
 slug: 002-rolling-average-of-sensor-readings
 category: Streaming

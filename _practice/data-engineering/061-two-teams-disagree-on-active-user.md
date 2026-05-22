@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 61
+problem_id: 61
 title: Two Teams Disagree on Active User
 slug: 061-two-teams-disagree-on-active-user
 category: People & Process

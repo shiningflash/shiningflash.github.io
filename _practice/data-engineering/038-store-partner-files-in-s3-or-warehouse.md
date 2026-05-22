@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 38
+problem_id: 38
 title: Store Partner Files in S3 or Warehouse
 slug: 038-store-partner-files-in-s3-or-warehouse
 category: Cloud Decisions

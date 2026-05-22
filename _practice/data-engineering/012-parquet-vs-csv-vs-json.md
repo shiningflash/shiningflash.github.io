@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 12
+problem_id: 12
 title: Parquet vs CSV vs JSON
 slug: 012-parquet-vs-csv-vs-json
 category: Fundamentals

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 17
+problem_id: 17
 title: Reading an EXPLAIN Plan
 slug: 017-reading-an-explain-plan
 category: SQL Thinking

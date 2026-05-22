@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 43
+problem_id: 43
 title: Mixing Facts and Dimensions
 slug: 043-mixing-facts-and-dimensions
 category: Data Modeling

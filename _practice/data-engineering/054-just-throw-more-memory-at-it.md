@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 54
+problem_id: 54
 title: Just Throw More Memory At It
 slug: 054-just-throw-more-memory-at-it
 category: Cost & Performance

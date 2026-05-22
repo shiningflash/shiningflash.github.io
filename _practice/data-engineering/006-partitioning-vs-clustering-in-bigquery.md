@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 6
+problem_id: 6
 title: Partitioning vs Clustering in BigQuery
 slug: 006-partitioning-vs-clustering-in-bigquery
 category: Fundamentals

@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 19
+problem_id: 19
 title: Same Query Different Answers
 slug: 019-same-query-different-answers
 category: SQL Thinking

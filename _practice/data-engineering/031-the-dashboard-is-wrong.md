@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 31
+problem_id: 31
 title: The Dashboard is Wrong
 slug: 031-the-dashboard-is-wrong
 category: Scenarios

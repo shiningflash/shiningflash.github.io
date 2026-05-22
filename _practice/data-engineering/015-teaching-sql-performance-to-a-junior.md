@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 15
+problem_id: 15
 title: Teaching SQL Performance to a Junior
 slug: 015-teaching-sql-performance-to-a-junior
 category: SQL Thinking

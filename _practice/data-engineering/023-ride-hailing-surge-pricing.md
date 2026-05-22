@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 23
+problem_id: 23
 title: Ride Hailing Surge Pricing
 slug: 023-ride-hailing-surge-pricing
 category: System Design

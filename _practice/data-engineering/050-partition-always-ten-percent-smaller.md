@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 50
+problem_id: 50
 title: Partition Always Ten Percent Smaller
 slug: 050-partition-always-ten-percent-smaller
 category: Debugging

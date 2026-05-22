@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 20
+problem_id: 20
 title: Window Functions vs GROUP BY
 slug: 020-window-functions-vs-group-by
 category: SQL Thinking

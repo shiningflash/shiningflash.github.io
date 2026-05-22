@@ -1,7 +1,7 @@
 ---
 layout: practice-problem
 track: data-engineering
-id: 58
+problem_id: 58
 title: Streaming Consumer Lag Diagnosis
 slug: 058-streaming-consumer-lag-diagnosis
 category: Streaming
