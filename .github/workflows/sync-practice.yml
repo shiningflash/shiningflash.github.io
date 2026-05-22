@@ -73,11 +73,14 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- _practice/; then
+          git add _practice/
+          # Check staged changes against HEAD; this catches new (previously
+          # untracked) files, which `git diff --quiet` against the working
+          # tree would miss.
+          if git diff --cached --quiet -- _practice/; then
             echo "No changes to commit."
             exit 0
           fi
-          git add _practice/
           git commit -m "sync(practice): refresh from source repos
 
           Triggered by: ${{ github.event_name }}
