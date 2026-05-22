@@ -31,6 +31,13 @@ jobs:
     steps:
       - name: Checkout blog repo
         uses: actions/checkout@v4
+        with:
+          # Push with a PAT (not the default GITHUB_TOKEN) so that the
+          # resulting commit triggers the pages-deploy workflow. Pushes
+          # made with GITHUB_TOKEN are intentionally blocked from chaining.
+          # Falls back to GITHUB_TOKEN if the PAT secret is not set; in
+          # that case you must manually trigger pages-deploy after a sync.
+          token: ${{ secrets.BLOG_DISPATCH_TOKEN || github.token }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
