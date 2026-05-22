@@ -44,6 +44,7 @@ jobs:
         run: |
           cat > tracks.txt <<'EOF'
           data-engineering:shiningflash/data-engineering-practice-problems
+          system-design:shiningflash/system-design
           EOF
           cat tracks.txt
 
