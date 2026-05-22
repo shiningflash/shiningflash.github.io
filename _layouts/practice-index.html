@@ -1,0 +1,105 @@
+---
+layout: page
+# Filterable index of every problem in a single track.
+# Front matter provides:
+#   track: data-engineering   (matches the folder under _practice/)
+#   title, description, hero_eyebrow
+---
+
+{%- assign problems = site.practice | where: "track", page.track | sort: "id" -%}
+{%- assign total = problems | size -%}
+
+{%- comment -%} Compute unique categories and difficulties for filter chips {%- endcomment -%}
+{%- assign categories = problems | map: "category" | uniq | sort -%}
+{%- assign difficulties = "Easy,Medium,Hard" | split: "," -%}
+
+<link rel="stylesheet" href="/assets/css/practice.css">
+
+<section class="pr-hero">
+  <div class="pr-hero-inner">
+    <span class="pr-eyebrow">{{ page.hero_eyebrow | default: "Practice Track" }}</span>
+    <h1 class="pr-title">{{ page.hero_title | default: page.title }}</h1>
+    {% if page.hero_subtitle %}
+      <p class="pr-subtitle">{{ page.hero_subtitle }}</p>
+    {% endif %}
+    <div class="pr-stats">
+      <div class="pr-stat"><strong>{{ total }}</strong><span>Problems</span></div>
+      <div class="pr-stat"><strong>{{ categories | size }}</strong><span>Categories</span></div>
+      <div class="pr-stat"><strong>3</strong><span>Levels</span></div>
+      {% if page.source_repo %}
+        <a class="pr-stat pr-stat-link" href="{{ page.source_repo }}" target="_blank" rel="noopener">
+          <strong>↗</strong><span>Source repo</span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="pr-toolbar" aria-label="Filter problems">
+  <div class="pr-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+    <input id="pr-search-input" type="search" placeholder="Search by title or topic…" aria-label="Search problems">
+    <button type="button" id="pr-clear" class="pr-clear-btn" aria-label="Clear search" hidden>×</button>
+  </div>
+
+  <div class="pr-chip-group" role="group" aria-label="Difficulty filter">
+    {% for d in difficulties %}
+      <button type="button" class="pr-chip pr-chip-diff" data-filter-difficulty="{{ d }}">{{ d }}</button>
+    {% endfor %}
+  </div>
+
+  <div class="pr-chip-group" role="group" aria-label="Category filter">
+    {% for cat in categories %}
+      <button type="button" class="pr-chip pr-chip-cat" data-filter-category="{{ cat }}">{{ cat }}</button>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="pr-reset" class="pr-reset" hidden>Reset filters</button>
+</section>
+
+<div id="pr-meta-bar" class="pr-meta-bar">
+  <span id="pr-count">{{ total }}</span> of <span class="pr-total">{{ total }}</span> problems
+  <span id="pr-active-filters" class="pr-active-filters"></span>
+</div>
+
+<section class="pr-grid" id="pr-grid">
+  {% for p in problems %}
+    {%- assign diff = p.difficulty | default: "Medium" -%}
+    {%- assign topics_csv = p.topics | join: ", " -%}
+    <a class="pr-card"
+       href="{{ p.url | relative_url }}"
+       data-id="{{ p.id }}"
+       data-title="{{ p.title | downcase }}"
+       data-category="{{ p.category }}"
+       data-difficulty="{{ diff }}"
+       data-topics="{{ topics_csv | downcase }}">
+      <div class="pr-card-head">
+        <span class="pr-card-id">#{{ p.id }}</span>
+        <span class="pr-diff pr-diff-{{ diff | downcase }}">{{ diff }}</span>
+      </div>
+      <h3 class="pr-card-title">{{ p.title }}</h3>
+      <div class="pr-card-cat">{{ p.category }}</div>
+      <div class="pr-card-topics">
+        {% for t in p.topics limit:4 %}<span class="pr-topic">{{ t }}</span>{% endfor %}
+        {% if p.topics.size > 4 %}<span class="pr-topic pr-topic-more">+{{ p.topics.size | minus: 4 }}</span>{% endif %}
+      </div>
+    </a>
+  {% endfor %}
+</section>
+
+<div id="pr-empty" class="pr-empty" hidden>
+  <div class="pr-empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+  </div>
+  <h3>No problems match these filters</h3>
+  <p>Try removing a filter or clearing your search.</p>
+  <button type="button" class="pr-btn pr-btn-primary" data-reset>Clear all filters</button>
+</div>
+
+<script src="/assets/js/practice-filter.js" defer></script>

@@ -146,6 +146,10 @@ collections:
   tabs:
     output: true
     sort_by: order
+  practice:
+    output: true
+    sort_by: id
+    permalink: /practice/:path/
 
 defaults:
   - scope:
@@ -168,6 +172,13 @@ defaults:
     values:
       layout: page
       permalink: /:title/
+  - scope:
+      path: ""
+      type: practice
+    values:
+      layout: practice-problem
+      comments: false
+      toc: false
   - scope:
       path: assets/js/dist
     values:
@@ -194,6 +205,7 @@ exclude:
   - LICENSE
   - rollup.config.js
   - package*.json
+  - scripts
 
 jekyll-archives:
   enabled: [categories, tags]

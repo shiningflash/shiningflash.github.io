@@ -1,0 +1,84 @@
+name: Sync Practice Problems
+
+on:
+  # Manual trigger from the Actions tab
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Track to sync (e.g. data-engineering). Leave blank to sync all known tracks."
+        required: false
+        type: string
+
+  # Daily safety net in case a repository_dispatch is missed
+  schedule:
+    - cron: "17 5 * * *"
+
+  # Fired from the source repo's notify-blog.yml on every push to main
+  repository_dispatch:
+    types: [practice-problems-updated]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-practice
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout blog repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Each entry: <track-slug>:<owner>/<repo>
+      # Add a new line here to register another track.
+      - name: Define tracks
+        id: tracks
+        run: |
+          cat > tracks.txt <<'EOF'
+          data-engineering:shiningflash/data-engineering-practice-problems
+          EOF
+          cat tracks.txt
+
+      - name: Sync each track
+        env:
+          REQUESTED_TRACK: ${{ github.event.inputs.track }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            track="${line%%:*}"
+            repo="${line#*:}"
+            if [ -n "${REQUESTED_TRACK:-}" ] && [ "$REQUESTED_TRACK" != "$track" ]; then
+              echo "Skipping $track (not requested)"
+              continue
+            fi
+            echo "::group::Syncing $track from $repo"
+            python3 scripts/sync_practice.py \
+              --remote "$repo" \
+              --track "$track" \
+              --source-repo-url "https://github.com/$repo"
+            echo "::endgroup::"
+          done < tracks.txt
+
+      - name: Commit changes (if any)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- _practice/; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git add _practice/
+          git commit -m "sync(practice): refresh from source repos
+
+          Triggered by: ${{ github.event_name }}
+          Run: ${{ github.run_id }}"
+          git push
