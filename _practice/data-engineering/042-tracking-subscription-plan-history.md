@@ -14,9 +14,9 @@ solution_lang: markdown
 {% raw %}
 
 **Scenario:**
-A SaaS company has customers who change plans constantly: upgrade, downgrade, pause, switch billing cycle. The finance team disputes a customer's bill almost every month, and the support team needs to answer "what plan was this customer on three months ago" routinely. The current `customers.plan_id` column only stores the latest plan, which is no help.
+A SaaS company has customers who change plans constantly: upgrade, downgrade, pause, switch billing cycle. The finance team disputes a customer's bill almost every month, and support routinely needs to answer "what plan was this customer on three months ago." The current `customers.plan_id` column only stores the latest plan, which is no help.
 
-In the interview, the question is:
+The question:
 
 > You need to track every change to a customer's subscription plan because billing disputes are common. How do you model this?
 
@@ -27,7 +27,7 @@ In the interview, the question is:
 1. Show the table design.
 2. Walk through the events that update it.
 3. Cover the query patterns: "what plan now," "what plan at this date," "list all changes for this customer."
-4. Mention the trade-offs vs an event-only table.
+4. Mention the trade-offs vs. an event-only table.
 
 ---
 
@@ -47,7 +47,7 @@ In the interview, the question is:
 
 ### Short version you can say out loud
 
-> A `subscription_periods` table. Each row is one continuous stretch of time during which the customer was on one specific plan, with `valid_from` and `valid_to` columns. When the plan changes, we close the current row and open a new one. The "current" plan is just the row whose `valid_to` is in the far future. Disputes get resolved by joining the bill date against this table. Audit events also exist separately, but they record "who did what" rather than "what was true when."
+> A `subscription_periods` table. Each row is one continuous stretch of time during which the customer was on one specific plan, with `valid_from` and `valid_to` columns. When the plan changes, close the current row and open a new one. The "current" plan is just the row whose `valid_to` is in the far future. Disputes get resolved by joining the bill date against this table. Audit events exist separately, but they record "who did what" rather than "what was true when."
 
 ### The table
 
@@ -81,7 +81,7 @@ customer_id │ plan       │ cycle    │ status │ valid_from           │ 
 1001        │ pro        │ yearly   │ active │ 2025-05-22 09:30:00  │ 9999-12-31 00:00:00
 ```
 
-You can read this row by row and understand the customer's life: started on basic, upgraded to pro, switched to yearly billing, paused for 12 days, resumed.
+Read it row by row and you understand the customer's life: started on basic, upgraded to pro, switched to yearly billing, paused for 12 days, resumed.
 
 ### How events update the table
 
@@ -114,11 +114,11 @@ def change_plan(customer_id, new_plan_id, billing_cycle, when, who):
 
 The two writes happen in one transaction. The intervals are half-open: `valid_from` inclusive, `valid_to` exclusive. The new period starts at the exact instant the old one ends. No gaps, no overlaps.
 
-Pause and resume are the same shape, just with a `status` change instead of a `plan_id` change.
+Pause and resume have the same shape, just with a `status` change instead of a `plan_id` change.
 
 ### The three classic queries
 
-**"What plan is this customer on right now?"**
+"What plan is this customer on right now?"
 
 ```sql
 SELECT *
@@ -129,7 +129,7 @@ WHERE customer_id = :id
 
 Or equivalently, `WHERE NOW() >= valid_from AND NOW() < valid_to`.
 
-**"What plan was this customer on on a specific date?"**
+"What plan was this customer on on a specific date?"
 
 ```sql
 SELECT *
@@ -141,7 +141,7 @@ WHERE customer_id = :id
 
 This is the as-of join from Problem 10. It answers the billing dispute in seconds.
 
-**"List every change this customer made."**
+"List every change this customer made."
 
 ```sql
 SELECT *
@@ -170,11 +170,11 @@ WHERE p.customer_id = :id
 
 This returns one row per plan-segment within the billing window. Each segment gets its own line on the bill ("Pro plan May 1-9: $X. Paused May 10-21: $0. Pro plan May 22-31: $Y"). This is exactly how the smart meter bill in Problem 25 handled tariffs.
 
-### What goes in here vs in an audit table
+### What goes here vs. in an audit table
 
-This table is **what was true when**. It is the source of truth for billing and reporting.
+This table is *what was true when*. It's the source of truth for billing and reporting.
 
-An audit log table is separate. It records **who did what**:
+An audit log table is separate. It records *who did what*:
 
 ```
 audit_events
@@ -189,13 +189,13 @@ The two tables answer different questions. The periods table answers "what was t
 
 Two ways to model:
 
-**Option A: status column.** A row with `status = 'paused'` indicates the customer was paused during that period. Pricing logic treats paused periods as $0. The schema does not need new tables.
+Option A: status column. A row with `status = 'paused'` means the customer was paused during that period. Pricing logic treats paused periods as $0. The schema doesn't need new tables.
 
-**Option B: separate "active vs paused" intervals.** More normalized: one table tracks plan, another tracks paused/active. More complex to join.
+Option B: separate "active vs. paused" intervals. More normalized: one table tracks plan, another tracks paused/active. More complex to join.
 
-I prefer Option A. It is simple and it composes well with billing logic.
+I prefer Option A. It's simple and it composes well with billing logic.
 
-### Trade-offs vs an event-only table
+### Trade-offs vs. an event-only table
 
 Some teams only store events:
 
@@ -206,17 +206,17 @@ event_id, customer_id, action ('upgraded', 'downgraded', 'paused'),
 new_plan_id, occurred_at
 ```
 
-To answer "what plan was the customer on on May 10," you replay events from the start. This is correct but slow. For frequent dispute lookups, recomputing the state is wasteful.
+To answer "what plan was the customer on on May 10," you replay events from the start. Correct but slow. For frequent dispute lookups, recomputing the state is wasteful.
 
-The period table is the **materialized** form of the same information. It is precomputed, indexed, and fast. Best practice: keep both. Events drive updates to periods. Periods are the read model.
+The period table is the materialized form of the same information. Precomputed, indexed, fast. Best practice: keep both. Events drive updates to periods. Periods are the read model.
 
 ### Common mistakes interviewers want you to name
 
-1. **Overlapping intervals.** Two rows both claim to cover the same instant. Bug somewhere in the update logic. Add a constraint or a check.
-2. **Using `NULL` for `valid_to` on the current row.** Then "as-of date" queries need `COALESCE`. `9999-12-31` is simpler.
-3. **Closing the old row but not opening a new one.** Customer has a gap; their plan looks "deleted" for an instant. The transaction must do both.
-4. **Updating the period table in place without history.** Then a dispute six months later cannot be answered.
-5. **Storing the period in the user row** (`plan_id`, `plan_started_at`). The history is gone.
+1. Overlapping intervals. Two rows both claim to cover the same instant. Bug somewhere in the update logic. Add a constraint or a check.
+2. Using `NULL` for `valid_to` on the current row. Then "as-of date" queries need `COALESCE`. `9999-12-31` is simpler.
+3. Closing the old row but not opening a new one. Customer has a gap; their plan looks "deleted" for an instant. The transaction must do both.
+4. Updating the period table in place without history. Then a dispute six months later can't be answered.
+5. Storing the period on the user row (`plan_id`, `plan_started_at`). History is gone.
 
 ### Bonus follow-up the interviewer might throw
 

@@ -14,7 +14,7 @@ solution_lang: markdown
 {% raw %}
 
 **Scenario:**
-The daily revenue dashboard shows total revenue across regions. Today, one region — say, Indonesia — shows zero. The other regions look normal. Yesterday Indonesia showed $X. The business hasn't shut down operations there.
+The daily revenue dashboard shows total revenue across regions. Today, one region, say, Indonesia, shows zero. The other regions look normal. Yesterday Indonesia showed $X. The business hasn't shut down operations there.
 
 In the interview, the question is:
 

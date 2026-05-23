@@ -14,7 +14,7 @@ solution_lang: markdown
 {% raw %}
 
 **Scenario:**
-You have one SQL query. You run it in development against a copy of yesterday's production data. It returns 142,500 rows. You run the exact same SQL in production. It returns 138,920 rows. The team is told "the data is the same." Something is off, and it is not obvious where.
+You have one SQL query. You run it in development against a copy of yesterday's production data. It returns 142,500 rows. You run the exact same SQL in production. It returns 138,920 rows. The team's been told "the data is the same." Something's off, and it's not obvious where.
 
 In the interview, the question is:
 
@@ -50,7 +50,7 @@ This is a "be systematic" question. The interviewer wants to see your debugging 
 
 ### Short version you can say out loud
 
-> When a query gives different numbers in two environments and the data is "supposed to be the same," the data is almost never actually the same. I check seven things, in this order: time zones, row-level security or filtered views, late-arriving rows, exact table identity, session settings, collation and case sensitivity, and whether one environment has materialized views or aggregates that the other doesn't. About 90 percent of the time it is one of the first three.
+> When a query returns different numbers in two environments and the data is "supposed to be the same," the data is almost never actually the same. I check seven things in this order: time zones, row-level security or filtered views, late-arriving rows, exact table identity, session settings, collation and case sensitivity, and whether one environment has materialized views or aggregates that the other doesn't. About 90% of the time it's one of the first three.
 
 ### My mental order of checks
 

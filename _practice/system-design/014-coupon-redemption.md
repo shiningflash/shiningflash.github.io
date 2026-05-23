@@ -14,36 +14,40 @@ solution_lang: markdown
 {% raw %}
 ## Scene
 
-It is the day before Black Friday. The marketing team walks into your standup with a slide deck.
+It is the day before Black Friday. Marketing walks into your standup with a slide deck.
 
-> *"Tomorrow at 9am we are dropping the code BLACKFRI100 for 100 percent off our flagship product. Only the first 1000 customers get it. We expect 10,000 users hitting the redeem button in the same second. Oh, and we are also sending a unique code to each of our 200,000 newsletter subscribers, single use only, expires in 30 days. Can you build that today?"*
+> *"Tomorrow at 9am we are dropping BLACKFRI100 for 100 percent off our flagship product. First 1000 customers only. We expect 10,000 users hitting the redeem button in the same second. Oh, and we are also mailing a unique code to each of our 200,000 newsletter subscribers, single use, expires in 30 days. Can you build that today?"*
 
 They smile. The CTO looks at you. You have one afternoon.
 
-This problem looks like a CRUD app. It is not. The interesting bits are: how do you give the code to exactly the first N customers and no more, how do you stop the same user from redeeming the same code fifty times, how do you survive Redis dying mid-transaction without giving the code to two people, and how do you stop someone who scraped your code format from brute-forcing the namespace.
+This problem looks like a CRUD app. It is not. The interesting bits: how do you give the code to exactly the first N customers and no more, how do you stop the same user from redeeming the same code fifty times, how do you survive Redis dying mid-transaction without handing the code to two people, and how do you stop someone who reverse-engineered your code format from brute-forcing the namespace.
 
 Most candidates jump to "store coupons in a table, mark them used." That answer breaks the moment two requests arrive in the same millisecond. The good design names the race condition first, then fixes it.
 
 ## Step 1: clarify before you design
 
-Take 5 minutes. Aim for 8 questions. Each one should change the design materially if answered differently.
+Five minutes. Aim for eight questions. Each one should change the design materially if answered differently.
 
 <details>
 <summary><b>Reveal: questions a strong candidate asks</b></summary>
 
-1. **Single-use or reusable?** "Is each code one redemption only (a gift card), or many redemptions up to a cap (a generic promo code)?" This is the single biggest fork. Single-use means one row, one redeem, throw away. Reusable means a counter, atomic decrement, and a per-user dedup story.
-2. **Per-user limit on reusable codes.** "Can the same user redeem SAVE10 once a day, once ever, or unlimited?" Drives the existence of a `(code, user)` dedup table. Without this question you will let one user drain the whole campaign.
-3. **Stackable with other codes.** "Can a cart have two coupons applied at once? What if both are percentage discounts, do they compound or sum?" Stacking rules live in the validate path, not the redeem path, and they change the API shape.
-4. **Expiration semantics.** "Hard expiry on a wall clock, or N hours after issue per user? Time-zone of the expiry?" A 'midnight expiry' interpreted as PST vs UTC has cost real companies millions.
-5. **Offline redemption.** "Does the code ever get redeemed by an in-store POS that may be offline? What if it syncs hours later?" If yes, you need conflict resolution and a tentative-claim model. If no, you can be strictly online and refuse anything you cannot validate live.
-6. **Cancellation and refund.** "If the order is cancelled after the coupon was redeemed, does the code come back to life? Does the user get to use it again, or is it gone forever?" Different campaigns answer this differently. Refunds without code-release create angry support tickets.
-7. **Generation pattern.** "Generic shared codes like SAVE10? Per-user unique codes mailed individually? Pre-generated pool of single-use codes that any user can claim?" The three patterns have completely different storage and scaling shapes; pick one or design for all three.
-8. **Abuse model.** "What kind of abuse are we protecting against? Same user trying every guess? Codes leaked to a deal forum and used by people outside the intended audience? Bots scraping the namespace?" Determines whether you need rate limiting, device fingerprinting, allowlists, or all three.
+The first fork is *single-use or reusable?* One redemption only (a gift card) versus many redemptions up to a cap (a generic promo). Single-use means one row, one redeem, throw away. Reusable means a counter, an atomic decrement, and a per-user dedup story.
 
-Bonus questions a senior asks:
+The second fork sits inside reusable: *can the same user redeem SAVE10 once a day, once ever, or unlimited?* Without this answer you will let one user drain the whole campaign. It drives whether you need a `(code, user)` dedup table.
 
-9. **Validate vs redeem split.** "Does the cart page show 'this code is valid' before checkout, separate from actually consuming it?" A validate endpoint that does not consume the code is standard for a good UX, but it leaks information to scrapers.
-10. **Audit and reporting.** "Does finance need to know exactly which codes were used by which users on which orders, for accounting and fraud review?" If yes, you need an immutable redemption log.
+*Are codes stackable?* Two coupons in one cart, both percentage discounts, do they compound or sum? Stacking rules live in the validate path, not the redeem path, and they change the API shape.
+
+*Expiration semantics.* Hard expiry on a wall clock, or N hours after issue per user? Timezone? "Midnight expiry" interpreted as PST versus UTC has cost real companies millions.
+
+*Offline redemption.* If an in-store POS goes offline and syncs hours later, you need conflict resolution and a tentative-claim model. If everything is online, you can refuse anything you cannot validate live.
+
+*Cancellation and refund.* If the order is cancelled after the coupon was redeemed, does the code come back to life? Refunds without code-release create angry support tickets; refunds with code-release create a parallel race.
+
+*Generation pattern.* Generic shared codes like SAVE10? Per-user unique codes mailed individually? A pre-generated pool of single-use codes that any user can claim? The three patterns have completely different storage and scaling shapes; pick one or design for all three.
+
+*Abuse model.* Same user trying every guess? Codes leaked to a deal forum? Bots scraping the namespace? Determines whether you need rate limiting, device fingerprinting, allowlists, or all three.
+
+A senior candidate adds two more. *Does the cart page show "this code is valid" before checkout, separate from actually consuming it?* A validate endpoint is standard for good UX but it leaks information to scrapers. And *does finance need to know exactly which codes were used by which users on which orders, for accounting and fraud review?* If yes, you need an immutable redemption log.
 
 </details>
 
@@ -51,11 +55,11 @@ Bonus questions a senior asks:
 
 Marketing gives you the numbers:
 
-- Launch day burst: BLACKFRI100 drops at 9am. Expect 10,000 redeem requests in the first second. 1000 successful, 9000 must be told "sold out".
-- Steady state across the year: ~50,000 redemptions per day from normal promos.
-- ~50 active campaigns at any time. Each holds 10k to 10M codes (per-user codes for newsletter sends).
+- Launch burst: BLACKFRI100 drops at 9am. 10,000 redeem requests in the first second. 1000 win, 9000 must be told "sold out".
+- Steady state: ~50,000 redemptions per day across normal promos.
+- ~50 active campaigns at any time. Each holds 10k to 10M codes.
 - Per-user codes total: ~200M codes across all campaigns, ~5 year retention.
-- Validate-to-redeem ratio: ~5 validate calls per redeem (users put the code in the cart, then bounce, then come back).
+- Validate-to-redeem ratio: ~5 validate calls per redeem. Users paste a code into the cart, bounce, come back.
 
 Compute these on paper before reading the reveal:
 
@@ -68,22 +72,17 @@ Compute these on paper before reading the reveal:
 <details>
 <summary><b>Reveal: the math</b></summary>
 
-**Peak QPS at launch.**
-10,000 requests in 1 second = 10,000 QPS spike. This is the design pressure point. It lasts seconds, not hours, but every request must be served correctly: 1000 win, 9000 lose, no double-wins, no skipped slots.
+**Peak QPS at launch.** 10,000 requests in 1 second = 10,000 QPS spike. This is the design pressure point. It lasts seconds, not hours, but every request must be served correctly: 1000 win, 9000 lose, no double-wins, no skipped slots.
 
-**Steady QPS.**
-50,000 redemptions / 86400s ≈ 0.6 redemptions/sec sustained. Trivial. Peak business hours maybe 5/sec.
+**Steady QPS.** 50,000 / 86400s is about 0.6 redemptions/sec sustained. Peak business hours maybe 5/sec. Trivial.
 
-**Validate QPS.**
-5x redeem = ~3/sec sustained, ~25/sec peak business hours. Also trivial. The launch burst applies here too: 50,000 validate calls at 9am because users typed the code in the cart before clicking redeem.
+**Validate QPS.** Five times redeem is ~3/sec sustained, ~25/sec peak. Also trivial. The launch burst applies here too: 50,000 validate calls at 9am because users paste the code in the cart before clicking redeem.
 
-**Storage.**
-200M codes × ~200 bytes per record (code + campaign_id + user_id + state + timestamps + index overhead) = ~40GB. Fits on a single Postgres instance comfortably. Add redemption log at ~100 bytes per redemption × 50k/day × 365 × 5 years = ~9GB. Round up to 50GB total. Still one machine.
+**Storage.** 200M codes at ~200 bytes per record (code, campaign_id, user_id, state, timestamps, index overhead) is ~40GB. Redemption log at ~100 bytes per redemption times 50k/day times 365 times 5 years is ~9GB. Round to 50GB total. Still one machine.
 
-**Hot working set during launch.**
-The single campaign BLACKFRI100 is the hot row (or counter). One key. The pool of 1000 codes if you pre-generate, also tiny. Maybe 100KB of actively-hot data.
+**Hot working set during launch.** One campaign is the hot row. One key. The pool of 1000 codes if you pre-generate, also tiny. Maybe 100KB of actively-hot data.
 
-**Key insight from the math.** The system is small overall. The architecture exists for two reasons: surviving the 10,000 QPS burst correctly on one hot key, and stopping abuse. Database throughput and storage are non-issues; the design pressure is concurrency and integrity.
+The system is small. The architecture exists for two reasons: surviving the 10,000 QPS burst correctly on one hot key, and stopping abuse. Database throughput and storage are non-issues; the design pressure is concurrency and integrity.
 
 </details>
 
@@ -108,14 +107,9 @@ Fill in the comparison below before reading the reveal.
 | **Unique per-user** | One row per (code, intended_user). | O(1) by PK. | Strong. UID-7A2F-9B3C-1D4E has ~10^14 possible values, infeasible to guess. | One redemption ever, simple `UPDATE WHERE state = 'unused' RETURNING`. |
 | **Pre-generated pool** | One row per code, plus an "unclaimed" index. | O(1) by PK to validate. Atomic pop from the pool to claim. | Strong if the code is long and random. | The hard race. Two users hit the same pool at the same instant; only one can claim each code. |
 
-**Format rules that matter regardless of pattern:**
+A few format rules carry regardless of pattern. Use 8 to 12 characters of base32, dropping 0/O, 1/I/L, U because humans confuse them. That gives 32^10 or about 10^15 codes, plenty for any campaign. Prefix the code with the campaign tag (`BLACKFRI-`) so validate calls route without a join and mistype detection becomes easier. For human-typed codes, a checksum suffix catches typos before you hit the database; for machine-mailed ones it is dead weight. Always normalize to uppercase so `save10` and `SAVE10` are the same code.
 
-- **Length and alphabet.** 8 to 12 characters, base32 (avoid 0/O, 1/I/L, U for confusion). Gives 32^10 ≈ 10^15 codes, plenty for any campaign.
-- **Prefix encodes the campaign.** `BLACKFRI-` prefix lets you route validate calls to the right campaign without a join. Mistype detection becomes easier. The prefix is 8 chars; the random suffix is 8-12.
-- **Checksum suffix (optional).** Last char is a checksum of the rest. Catches typos before you even hit the database. Useful for human-typed codes; pointless for machine-mailed ones.
-- **Case insensitive.** Always normalize to uppercase. `save10` and `SAVE10` are the same code.
-
-**Recommendation.** Support all three patterns in one schema. Each campaign has a `type` (`shared`, `unique`, `pool`). The data model differs slightly per type but the API surface is the same. We design for this in the solution.
+The recommendation: support all three patterns in one schema. Each campaign has a `type` (`shared`, `unique`, `pool`). The data model differs slightly per type but the API surface is the same. We design for this in the solution.
 
 </details>
 
@@ -128,8 +122,8 @@ Sketch what the system looks like. Fill in the five `[ ? ]` boxes. The placehold
                               │
                               ▼
                     ┌──────────────────┐
-                    │   [ ? ]          │  (auth, per-user rate limit,
-                    │                  │   bot detection)
+                    │   [ ? ]          │  auth, per-user rate limit,
+                    │                  │  bot detection
                     └────────┬─────────┘
                              │
         validate path        │       redeem path
@@ -145,21 +139,21 @@ Sketch what the system looks like. Fill in the five `[ ? ]` boxes. The placehold
                │                      │   │
                ▼                      ▼   │
         ┌─────────────┐         ┌──────────┐
-        │  [ ? ]      │         │  [ ? ]   │  (single-key atomic ops
-        │             │         │          │   for the launch burst)
+        │  [ ? ]      │         │  [ ? ]   │  single-key atomic ops
+        │             │         │          │  for the launch burst
         └─────────────┘         └────┬─────┘
                                      │
                                      ▼
                               ┌──────────────┐
-                              │  [ ? ]       │  (source of truth,
-                              │              │   campaigns + codes
-                              │              │   + redemptions)
+                              │  [ ? ]       │  source of truth,
+                              │              │  campaigns + codes
+                              │              │  + redemptions
                               └──────┬───────┘
                                      │
                                      ▼
                               ┌──────────────┐
-                              │  [ ? ]       │  (notify cart / checkout
-                              │              │   that discount applies)
+                              │  [ ? ]       │  notify cart / checkout
+                              │              │  that discount applies
                               └──────────────┘
 ```
 
@@ -171,8 +165,8 @@ Sketch what the system looks like. Fill in the five `[ ? ]` boxes. The placehold
                               │
                               ▼
                     ┌──────────────────┐
-                    │  API Gateway     │  (auth, per-user + per-IP rate
-                    │  + Rate Limiter  │   limit, WAF for bot signatures)
+                    │  API Gateway     │  auth, per-user + per-IP rate
+                    │  + Rate Limiter  │  limit, WAF for bot signatures
                     └────────┬─────────┘
                              │
         validate path        │       redeem path
@@ -197,10 +191,10 @@ Sketch what the system looks like. Fill in the five `[ ? ]` boxes. The placehold
                               ┌──────────────┐
                               │  Postgres    │  Source of truth.
                               │              │  Tables:
-                              │              │   - campaigns
-                              │              │   - codes
-                              │              │   - redemptions
-                              │              │   - redemption_attempts
+                              │              │   campaigns
+                              │              │   codes
+                              │              │   redemptions
+                              │              │   redemption_attempts
                               └──────┬───────┘
                                      │
                                      ▼
@@ -211,15 +205,19 @@ Sketch what the system looks like. Fill in the five `[ ? ]` boxes. The placehold
                               └──────────────┘
 ```
 
-Component responsibilities:
+The gateway is the first line. Caps brute-force at, say, 10 attempts per user per minute and 30 per IP per minute. Bot patterns (no JS, suspicious UA) get stricter limits. Without this, an attacker enumerates the namespace in hours.
 
-- **API Gateway + Rate Limiter.** First line. Caps brute-force attempts at, say, 10 attempts per user per minute and 30 per IP per minute. Bot patterns (no JS, suspicious UA) get stricter limits. Without this, an attacker enumerates the namespace in hours.
-- **Coupon Service (read).** Validates a code without consuming it. Used by the cart "apply coupon" button. Reads from cache; falls back to DB on miss. Returns the discount shape and any stacking restrictions.
-- **Coupon Service (write).** The redeem path. Performs the atomic claim. For low-traffic campaigns it goes straight to Postgres. For hot-burst campaigns it goes through Redis with a Lua script and async-writes the redemption row to Postgres.
-- **Read Cache + Bloom filter.** Caches campaign metadata (discount type, expiry, stacking rules). A Bloom filter sits in front: if the prefix is not in the filter, return 404 immediately without hitting the DB. Stops scrapers from generating DB load.
-- **Redis + Lua.** Holds the hot counter or claimable pool for active campaigns. Lua script makes "check, decrement, return" atomic in a single round trip. Sub-millisecond.
-- **Postgres.** Source of truth. Campaigns, codes, redemptions, attempts. The redemption table has a unique index on `(code_id, user_id)` for single-use enforcement at the DB level even when Redis has already said yes.
-- **Kafka.** A redemption fires `coupon.redeemed`. The cart service applies the discount. The fraud service correlates with other signals. Analytics aggregates. The coupon service does not care who consumes the event.
+The read service validates a code without consuming it. That is the "apply coupon" button on the cart page. Reads come from cache and fall back to the DB on miss. Response includes the discount shape and any stacking restrictions.
+
+The write service is the redeem path. For low-traffic campaigns it goes straight to Postgres. For hot-burst campaigns it goes through Redis with a Lua script and async-writes the redemption row to Postgres.
+
+The read cache holds campaign metadata (discount type, expiry, stacking rules). A Bloom filter sits in front: if the prefix is not in the filter, return 404 immediately without hitting the DB. Stops scrapers from generating DB load.
+
+The hot-burst Redis holds the counter or claimable pool for active campaigns. The Lua script makes "check, decrement, return" atomic in a single round trip. Sub-millisecond.
+
+Postgres is the source of truth. Campaigns, codes, redemptions, attempts. The redemption table has a unique index on `(campaign_id, user_id)` for per-user single-use enforcement at the DB level even when Redis has already said yes.
+
+Kafka carries `coupon.redeemed`. The cart applies the discount. Fraud correlates with other signals. Analytics aggregates. The coupon service does not care who consumes the event.
 
 </details>
 
@@ -263,7 +261,7 @@ Per-user uniqueness: a unique index on `redemptions (campaign_id, user_id)` (or 
 
 Latency: 5 to 20ms per redeem under modest concurrency. Under 10,000 QPS on one row the row-level locking can queue up; you would not run this against a single hot row at burst-scale without something in front.
 
-Failure: if the Postgres connection dies after `UPDATE` commits but before the client sees the response, the user retries. The retry's `(campaign_id, user_id)` lookup finds the previous redemption and returns it idempotently. No double-claim.
+If Postgres dies after `UPDATE` commits but before the client sees the response, the user retries. The retry's `(campaign_id, user_id)` lookup finds the previous redemption and returns it idempotently. No double-claim.
 
 **Approach B: Redis SETNX (or DECR) for the claim, Postgres for the record.**
 
@@ -286,11 +284,11 @@ return {ok = redis.call("GET", KEYS[1])}
 
 `KEYS[1]` is `campaign:blackfri:remaining`. `KEYS[2]` is `campaign:blackfri:users` (set of users who already redeemed). `ARGV[1]` is the user id. The Lua block is atomic; Redis runs it serially, no race.
 
-Latency: under 1ms typical. Redis is single-threaded so a hot campaign's claims serialize on one core, which is fine for 10k QPS (Redis can handle hundreds of thousands of simple ops per second).
+Latency: under 1ms typical. Redis is single-threaded so a hot campaign's claims serialize on one core, which is fine for 10k QPS (Redis handles hundreds of thousands of simple ops per second).
 
 After Redis says yes, asynchronously write the redemption to Postgres. The DB unique index `(campaign_id, user_id)` is a backstop: if Redis and Postgres ever disagree (Redis lost state, replay happened), the DB rejects duplicates.
 
-Failure: if Redis crashes after DECR but before the async DB write, you have a counter decrement with no recorded redemption. Sad path: the user paid nothing because the cart received the success, but no audit row exists. Mitigation: persist the redemption synchronously via a small WAL before returning success. Acceptable cost is ~5ms extra.
+The sad path: Redis crashes after DECR but before the async DB write. You have a counter decrement with no recorded redemption. The user paid nothing because the cart received the success, but no audit row exists. The fix is to persist the redemption synchronously via a small WAL before returning success. Acceptable cost is ~5ms extra.
 
 **Approach C: Token bucket pre-issued.**
 
@@ -300,15 +298,11 @@ Then validate the (user, token) at checkout: the user must present this token. P
 
 Latency: sub-millisecond. List operations on Redis are O(1).
 
-Failure: if Redis loses the list (failover with stale replica), tokens disappear. Mitigation: also store the token list in Postgres so it can be rebuilt. On rebuild, mark tokens that were already popped (you have a record because the redemption hit Postgres) and re-push the unpopped ones.
+If Redis loses the list (failover with stale replica), tokens disappear. Mitigation: also store the token list in Postgres so it can be rebuilt. On rebuild, mark tokens that were already popped (you have a record because the redemption hit Postgres) and re-push the unpopped ones.
 
-**Which one to pick:**
+**Which one to pick.** Approach A alone is fine up to a few hundred QPS on the hot key. Below that threshold you do not need Redis at all. For a flash sale, the standard answer is B with A as backstop: Redis handles the burst, Postgres is the safety net, and the unique index in Postgres makes Redis state recoverable. Approach C is the right pick when the tokens are meaningful artifacts the user actually holds (gift card numbers, lottery tickets). Otherwise the counter approach is simpler.
 
-- **Approach A only:** good up to a few hundred QPS on the hot key. Below that threshold, you do not need Redis at all.
-- **Approach B with A as backstop:** the standard answer for a flash sale. Redis handles the burst; Postgres is the safety net. The unique index in Postgres makes Redis state recoverable.
-- **Approach C:** good if the tokens are also meaningful artifacts the user holds (gift card numbers, lottery tickets). Otherwise the counter approach (B) is simpler.
-
-The senior answer: "Approach B for the hot path, with the unique index from Approach A as the ground truth. Approach C if marketing wants the codes to be meaningful." That is one minute of clear reasoning that wins the room.
+The senior answer in one breath: "Approach B for the hot path, with the unique index from Approach A as the ground truth. Approach C if marketing wants the codes to be meaningful." One minute of clear reasoning wins the room.
 
 </details>
 
@@ -325,29 +319,31 @@ Sketch defenses for each. Take 5 minutes per scenario.
 <details>
 <summary><b>Reveal: defenses</b></summary>
 
-**Scenario 1: brute force.**
+**Scenario 1: brute force.** Layer the defenses; no single one is enough.
 
-Layer the defenses; no single defense is enough.
+The cheapest big win is per-user rate limiting. Authenticated users get 10 attempts per minute, 50 per hour. Anonymous gets 5 per minute per IP. Token bucket in Redis, 429 with `Retry-After` after the cap.
 
-1. **Per-user rate limit.** Authenticated user: 10 attempts per minute, 50 per hour. Anonymous: 5 per minute per IP. Token bucket in Redis. Returns 429 with `Retry-After` after the cap. This is the cheapest and most effective defense.
-2. **Per-IP rate limit.** Stricter for unauthenticated traffic. 30 attempts per minute per IP. Catches the case where the attacker is using session-less requests.
-3. **Bloom filter prefilter.** If the submitted code is not in the Bloom filter of issued codes, return "invalid code" *without hitting the DB*. Brute-force load never reaches your authoritative store. Filter is in-memory at the service; rebuilt on campaign create. False-positive rate of 0.1% is fine: a small fraction of guesses leak through to a real lookup.
-4. **Exponential backoff after consecutive failures.** After 5 failures from the same user/IP, double the cooldown. After 10, ban for 1 hour. After 20, ban for 24 hours and flag for review.
-5. **CAPTCHA challenge.** After 3 failed attempts in 1 minute, present a CAPTCHA before the next attempt. Slows automated tools to a crawl.
-6. **Device fingerprint.** Same browser fingerprint creating many accounts and each attempting codes is a signal. Combine with rate limits.
+Add per-IP rate limiting for unauthenticated traffic. 30 attempts per minute per IP catches session-less requests.
 
-**Scenario 2: code leakage beyond intended audience.**
+The Bloom filter prefilter is the killer move. If the submitted code is not in the filter of issued codes, return "invalid code" without hitting the DB. Brute-force load never reaches your authoritative store. The filter is in-memory at the service; rebuilt on campaign create. A 0.1% false-positive rate is fine: a small fraction of guesses leak through to a real lookup.
 
-The fundamental problem: a shared code that should be private has been disclosed. There is no perfect defense once it has leaked. There are several mitigations:
+After 5 consecutive failures from the same user or IP, double the cooldown. After 10, ban for an hour. After 20, ban for a day and flag for review. After 3 failed attempts in a minute, throw up a CAPTCHA before the next try. Slows automated tools to a crawl.
 
-1. **Audience restriction at validate time.** Codes carry an `audience_filter`: "must be a subscriber as of date X", "must be a customer of segment Y", "must have made a purchase in the last 90 days". Validate fails if the user does not match, even if the code is correct. The leaker can post the code but most leakers' audiences cannot use it.
-2. **Per-user mailing of unique codes.** Better: mail UID-7A2F-9B3C-1D4E to each subscriber instead of one shared BLACKFRI100. Even if a code leaks, only that one user's code is burnt. Worth the extra storage.
-3. **Lower limit on shared codes.** If you insist on BLACKFRI100 being shared, cap at a number that survives leakage: 1000 codes is gone in seconds when leaked; 100,000 buys more grace.
-4. **Velocity-based shutdown.** If a campaign sees a 100x spike in redemption attempts in 1 minute relative to the expected rate, auto-pause and alert. Marketing reviews and either confirms the spike is legit or kills the campaign before all slots burn.
-5. **Honeypot codes.** Insert a fake code into the mailing that is not actually valid. Track who tries to use it. If a user redeems a real code *and* the honeypot, they are the leaker or someone downstream of the leaker.
-6. **Audience watermarking with unique codes.** Each mailed code includes a hash of the recipient. When the code shows up on a forum, you know who leaked it.
+Device fingerprint as a signal: same browser fingerprint creating many accounts and each attempting codes is suspicious. Combine with rate limits; do not rely on fingerprint alone because it is bypassable.
 
-The honest answer the interviewer wants to hear: "Defense is layered. No single mitigation works for both abuse types. The validate-side audience filter is the cheapest big win for leakage; per-user rate limits are the cheapest big win for brute force."
+**Scenario 2: code leakage beyond intended audience.** The fundamental problem: a shared code that should be private has been disclosed. There is no perfect defense once it has leaked. There are mitigations.
+
+The cheapest big win for leakage is an audience filter at validate time. Codes carry an `audience_filter`: "must be a subscriber as of date X", "must be a customer of segment Y", "must have made a purchase in the last 90 days". Validate fails if the user does not match, even if the code is correct. The leaker can post the code but most leakers' audiences cannot use it.
+
+Better, mail unique per-user codes instead of one shared BLACKFRI100. Even if a code leaks, only that one user's code is burnt. Worth the extra storage.
+
+If you insist on a shared code, cap at a number that survives leakage. 1000 codes vanish in seconds when leaked; 100,000 buys more grace.
+
+Velocity-based shutdown catches both bugs and leakage. If a campaign sees a 100x spike in redemption attempts in 1 minute relative to the expected rate, auto-pause and alert. Marketing reviews and either confirms the spike is legit or kills the campaign before all slots burn.
+
+Honeypot codes are sneaky and cheap. Insert a fake code into the mailing that is not actually valid. Track who tries to use it. If a user redeems a real code *and* the honeypot, they are the leaker or someone downstream of the leaker. With unique-per-user mailings, each code is already a watermark; when it shows up on a forum, you know who leaked it.
+
+The honest answer the interviewer wants: defense is layered. No single mitigation works for both abuse types. The validate-side audience filter is the cheapest big win for leakage; per-user rate limits and the Bloom filter are the cheapest big wins for brute force.
 
 </details>
 
@@ -377,9 +373,9 @@ Try answering each in 2 to 3 sentences before reading the solution.
 
 ## Related problems
 
-- **[Approval Management (011)](../011-approval-management/question.md)**. The audit trail, immutable record-keeping, and state machine patterns there apply directly to the redemption log here.
-- **[Shopping Cart (012)](../012-shopping-cart/question.md)**. The cart consumes coupon.redeemed events and applies discounts. The cart's idempotency story is the other side of the redemption's idempotency story.
-- **[Rate Limiter (004)](../004-rate-limiter/question.md)**. The per-user and per-IP rate limits in Step 6 are the standard rate limiter algorithms. Pick one with intent.
+- **[Approval Management (011)](../011-approval-management/question.md)**. The audit trail, immutable record-keeping, and state machine patterns apply directly to the redemption log here.
+- **[Shopping Cart (012)](../012-shopping-cart/question.md)**. The cart consumes coupon.redeemed events and applies discounts. Cart idempotency is the other side of redemption idempotency.
+- **[Rate Limiter (004)](../004-rate-limiter/question.md)**. The per-user and per-IP rate limits in Step 6 are the standard algorithms. Pick one with intent.
 - **[Distributed Cache (009)](../009-distributed-cache/question.md)**. The Redis layer here is the same caching layer; understand its eviction and replication story before depending on it for hot-burst correctness.
 {% endraw %}
 
@@ -392,29 +388,33 @@ Try answering each in 2 to 3 sentences before reading the solution.
 
 A coupon system is a small, write-light service with one nasty bit: surviving a launch burst where 10,000 users hit the same code in the same second and exactly 1000 of them must win. Everything else is plumbing.
 
-The design has two layers. Postgres holds the source of truth, with a unique index on `(code_id, user_id)` that makes double-redemption impossible at the storage level. Redis with a Lua script handles the hot-burst claim path so the database is not asked to serialize 10,000 transactions on one row. Async writes from Redis to Postgres keep the two in sync; the unique index is the safety net when they disagree.
+The design has two layers. Postgres holds the source of truth, with a unique index on `(campaign_id, user_id)` that makes double-redemption impossible at the storage level. Redis with a Lua script handles the hot-burst claim path so the database is not asked to serialize 10,000 transactions on one row. Synchronous writes from Redis to Postgres keep the two in sync; the unique index is the safety net when they disagree.
 
 Three code patterns coexist under one schema: generic shared codes (`SAVE10`), unique per-user codes (`UID-XXXX`), and pre-generated pools (`BLACKFRI-XXXX`). All three use the same redeem API; the difference is in how codes are minted and how the claim is structured. A Bloom filter in front of the read path stops brute-force traffic from reaching the DB. Rate limits stop the same user from grinding the namespace.
 
-The interesting engineering is at three edges: making the launch burst correct without a database stampede, defining what "release the code back to the pool on refund" means without creating a parallel race, and laying down an audit trail that finance can use for accounting years later.
+The interesting engineering sits at three edges: making the launch burst correct without a database stampede, defining what "release the code back to the pool on refund" means without creating a parallel race, and laying down an audit trail finance can use for accounting years later.
 
-### 1. Clarifying questions and why each matters
+### 1. Clarifying questions, recap
 
-Covered in `question.md`. The single most important question: single-use or reusable. They have completely different data models and contention shapes. Almost as important: which of the three code patterns (shared, unique, pool) the system supports. If you assume "just one pattern" and the interviewer wanted all three, you redesign mid-interview.
+The most important question is the first one: *single-use or reusable?* They have completely different data models and contention shapes. Almost as important: which of the three code patterns (shared, unique, pool) the system supports. If you assume "just one pattern" and the interviewer wanted all three, you redesign mid-interview.
 
-### 2. Capacity estimates (full working)
+Everything else (stacking, expiration, refund, abuse) follows from those two answers.
 
-- **Launch burst:** 10,000 redeem requests in 1 second, of which 1000 must succeed and 9000 must be told "sold out". One hot key, one hot campaign. The 9000 losers are the design pressure, not the 1000 winners. They all need a fast response, not a timeout.
-- **Steady redemption:** 50k/day = ~0.6/sec sustained, ~5/sec peak business hours. Trivial.
-- **Validate calls:** 5x redeems = ~3/sec sustained, ~25/sec peak. Plus a burst of 50k at 9am launch when users paste the code into the cart before clicking redeem.
-- **Storage:** 200M per-user codes × ~200 bytes = ~40GB. Add 9GB of redemption log over 5 years. ~50GB total. One Postgres instance.
-- **Hot working set:** one campaign at a time. The campaign row, the counter, and (for pool campaigns) the unclaimed code list. ~100KB to a few MB. Fits in any cache.
+### 2. Capacity, with the math
 
-The system is small. The architecture exists for **burst correctness and abuse resistance**, not throughput or storage.
+The launch burst is the design pressure point. 10,000 redeem requests in 1 second, of which 1000 must succeed and 9000 must be told "sold out". One hot key, one hot campaign. The 9000 losers are the design pressure, not the 1000 winners. They all need a fast response, not a timeout.
 
-### 3. API design
+Steady redemption is trivial. 50k per day works out to about 0.6 per second sustained, 5 per second at peak business hours. Validate calls run 5x that: 3 per second sustained, 25 per second at peak. Plus a burst of 50k validate calls at 9am launch when users paste the code into the cart before clicking redeem.
 
-**Validate (does not consume):**
+Storage barely registers. 200M per-user codes at ~200 bytes each is ~40GB. Add 9GB of redemption log over 5 years. ~50GB total. One Postgres instance.
+
+Hot working set during launch is one campaign at a time. The campaign row, the counter, and (for pool campaigns) the unclaimed code list. ~100KB to a few MB. Fits in any cache.
+
+The system is small. The architecture exists for *burst correctness and abuse resistance*, not throughput or storage.
+
+### 3. API
+
+Validate and redeem are separate endpoints. Validate is read-only and cheap. Redeem is the atomic act. Treating them as one endpoint (POST that always consumes) breaks the cart UX where users want to see the discount before clicking checkout.
 
 ```
 POST /api/v1/coupons/validate
@@ -423,23 +423,19 @@ Content-Type: application/json
 
 {
   "code": "BLACKFRI100",
-  "cart_id": "cart_abc",            # for stacking checks and cart-context discounts
+  "cart_id": "cart_abc",
   "subtotal": 12000                  # cents
 }
 ```
 
-Responses:
-
 | Status | Meaning | Body |
 |--------|---------|------|
 | 200 OK | Code valid for this user/cart | `{"valid": true, "discount": {"type": "percent", "value": 100, "max_off": 50000}, "stackable_with": ["FREESHIP"], "expires_at": "..."}` |
-| 200 OK | Code valid in isolation but fails stacking | `{"valid": false, "reason": "not_stackable_with_SAVE10"}` |
+| 200 OK | Valid in isolation but fails stacking | `{"valid": false, "reason": "not_stackable_with_SAVE10"}` |
 | 404 Not Found | Code does not exist | `{"valid": false, "reason": "unknown_code"}` |
 | 410 Gone | Code expired or fully redeemed | `{"valid": false, "reason": "expired" / "exhausted"}` |
 | 403 Forbidden | User not in audience | `{"valid": false, "reason": "audience_mismatch"}` |
 | 429 Too Many Requests | Too many validate attempts | `{"reason": "rate_limited", "retry_after": 60}` |
-
-**Redeem (consumes):**
 
 ```
 POST /api/v1/coupons/redeem
@@ -454,8 +450,6 @@ Content-Type: application/json
 }
 ```
 
-Responses:
-
 | Status | Meaning | Body |
 |--------|---------|------|
 | 201 Created | Redemption succeeded | `{"redemption_id": "rdm_...", "code": "BLACKFRI100", "discount_applied": {...}}` |
@@ -464,13 +458,7 @@ Responses:
 | 410 Gone | Code is exhausted or expired (lost the race) | `{"error": "exhausted"}` |
 | 403 Forbidden | Audience mismatch | `{"error": "audience_mismatch"}` |
 
-**List user's redemptions:**
-
-```
-GET /api/v1/users/{user_id}/redemptions?status=active&limit=50
-```
-
-**Admin: create campaign:**
+Two reads round it out. `GET /api/v1/users/{user_id}/redemptions?status=active&limit=50` for the user's history, and an admin `POST /api/v1/admin/campaigns` to create a campaign:
 
 ```
 POST /api/v1/admin/campaigns
@@ -487,14 +475,11 @@ POST /api/v1/admin/campaigns
 }
 ```
 
-**Notes on the API:**
-
-- **Validate and redeem are separate.** Validate is read-only and cheap. Redeem is the atomic act. Treating them as one endpoint (POST that always consumes) breaks the cart UX where users want to see the discount before clicking checkout.
-- **Idempotency-Key on redeem is required, not optional.** Network retries are guaranteed at launch burst. Without the key, the same user's retry can consume two codes.
-- **`order_id` ties the redemption to the order.** Needed for refund/release flow and for finance reconciliation.
-- **403 with `audience_mismatch` does not reveal whether the code itself is valid.** Returning 404 to outsiders prevents harvesting; returning 403 only to authenticated users in the wrong audience is the right balance.
+A few small but load-bearing choices. Idempotency-Key on redeem is required, not optional; network retries are guaranteed at launch burst and without the key the same user's retry can consume two codes. `order_id` ties the redemption to the order, which you need for the refund/release flow and for finance reconciliation. And the 403 with `audience_mismatch` does not reveal whether the code itself is valid; returning 404 to outsiders prevents harvesting while returning 403 only to authenticated users in the wrong audience is the right balance.
 
 ### 4. Data model
+
+Four tables. Two large, two small.
 
 ```sql
 -- Campaigns: one row per promotional campaign.
@@ -507,7 +492,7 @@ CREATE TABLE campaigns (
     issued_codes     INT NOT NULL DEFAULT 0,           -- monotonic counter of codes minted
     redeemed_count   INT NOT NULL DEFAULT 0,           -- updated async from redemptions
     per_user_limit   INT NOT NULL DEFAULT 1,
-    audience_filter  JSONB,                            -- {"min_subscription_days": 30, ...}
+    audience_filter  JSONB,
     stacking_rules   JSONB,                            -- {"stackable_with": [...], "excludes": [...]}
     starts_at        TIMESTAMPTZ NOT NULL,
     ends_at          TIMESTAMPTZ NOT NULL,
@@ -517,9 +502,9 @@ CREATE TABLE campaigns (
 CREATE INDEX idx_campaigns_status_window ON campaigns (status, starts_at, ends_at);
 
 -- Codes: one row per individual code string.
---   - shared:  one row total; counter tracked on the campaign
---   - unique:  one row per (campaign, intended_user)
---   - pool:    one row per code, intended_user is NULL until claimed
+--   shared:  one row total; counter tracked on the campaign
+--   unique:  one row per (campaign, intended_user)
+--   pool:    one row per code, intended_user is NULL until claimed
 CREATE TABLE codes (
     code_id          UUID PRIMARY KEY,
     campaign_id      UUID NOT NULL REFERENCES campaigns(campaign_id),
@@ -528,10 +513,10 @@ CREATE TABLE codes (
     state            TEXT NOT NULL DEFAULT 'unused',   -- 'unused' | 'claimed' | 'used' | 'expired'
     claimed_by       TEXT,                             -- user_id who claimed (pool type)
     claimed_at       TIMESTAMPTZ,
-    expires_at       TIMESTAMPTZ,                      -- inherits from campaign unless overridden
+    expires_at       TIMESTAMPTZ,
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE UNIQUE INDEX idx_codes_code ON codes (code);    -- global uniqueness of code string
+CREATE UNIQUE INDEX idx_codes_code ON codes (code);
 CREATE INDEX idx_codes_campaign_state ON codes (campaign_id, state) WHERE state = 'unused';
 CREATE INDEX idx_codes_intended_user ON codes (intended_user) WHERE intended_user IS NOT NULL;
 
@@ -561,8 +546,8 @@ CREATE TABLE redemption_attempts (
     ip               INET,
     user_agent_hash  BYTEA,
     result           TEXT NOT NULL,                    -- 'success' | 'unknown_code' | 'exhausted' |
-                                                      -- 'already_redeemed' | 'expired' |
-                                                      -- 'audience_mismatch' | 'rate_limited'
+                                                       -- 'already_redeemed' | 'expired' |
+                                                       -- 'audience_mismatch' | 'rate_limited'
     attempted_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_attempts_user_time ON redemption_attempts (user_id, attempted_at DESC);
@@ -570,18 +555,19 @@ CREATE INDEX idx_attempts_ip_time ON redemption_attempts (ip, attempted_at DESC)
 CREATE INDEX idx_attempts_result_time ON redemption_attempts (result, attempted_at DESC);
 ```
 
-**Why each table:**
+A few choices worth defending out loud.
 
-- **`campaigns`** holds the policy. Discount, audience, stacking, total cap. The `redeemed_count` is updated asynchronously from the redemptions log; it is a denormalized counter, not the source of truth for "is the campaign exhausted." The source of truth for that is `COUNT(*) FROM redemptions WHERE campaign_id = ?`, but we never query that on the hot path; we trust the counter and reconcile periodically.
-- **`codes`** holds the issued strings. For shared campaigns, one row. For unique campaigns, one row per recipient. For pool campaigns, N rows pre-generated. The `unused` filtered index makes "find me an unclaimed code" fast.
-- **`redemptions`** is the audit-grade record. The unique index on `(campaign_id, user_id)` is the database-level enforcement of per-user single-use. This is the safety net behind whatever Redis says.
-- **`redemption_attempts`** logs everything, including failures. Required for fraud signals (50 attempts/sec from one IP) and for the abuse-prevention dashboards. Partitioned by month in production.
+The `UNIQUE (campaign_id, user_id) WHERE released_at IS NULL` index on redemptions is doing real work. When the same user races themselves with two browser tabs, the database serializes them. The first insert wins, the second fails with a unique-violation, the API turns that into a friendly 409. This is the safety net behind whatever Redis says. If you only remember one thing from this design, remember this index.
 
-**Choice: Postgres.** Strong consistency for the unique index, transactional semantics for the claim, JSONB for the flexible discount/audience shapes. Cassandra or DynamoDB would force you to invent the unique-claim logic. The data volume is small (50GB total at 5-year retention), so Postgres has no scaling problem.
+`campaigns.redeemed_count` is denormalized and async. It is not the source of truth for "is the campaign exhausted." The source of truth for that is `COUNT(*) FROM redemptions WHERE campaign_id = ?`, but we never query that on the hot path; we trust the counter in Redis and reconcile periodically against the table.
 
-### 5. Core algorithm: atomic claim
+`redemption_attempts` logs everything, including failures. Required for fraud signals (50 attempts/sec from one IP) and for the abuse-prevention dashboards. Partitioned by month in production.
 
-#### Approach A: Postgres-only, low traffic
+Postgres, not Cassandra or DynamoDB. Strong consistency for the unique index. Transactional semantics for the claim. JSONB for the flexible discount and audience shapes. Cassandra would force you to invent compensating logic for the same guarantees, and the data volume (50GB at 5-year retention) gives Postgres no scaling problem to solve.
+
+### 5. Core algorithm: the atomic claim
+
+Two paths, picked per campaign.
 
 For campaigns expected to see fewer than a few hundred QPS, skip Redis entirely.
 
@@ -616,13 +602,7 @@ RETURNING redemption_id;
 COMMIT;
 ```
 
-`FOR UPDATE SKIP LOCKED` is the key. Without `SKIP LOCKED`, concurrent transactions queue up on the first unused row; with it, each picks a different unused row.
-
-The `ON CONFLICT ... DO NOTHING RETURNING` is the per-user single-use enforcement. If the user already has a non-released redemption for this campaign, the insert returns zero rows and we return 409.
-
-Throughput: a few hundred claims per second on a single Postgres on this exact query, limited by row-level locking on the campaign's row set.
-
-#### Approach B: Redis Lua for the burst, Postgres as backstop
+`FOR UPDATE SKIP LOCKED` is the key. Without `SKIP LOCKED`, concurrent transactions queue up on the first unused row; with it, each picks a different unused row. Throughput is a few hundred claims per second on a single Postgres on this exact query, limited by row-level locking on the campaign's row set.
 
 For BLACKFRI100-style 10k QPS bursts, the hot path goes to Redis.
 
@@ -662,23 +642,19 @@ return {'ok', claimed_code}
 
 The Lua block runs atomically. Redis is single-threaded so concurrent scripts serialize on one CPU. Latency under 1ms; throughput well above 50k ops/sec on a single Redis node, far above the 10k burst target.
 
-After Redis returns OK, the service writes the redemption to Postgres synchronously (~5ms). Total redeem latency: ~6ms.
+After Redis returns OK, the service writes the redemption to Postgres synchronously (~5ms). Total redeem latency: ~6ms. The Postgres write uses the same `ON CONFLICT (campaign_id, user_id)` clause as the Postgres-only path. If Redis hiccupped and somehow let two requests through for the same user, the DB unique index catches the second one. The service handles this case by rolling back the Redis state (re-adding the user to the set, incrementing the counter) and returning 409 to the second user.
 
-The Postgres write uses the same `ON CONFLICT (campaign_id, user_id)` clause as Approach A. If Redis hiccupped and somehow let two requests through for the same user, the DB unique index catches the second one. The service handles this case by rolling back the Redis state (re-adding the user to the set, incrementing the counter) and returning 409 to the second user.
-
-#### Hybrid: when to use which
+Picking between them:
 
 | Campaign expected QPS | Approach |
 |----------------------|----------|
-| < 100 | Approach A (Postgres only) |
-| 100 to 10,000 | Approach B (Redis + Postgres) |
-| > 10,000 | Approach B with sharded Redis (counter and user-set partitioned by hash of user_id) |
+| < 100 | Postgres only |
+| 100 to 10,000 | Redis + Postgres backstop |
+| > 10,000 | Redis + Postgres with sharded Redis (counter and user-set partitioned by hash of user_id) |
 
 The hybrid in production: every campaign uses Redis. For low-traffic ones the Redis cost is negligible and the consistent code path is worth it. For high-traffic ones the Redis layer is what keeps the DB alive.
 
-#### Bloom filter prefilter
-
-Before validate even queries Redis or the DB, check a Bloom filter of all issued codes:
+Before validate even queries Redis or the DB, a Bloom filter check.
 
 ```python
 def validate(code):
@@ -687,236 +663,224 @@ def validate(code):
     # falls through to Redis/DB
 ```
 
-Bloom filters never have false negatives (if it says "not present", the code definitely was never issued). They have a tunable false-positive rate (~0.1% is typical). At 0.1%, a brute-force scraper sees 99.9% of attempts cut off at the filter, never touching the DB.
+Bloom filters never have false negatives. If the filter says "not present", the code definitely was never issued. They have a tunable false-positive rate (~0.1% is typical). At 0.1%, a brute-force scraper sees 99.9% of attempts cut off at the filter, never touching the DB.
 
-The filter is rebuilt when a campaign is created (add all new codes) and reloaded on service start. Memory footprint: ~12 bits per code at 0.1% FPR. 200M codes = ~300MB. Fits in process memory.
+The filter is rebuilt when a campaign is created (add all new codes) and reloaded on service start. Memory footprint is ~12 bits per code at 0.1% FPR. 200M codes is ~300MB. Fits in process memory.
 
-### 6. Architecture (already in question.md)
+### 6. Architecture
 
-Reviewing the components:
+Here is the whole picture. Drawn small enough to fit one screen.
 
-| Component | Stateful? | Scaling story |
-|-----------|-----------|--------------|
-| API Gateway + Rate Limiter | Limited (token buckets) | Horizontal; rate-limit state in Redis |
-| Coupon Service (read) | No | Horizontal pods; bounded by cache fill |
-| Coupon Service (write) | No (state in DB/Redis) | Horizontal pods; partitioned by campaign for hot campaigns |
-| Read Cache (Redis) | Yes | Replicated; warmable on demand |
-| Redis (hot-burst) | Yes | Per-campaign keyspace; can shard one campaign across nodes via hash |
-| Postgres | Yes | Primary + read replica; partition redemptions table by month |
-| Kafka | Yes | Standard cluster scaling |
+```
+              ┌────────────────────────────────────────────────┐
+              │ Clients: web, mobile, POS terminal             │
+              └─────────────────────┬──────────────────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────┐
+                         │  API Gateway     │ auth, per-user + per-IP
+                         │  + Rate Limiter  │ rate limit, WAF
+                         └────┬────────┬────┘
+                  validate    │        │   redeem
+                              │        │
+                              ▼        ▼
+              ┌─────────────────────┐ ┌──────────────────────┐
+              │  Coupon Service      │ │  Coupon Service       │
+              │  (read, stateless)   │ │  (write, stateless)   │
+              │                      │ │                       │
+              │  ┌─ Bloom filter ────┘ │  ┌─ Idempotency key  │
+              │  ├─ in-proc LRU       │  ├─ Redis Lua claim  │
+              │  └─ cache lookup      │  └─ Postgres write   │
+              └─────────┬─────────────┘ └──┬───────┬──────────┘
+                        │                  │       │
+                        ▼                  ▼       │
+              ┌──────────────────┐   ┌──────────────────┐
+              │  Read Cache       │   │  Redis (hot      │
+              │  (Redis)          │   │  burst)           │
+              │  campaign meta,   │   │  remaining counter│
+              │  60s TTL + jitter │   │  user-set, pool   │
+              └──────────────────┘   └────────┬──────────┘
+                                              │
+                                              ▼
+              ┌──────────────────────────────────────────────┐
+              │  Postgres (source of truth)                  │
+              │   campaigns, codes,                          │
+              │   redemptions (unique on (campaign,user)),   │
+              │   redemption_attempts                        │
+              └────────────────┬─────────────────────────────┘
+                               │
+                  CDC / outbox │
+                               ▼
+              ┌──────────────────────────────────────────────┐
+              │  Kafka                                        │
+              │   coupon.redeemed                             │
+              │   coupon.released                             │
+              └──┬──────────────┬──────────────┬─────────────┘
+                 │              │              │
+                 ▼              ▼              ▼
+        ┌─────────────┐  ┌──────────────┐  ┌────────────────┐
+        │ Cart Svc    │  │  Fraud Svc    │  │ Analytics +     │
+        │ apply       │  │  velocity     │  │ Finance recon   │
+        │ discount    │  │  signals      │  │ (ClickHouse)    │
+        └─────────────┘  └──────────────┘  └────────────────┘
+```
 
-### 7. Read and write paths
+Five things to notice while reading this.
 
-**Validate path (read-only, ~3-25 QPS sustained, burst at launch):**
+The write path touches Redis and Postgres in one transaction window. Nothing else is in the synchronous hot path. Kafka, the cart service, fraud, analytics are all downstream of a CDC stream from Postgres. If the cart is down, redemptions still succeed; the discount catches up when the cart comes back.
 
-1. Client → API Gateway. Per-user rate limit (10/min validate, separate bucket from redeem).
-2. Coupon Service (read) normalizes the code (uppercase, strip whitespace).
-3. Bloom filter check. If miss, return 404 immediately. ~99% of brute-force load stops here.
-4. Read cache lookup by code. Cache holds: campaign_id, discount, expires_at, audience_filter, status, stackable_with. TTL 60s with jitter.
-5. Cache miss: query Postgres `SELECT ... FROM codes JOIN campaigns ON ... WHERE code = ?`. Populate cache.
-6. Check `expires_at`: return 410 if past.
-7. Check `audience_filter` against the authenticated user's attributes (fetched from user service, also cached). Return 403 if mismatch.
-8. Check stacking rules against the cart's existing coupons. Return 200 with `{"valid": false, "reason": "not_stackable_with_..."}` if conflict.
-9. Return 200 with discount shape.
+The Bloom filter and in-process LRU live in the read service, not in Redis. Process memory is the cheapest, fastest tier. Redis is the next tier. Postgres is the floor.
 
-P99 target: 50ms. Most calls are cache hits at ~5ms.
+Hot-burst Redis and read-cache Redis are different roles, often on different clusters. The hot-burst one runs Lua scripts and serializes campaigns on a single core; the read cache holds campaign metadata for thousands of campaigns and scales horizontally with sharding.
 
-**Redeem path (atomic claim):**
+The Postgres unique index is the ground truth. Every other layer can lose data and the system recovers. If the unique index loses data, you have a real correctness bug.
 
-1. Client → API Gateway. Per-user rate limit (5/min redeem). Stricter than validate because each successful redeem has real cost.
-2. Coupon Service (write) checks Idempotency-Key in Redis (5min TTL). If present, return the cached response. Required to handle network retries during the launch burst.
-3. Normalize code. Bloom filter check. Cache lookup for campaign metadata.
-4. Verify audience filter, expiry, status.
-5. **Atomic claim (hot path):**
-   - Call Redis Lua script. Returns OK with optional claimed_code (pool type), or err with reason.
-   - On `exhausted` or `already_redeemed`, log to redemption_attempts and return 410 or 409.
-6. **Persist (synchronous):**
-   - `INSERT INTO redemptions ...` with `ON CONFLICT (campaign_id, user_id) DO NOTHING RETURNING`.
-   - If conflict (DB says user already redeemed but Redis said no), this is a state drift. Roll back Redis: `SREM users {user_id}, INCR remaining`. Return 409. Alert.
-7. **For pool type**, also update the `codes` row: `UPDATE codes SET state = 'used', claimed_by = ?, claimed_at = NOW() WHERE code = ?`.
-8. Cache the response under the Idempotency-Key (5min TTL).
-9. Emit `coupon.redeemed` event to Kafka.
-10. Return 201 with redemption_id and discount.
+The Coupon Service pods are stateless and horizontally scalable. The Bloom filter is rebuilt on startup from a snapshot in S3 plus a tail of `campaign_created` events from Kafka.
 
-P99 target: 50ms at burst. Breakdown: rate limit ~1ms, Redis Lua ~1ms, Postgres insert ~5-10ms, Kafka publish (async, fire-and-forget) ~0ms blocking. Most time is in network round-trips.
+### 7. What a redeem looks like, end to end
+
+Here is the redeem-on-hot-campaign flow drawn as a sequence:
+
+```
+   Client      API GW     Coupon Svc      Redis         Postgres        Kafka
+     │           │            │              │              │             │
+     │ POST      │            │              │              │             │
+     │ /redeem   │            │              │              │             │
+     ├──────────►│            │              │              │             │
+     │           │ rate limit │              │              │             │
+     │           │ check      │              │              │             │
+     │           ├───────────►│              │              │             │
+     │           │            │ idem-key     │              │             │
+     │           │            │ lookup       │              │             │
+     │           │            ├─────────────►│              │             │
+     │           │            │◄─────────────┤              │             │
+     │           │            │              │              │             │
+     │           │            │ bloom + cache│              │             │
+     │           │            │ (in-proc)    │              │             │
+     │           │            │              │              │             │
+     │           │            │ EVAL Lua     │              │             │
+     │           │            │ (check       │              │             │
+     │           │            │  counter,    │              │             │
+     │           │            │  user-set,   │              │             │
+     │           │            │  decr, sadd) │              │             │
+     │           │            ├─────────────►│              │             │
+     │           │            │◄─────────────┤              │             │
+     │           │            │   ok         │              │             │
+     │           │            │              │              │             │
+     │           │            │ BEGIN TX                    │             │
+     │           │            ├─────────────────────────────►             │
+     │           │            │ INSERT redemptions          │             │
+     │           │            │   ON CONFLICT DO NOTHING    │             │
+     │           │            │ UPDATE codes (pool only)    │             │
+     │           │            │ INSERT redemption_attempts  │             │
+     │           │            │ COMMIT                      │             │
+     │           │            │◄─────────────────────────────             │
+     │           │            │              │              │             │
+     │           │            │ cache idem-key response     │             │
+     │           │            ├─────────────►│              │             │
+     │           │            │              │              │             │
+     │           │            │ emit coupon.redeemed (CDC)  │             │
+     │           │            │              │              ├────────────►│
+     │           │ 201 OK     │              │              │             │
+     │           │◄───────────┤              │              │             │
+     │ 201 OK    │            │              │              │             │
+     │◄──────────┤            │              │              │             │
+     │           │            │              │              │  consumer   │
+     │           │            │              │              │             ├──► cart applies
+     │           │            │              │              │             ├──► fraud signal
+     │           │            │              │              │             └──► analytics
+```
+
+Validate has its own short flow. Client hits the gateway, the request goes to the read service, the Bloom filter rejects most bogus codes immediately, the in-process LRU absorbs most real-code reads, cache misses fall through to Redis and then Postgres. Whichever hits, the result is fast.
+
+Target latencies, for a sense of scale: validate P99 around 50ms (most calls are cache hits at ~5ms). Redeem P99 around 50ms even at the launch burst (rate limit ~1ms, Redis Lua ~1ms, Postgres insert ~5-10ms, the rest is network).
 
 ### 8. Scaling journey: 10 to 1M users
 
-This is the section the interviewer cares about most. Each stage names what just broke and the cheapest fix.
+At every stage, name what just broke and what fixes it. Build nothing preemptively.
 
-#### Stage 1: 10 to 100 users (a small startup)
+**Stage 1: 10 to 100 users.** One Postgres (db.t3.small), one app instance, the three tables with the unique index on `(campaign_id, user_id)`. Validate and redeem are both straight DB calls in a transaction. No Redis, no cache, no Kafka. The cart calls the coupon service inline. About $80/month total.
 
-**What you build:**
-- One Postgres (db.t3.small).
-- One application instance.
-- Campaigns table, codes table, redemptions table with the unique index on `(campaign_id, user_id)`.
-- Validate and redeem are both straight DB calls in a transaction.
-- No Redis, no cache, no Kafka. The cart service polls the redemption table or you call it inline.
+Ten redemptions per day. Postgres yawns. The unique index alone is the entire correctness story. No campaign sees more than 1 QPS, no race conditions of concern. Building anything more is over-engineering.
 
-**Why this is enough:**
-- ~10 redemptions per day. ~50 validate calls per day. Postgres yawns.
-- The unique index on redemptions enforces per-user single-use atomically. That alone is the entire correctness story.
-- No campaign sees more than 1 QPS. No race conditions of concern.
+**Stage 2: 1k users.** Something breaks: a user shared a code on a deal forum, 200 anonymous attempts hit in 5 minutes, the DB spiked to 50% CPU. Marketing started running per-user codes (2000 rows in `codes`); lookups by code string got slow without an index, so you added `CREATE UNIQUE INDEX idx_codes_code ON codes (code)` and the issue vanished. A cart bug caused some users to submit redeem twice in quick succession; the unique index caught the double-claim correctly but the second request got a confusing 500. You added `ON CONFLICT DO NOTHING RETURNING` handling and started returning 409 instead.
 
-**What you do *not* build:**
-- No Bloom filter. The DB is fine handling 1-2 QPS of bogus codes.
-- No rate limiting. You will add it the first time someone runs a script against you, not before.
-- No async event stream. The cart service calls the coupon service directly during checkout.
+You added per-user rate limiting in the gateway (token bucket in Redis, 10 validate/min and 5 redeem/min per authenticated user), per-IP rate limiting for unauthenticated traffic, and an in-process LRU for campaign and code lookups (1000 entries, 60s TTL, dropped DB load ~5x). The `redemption_attempts` table started filling, partitioned monthly, feeding a "top 10 IPs by failed-validate rate" dashboard. Idempotency-Key on redeem became required, stored in Redis with 5min TTL, and the cart UI bug stopped causing problems. About $250/month.
 
-**Total cost:** ~$50/month for the DB, ~$30/month for the app.
+Still no Bloom filter, still no Redis for the atomic claim. At 1k users you have at most a few thousand distinct code attempts per day; the cache absorbs most. Postgres handles all redeems directly with `FOR UPDATE SKIP LOCKED`. Max contention is on the hottest campaign at maybe 10 QPS. No Kafka. The cart calls the coupon service inline.
 
-#### Stage 2: 1,000 users (small business)
+**Stage 3: 100k users.** Now several things break at once. The first real flash sale: 2000 codes for FLASH50 at noon, 5000 users at once, Postgres CPU pegged for 30 seconds because `FOR UPDATE SKIP LOCKED` serialized on the `(campaign_id, state = 'unused')` index, most requests timed out at the gateway, marketing was furious. A scripted brute-force across the SAVE-prefix namespace fired 5000 attempts/sec from rotating IPs; the LRU helped on hits, but the guaranteed-misses on bogus codes hit the DB at ~1000 QPS. The cart started showing race conditions when a user redeemed, the cart applied the discount, then the user removed an item that made the discount no longer applicable.
 
-**What just broke:**
+The fixes, in order. Redis with Lua for atomic claims on hot campaigns (campaign marked `hot` at creation time or auto-flagged at expected_qps > 100); the Lua script in section 5 does the work; Postgres backstop with the unique index still catches drift. For pool campaigns, pre-load unclaimed codes into a Redis list; `LPOP` is sub-millisecond. Bloom filter prefilter loaded at service start, updated on campaign create; bogus codes return 404 in microseconds without touching Redis or DB. Synchronous write to Postgres for redemptions on hot campaigns (the unique index catches any double-write). Kafka topic `coupon.redeemed`; the cart consumes the event and applies the discount idempotently (uses `redemption_id` as the dedup key). Read replica for the validate path; primary stays write-only. Velocity-based campaign pause: 100x spike in 1 minute over the trailing-hour baseline auto-pauses and pages the on-call.
 
-- A user shared a code on a deal forum. 200 anonymous users tried it in 5 minutes. Most failed validation. Each failure was a DB query. The DB had a brief spike to 50% CPU.
-- Marketing started running per-user codes. A campaign with 2000 codes mailed individually means 2000 rows in `codes`. Lookups by code string get slower without an index. You add `CREATE UNIQUE INDEX idx_codes_code ON codes (code)` and the issue disappears.
-- A bug in the cart UI caused some users to submit redeem twice in quick succession. The unique index caught the double-claim correctly, but the second request got a confusing 500 (unhandled unique violation). You add proper `ON CONFLICT DO NOTHING RETURNING` handling and return 409.
+Flash sales now serve 10k QPS on the hot campaign on one Redis core. Bloom filter cuts brute-force DB load by ~99.9%. The Postgres unique index is still the safety net. About $1-2k/month.
 
-**What you add:**
+**Stage 4: 1M users.** New problems. The hottest Black Friday campaign saturated one Redis core at 50k QPS; latency went from 1ms to 50ms. EU operations launched; EU users redeem codes on the EU site, and the codes need to be valid across both regions, but cross-region replication of Redis state introduces ambiguity about who got the code. A pre-generated code minting bug inserted 10 million pool codes with the wrong discount value; bulk fixup was needed without invalidating the 50,000 already-redeemed ones. Marketing wanted per-segment campaigns: same code SAVE10 meaning 20% off for VIPs and 10% off for everyone else.
 
-- **Per-user rate limiting** in the API Gateway. Token bucket in Redis. 10 validate/min, 5 redeem/min per authenticated user. Catches the casual script kid.
-- **Per-IP rate limiting** for unauthenticated traffic. 30 validate/min per IP.
-- **In-process LRU cache** for campaign and code lookups. 1000 entries, 60s TTL. Most validate calls hit the cache. DB load drops ~5x.
-- **Redemption_attempts table** to log every attempt for fraud signals. Partitioned monthly. You start a dashboard showing "top 10 IPs by failed-validate rate in the last hour."
-- **Idempotency-Key on redeem.** Required, not optional. Stored in Redis with 5min TTL. The cart UI bug stops causing problems.
+Sharded Redis for ultra-hot campaigns: counter and user-set partitioned by hash(user_id) across N nodes, each holding 1/N of the cap. A user's redeem routes to the node owning their hash. Caveat: "remaining" is per-shard, so if one shard exhausts while others have slots, late users to the wrong shard see "exhausted" while slots exist elsewhere. Route losers to a fallback shard once, or accept that the cap is approximate (1000 ± 10) and document it.
 
-**What you do *not* yet build:**
+Pre-loaded code pool partitioned by the same shards. Multi-region with per-region authority: a code is owned by one region, redemption on the wrong region routes through to the owning region. Cross-region call adds ~100ms which is fine because most users redeem in their home region. Audit hash chain on the redemptions table: each row stores `prev_hash = SHA256(prev_redemption.canonical)` and `hash = SHA256(this.canonical + prev_hash)`. Finance auditors can verify the chain. Required for SOX at this scale.
 
-- No Bloom filter. At 1k users you have at most a few thousand distinct code attempts per day. The cache absorbs most of it.
-- No Redis for the atomic claim. Postgres handles all redeems directly with `FOR UPDATE SKIP LOCKED`. Max contention is on the hottest campaign which sees maybe 10 QPS.
-- No Kafka. The cart calls the coupon service inline. Latency is fine.
+Bulk campaign update tool that updates the campaign's `discount` metadata without touching the snapshot in each redemption (the snapshot is what the cart actually applied; it must never change). Per-segment discount via campaign rules: `discount_rules: [{audience: "vip", discount: 20%}, {audience: "default", discount: 10%}]`. The validate path evaluates the user's segment and returns the matching discount; the redemption snapshot records which rule fired. CDC pipeline from Postgres to ClickHouse for marketing dashboards. Nightly finance reconciliation: sum of redemptions per campaign vs Redis counter, alert on drift.
 
-**New cost:** ~$200/month (Redis for rate limits and idempotency keys, slightly bigger DB).
+Even at 1M users, the volume is small (~10 QPS sustained, 100k QPS peak burst). The architecture has not fundamentally changed since stage 3: regions, sharding, audit chain, RBAC. The core insight (Postgres unique index as safety net, Redis Lua as burst path, Bloom filter as brute-force shield) carries through unchanged. About $10-30k/month depending on regions and audit volume.
 
-#### Stage 3: 100,000 users (mid-size e-commerce)
-
-**What just broke:**
-
-- The first real flash sale. 2000 codes for FLASH50 dropped at noon. 5000 users tried at once. Postgres CPU pegged at 100% for 30 seconds. The `FOR UPDATE SKIP LOCKED` query serialized on the `(campaign_id, state = 'unused')` index. Most requests timed out at the gateway. Marketing was furious.
-- Someone scripted a brute-force across the SAVE-prefix namespace. 5000 attempts/sec from rotating IPs. Even with the LRU cache, the misses (which are guaranteed-misses on bogus codes) hit the DB at ~1000 QPS. The DB was healthy but the dashboard was screaming.
-- The cart service started experiencing race conditions: a user redeemed a code, the cart applied the discount, then the user removed an item from the cart that made the discount no longer applicable. The discount stayed applied. Edge case but real.
-
-**What you add:**
-
-- **Redis with Lua for atomic claims on hot campaigns.** When a campaign is marked `hot` at creation time (admin flag, or automatic if expected_qps > 100), the system maintains a Redis counter (`campaign:{id}:remaining`) and a Redis set of users (`campaign:{id}:users`). The Lua script in section 5 does the atomic claim. Postgres backstop with the unique index still catches drift.
-- **For pool campaigns**, pre-load all unclaimed codes into a Redis list. `LPOP` is sub-millisecond.
-- **Bloom filter prefilter** loaded at service start, updated when campaigns are created. Bogus codes return 404 in microseconds without touching Redis or DB. The brute-force scraper is reduced to noise.
-- **Async write to Postgres for redemptions on hot campaigns.** Redis says yes immediately; the Postgres write happens within ~50ms via a small per-pod outbox. The unique index catches any double-write. Acceptable risk: if Redis loses state in that 50ms window, you have ~5 unaudited redemptions to reconcile.
-- **Kafka topic `coupon.redeemed`.** The cart service consumes the event and applies the discount idempotently (uses `redemption_id` as the dedup key). The coupon service no longer makes a synchronous call to the cart.
-- **Read replica** for the validate path. The write path stays on the primary.
-- **Velocity-based campaign pause.** If redemption_attempts for a campaign spikes 100x in 1 minute over the trailing-hour baseline, auto-pause and page the on-call. Catches both leakage and bugs.
-
-**Why this is enough:**
-
-- Flash sales now serve 10k QPS on the hot campaign without breaking a sweat. Redis runs the whole burst on one core.
-- Bloom filter cuts brute-force DB load by ~99.9%.
-- The Postgres unique index is still the safety net. Any drift between Redis and Postgres is caught and reconciled.
-
-**New cost:** ~$1-2k/month (Redis cluster, Kafka cluster, read replica, bigger primary DB).
-
-#### Stage 4: 1,000,000 users (large e-commerce / multi-region)
-
-**What just broke:**
-
-- A single Redis node was the bottleneck for the hottest campaign during Black Friday. 50k QPS on one Redis core saturated it. Latency went from 1ms to 50ms.
-- EU operations launched. EU users redeem codes on the EU site; the codes need to be valid across both regions. Cross-region replication of Redis state introduces ambiguity about who got the code.
-- A bug in pre-generated code minting caused 10 million pool codes to be inserted with the same campaign_id but wrong discount value. Bulk fixup was needed without invalidating the 50,000 already-redeemed ones.
-- Marketing wants per-customer-segment campaigns: "the same code SAVE10 means 20% off for VIPs and 10% off for everyone else." The campaign model needs a layer of indirection.
-
-**What you add:**
-
-- **Sharded Redis for ultra-hot campaigns.** The counter and user-set for the hottest campaign are partitioned by hash(user_id) across N Redis nodes. Each node holds 1/N of the cap. A user's redeem call routes to the node owning their hash. Lua script runs per-node. Total throughput scales linearly with N.
-  - Caveat: the "remaining" count is per-shard. The total is the sum. If one shard is exhausted but others have slots, late users to the wrong shard see "exhausted" while slots exist elsewhere. Mitigation: route losers to a fallback shard once. Or accept that the absolute cap is approximate (1000 +/- 10) and document it.
-- **Pre-loaded code pool partitioned by hash.** Pool codes are split across the same Redis shards as the counter. Each shard holds N/shard_count codes. `LPOP` from the shard mapped to the user's hash.
-- **Multi-region with per-region authority.** A code is "owned" by one region. Redemption of a code on the wrong region routes through to the owning region. The cross-region call is rare (most users redeem in their home region) and adds ~100ms which is acceptable. Cross-region traffic is logged for fraud signals.
-- **Audit hash chain** on the redemptions table. Each row stores `prev_hash = SHA256(prev_redemption.canonical)` and `hash = SHA256(this.canonical + prev_hash)`. Finance auditors can verify the chain has not been tampered with. Required for SOX compliance at this scale.
-- **Bulk campaign update tool.** Allows admin to update campaign discount metadata without touching the `redeemed` snapshot in each redemption (the snapshot is what the cart actually applied; it must never change). For codes still unredeemed, the new discount takes effect on next redeem.
-- **Per-segment discount via campaign rules.** Campaign defines `discount_rules: [{audience: "vip", discount: 20%}, {audience: "default", discount: 10%}]`. The validate path evaluates the user's segment and returns the matching discount. The redemption snapshot records which rule fired.
-- **CDC pipeline from Postgres to analytics.** Redemption events stream to ClickHouse for marketing dashboards. Finance reconciliation runs nightly: sum of redemptions per campaign vs Redis counter, alert on drift.
-
-**Why this is enough:**
-
-Even at 1M users, the volume is small by absolute terms (~10 QPS sustained, 100k QPS peak burst). The architecture has not fundamentally changed since stage 3: regions, sharding, audit chain, RBAC. The core insight (Postgres unique index = safety net, Redis Lua = burst path, Bloom filter = brute-force shield) carries through unchanged.
-
-**Cost:** ~$10-30k/month depending on regions and audit volume.
-
-#### What you would not build at 10M+ users
-
-At 10M users you are a top-10 e-commerce platform. At that point coupon redemption is a real product (think Shopify Discounts, or the discount engine inside Amazon). The conversation shifts from "build a coupon system" to "build a discount engine that also handles bundles, tiered pricing, A/B testing of promotions, machine-learned personalized offers." Different problem.
+At 10M users you are a top-10 e-commerce platform. Coupon redemption becomes a real product (Shopify Discounts, the discount engine inside Amazon). The conversation shifts from "build a coupon system" to "build a discount engine that also handles bundles, tiered pricing, A/B testing of promotions, ML-personalized offers." Different problem.
 
 ### 9. Reliability
 
-**Redis dies mid-redemption.**
+Redis dies mid-redemption: Lua script returned OK, decremented the counter, added the user to the set; the service crashed before the Postgres write; Redis later lost state in a failover with a stale replica. Outcome: a few redemptions exist in Redis but not in Postgres, the counter shows N minus a few, reality is N.
 
-Scenario: Lua script returned OK, decremented the counter, added user to the set. Service crashes before the Postgres write. Redis later loses state (failover with stale replica).
+Three things keep this safe. The synchronous Postgres write before returning success (5-10ms cost, worth it for correctness). The Postgres unique index as ground truth: if Redis is rebuilt from scratch on warm-start, the rebuild queries Postgres for the current redeemed count and reseeds the counter; the user-set is similarly seeded from Postgres. And a periodic reconciliation job that compares Redis counter vs Postgres count, alerting on drift greater than 10.
 
-Outcome: ~5 redemptions exist in Redis but not in Postgres. Counter shows N-5; reality is N.
+Postgres primary fails: failover to read replica takes 30 to 60 seconds. During failover, redeem is unavailable. Validate still works against the replica (which is now primary). The Idempotency-Key cache in Redis means users who retry after failover get a clean response, either their previous successful redemption or a fresh attempt against the new primary.
 
-Mitigations:
-1. **Synchronous Postgres write before returning success.** Adds 5-10ms. Worth it for correctness.
-2. **Postgres unique index is the ground truth.** If Redis is rebuilt from scratch (warm-start), the rebuild process queries Postgres for the current redeemed count and reseeds the Redis counter. The user-set in Redis is similarly seeded from Postgres on warm-start.
-3. **Periodic reconciliation.** A nightly job compares Redis counter vs Postgres count. Drift > 10 alerts the on-call.
+Payment fails after redemption: user redeemed BLACKFRI100, the cart applied 100% off, payment failed at checkout. Two policies, picked at campaign-creation time. Default `release_on_failure = false`: the redemption stands, the user lost their chance, they are told "your discount has been consumed; please contact support." Opt-in `release_on_failure = true`: `payment.failed` triggers the release procedure, which sets `released_at` on the redemption (the partial unique index `WHERE released_at IS NULL` makes the user free to redeem again), and for pool codes sets the `codes` row back to `unused`, and for shared counters increments the Redis counter. Each step is idempotent.
 
-**Postgres primary fails.**
+The senior position: default to no release. Release introduces a parallel race where someone else can claim the released code while the original user is debugging payment. For high-value campaigns where customer goodwill matters, opt in.
 
-Failover to read replica takes 30-60 seconds. During failover, redeem is unavailable. Validate still works against the replica (which is now primary).
+Refund the next day works the same way, gated by an admin or automated rule. Marketing picks per-campaign whether refund releases. Most do not.
 
-The Idempotency-Key cache in Redis means users who retry after failover get a clean response (either their previous successful redemption, or a fresh attempt against the new primary).
-
-**Payment fails after redemption.**
-
-User redeemed BLACKFRI100, the cart applied 100% off, then payment failed at checkout.
-
-Two policies, choose at campaign-creation time:
-- **`release_on_failure = false` (default).** The redemption stands. The user lost their chance. They are told "your discount has been consumed; please contact support."
-- **`release_on_failure = true`.** The redemption is released. Mechanism: cart service emits `payment.failed` on the order; coupon service consumes it; if `order_id` matches a redemption, mark `released_at = NOW()` and run the release procedure.
-
-Release procedure: set `released_at` on the redemption row (the partial unique index `WHERE released_at IS NULL` makes the user free to redeem again). For pool codes, set the `codes` row state back to `unused`. For shared counters, increment the Redis counter. Each step is idempotent.
-
-The senior answer: "Default is `release_on_failure = false` because release introduces a parallel race (someone else can claim the released code while the original user is debugging payment). For high-value campaigns where customer goodwill matters, opt in to release."
-
-**Payment succeeds but user requests refund (next day).**
-
-Same release procedure, gated by an admin or automated rule. Marketing decides per-campaign whether refund releases the code. Most do not.
-
-**Kafka is down.**
-
-The redemption succeeds in Postgres. The cart does not receive the event. The cart polls the coupon service periodically for redemptions tied to active carts, or the user re-applies the code in the cart UI (the validate endpoint returns "valid: true, already_redeemed_for_this_order: true" with the discount).
-
-The fallback path is essential. A Kafka outage should not block checkout.
+Kafka is down: the redemption succeeds in Postgres but the cart does not receive the event. The cart polls the coupon service periodically for redemptions tied to active carts, or the user re-applies the code in the cart UI (the validate endpoint returns "valid: true, already_redeemed_for_this_order: true" with the discount). The fallback path is essential. A Kafka outage should not block checkout.
 
 ### 10. Observability
 
 | Metric | Why it matters |
 |--------|----------------|
-| `redeem.latency` p50/p95/p99 | Headline SLO; alert if p99 > 200ms at burst |
-| `redeem.success.rate` per campaign | Drops indicate exhaustion or backend errors |
-| `redeem.attempts.rate` per campaign | Sudden 100x spike triggers velocity pause |
-| `redeem.result.distribution` | `success`, `exhausted`, `already_redeemed`, `audience_mismatch`, etc. Drift tells you about UX bugs |
-| `validate.cache_hit_rate` | Should be > 90%; below = cache too small or invalidation too aggressive |
-| `bloom_filter.hit_rate` | Tracks the brute-force shield; spikes indicate scraper traffic |
-| `redis.counter.drift_vs_db` | Computed nightly; non-zero = a bug or a Redis incident |
-| `rate_limit.triggered.count` per user/IP | Top offenders dashboard for the security team |
-| `kafka.lag.coupon_redeemed` | Cart applies discount with this lag; alert at > 30s |
-| `audit_chain.verification.failed` | If non-zero ever, someone tampered with the redemption log; page everyone |
+| `redeem.latency` p50/p95/p99 | The headline SLO; alert if p99 > 200ms at burst. |
+| `redeem.success.rate` per campaign | Drops indicate exhaustion or backend errors. |
+| `redeem.attempts.rate` per campaign | Sudden 100x spike triggers velocity pause. |
+| `redeem.result.distribution` | success, exhausted, already_redeemed, audience_mismatch, etc. Drift tells you about UX bugs. |
+| `validate.cache_hit_rate` | Should be > 90%. Below means the cache is too small or invalidation too aggressive. |
+| `bloom_filter.hit_rate` | Tracks the brute-force shield. Spikes indicate scraper traffic. |
+| `redis.counter.drift_vs_db` | Computed nightly. Non-zero is a bug or a Redis incident. |
+| `rate_limit.triggered.count` per user/IP | Top offenders dashboard for the security team. |
+| `kafka.lag.coupon_redeemed` | Cart applies discount with this lag. Alert at > 30s. |
+| `audit_chain.verification.failed` | If non-zero ever, someone tampered with the log. Page everyone. |
 
-Alerts:
-- Page: redeem error rate > 5% for 5min; redis-postgres drift > 100; audit chain failure.
-- Ticket: validate cache hit rate < 80%; bloom filter rebuild stuck; rate limit triggers > 10x daily baseline.
+Page on: redeem error rate > 5% for 5min, redis-postgres drift > 100, audit chain failure. Ticket on: validate cache hit rate < 80%, Bloom filter rebuild stuck, rate limit triggers > 10x daily baseline.
 
-### 11. Common gotchas
+### 11. Gotchas the senior interviewer is listening for
 
-1. **Race condition on the hot key.** Two requests arrive in the same millisecond for the last available slot. Without atomic claim (Lua or `FOR UPDATE SKIP LOCKED`), both succeed and the campaign goes over cap. The unique index on `(campaign_id, user_id)` only protects against the same user racing themselves, not against two different users racing for the last slot. The atomic claim is non-optional.
-2. **Codes leaked publicly.** Shared codes on a deal forum is a feature of how the internet works. Defenses are audience filter, unique per-user codes, velocity-based pause, and a sensible cap. There is no perfect prevention.
-3. **Double redemption from retry.** Network failed after the redemption succeeded; client retried. Without Idempotency-Key, the retry consumes a second slot. With it, the retry returns the original response. Required.
-4. **User-agent fingerprinting for abuse.** Same browser fingerprint creating ten accounts and each trying ten codes is a signal. Combine fingerprint with IP and user account for the abuse detector. Real protection is layered; fingerprinting alone is bypassable.
-5. **Time zone in expiry.** "Midnight Dec 31" is ambiguous. Store `expires_at` as a UTC timestamp. Display in the user's local timezone. Always reject in the API based on UTC comparison.
-6. **The `released_at` race.** When you release a code due to refund, a third user can immediately re-claim it. If the original refund is itself reversed (rare but possible), you have a code claimed twice. Mitigation: never release after T hours from original redemption; after T hours, treat the redemption as permanent regardless of order status.
-7. **Cart applies the wrong discount snapshot.** The user redeems at 9am with a 100% discount. At 10am, marketing edits the campaign to 50%. The cart re-validates the redemption and now sees 50%. Bug: the cart should use the `discount_applied` snapshot from the redemption row, not re-query the campaign. The snapshot is the contract; the campaign is the rule for *future* redemptions.
-8. **Bloom filter staleness.** Campaigns created after the filter was built are not in the filter. Mitigation: when a campaign is created, broadcast a "rebuild filter" event to all service pods, or include new codes in an additional small in-memory set checked alongside the main filter.
-9. **Per-user limit > 1.** If `per_user_limit = 5`, the unique index `(campaign_id, user_id)` is wrong; it allows only 1. Solution: change to `(campaign_id, user_id, redemption_seq)` where redemption_seq is an integer that increments per user per campaign. Enforce the limit in the service code with a count check before insert.
-10. **POS / offline redemption.** A retail terminal goes offline, accepts a code, then syncs at 11pm. By then the same code may have been used online. Resolution requires per-channel policy: either "online wins" (POS redemption gets reversed) or "first-sync wins" (whoever syncs first to the central service wins; the other gets a chargeback). Pick one before you ship offline support; do not let it be ambiguous.
+Most of these only come out when the interviewer asks "what happens if...". The senior candidate brings them up unprompted.
+
+**Race on the hot key.** Two requests in the same millisecond for the last slot. Without atomic claim (Lua or `FOR UPDATE SKIP LOCKED`), both succeed and the campaign goes over cap. The unique index on `(campaign_id, user_id)` only protects against the same user racing themselves, not against two different users racing for the last slot. The atomic claim is non-optional.
+
+**Codes leaked publicly.** Shared codes on a deal forum is a feature of how the internet works. Defenses are audience filter, unique per-user codes, velocity-based pause, and a sensible cap. There is no perfect prevention.
+
+**Double redemption from retry.** Network failed after the redemption succeeded; client retried. Without Idempotency-Key, the retry consumes a second slot. With it, the retry returns the original response. Required, not optional.
+
+**Time zone in expiry.** "Midnight Dec 31" is ambiguous. Store `expires_at` as a UTC timestamp. Display in the user's local timezone. Always reject in the API based on UTC comparison.
+
+**The `released_at` race.** When you release a code due to refund, a third user can immediately re-claim it. If the original refund is itself reversed (rare but possible), you have a code claimed twice. Mitigation: never release after T hours from original redemption; after T hours, treat the redemption as permanent regardless of order status.
+
+**Cart applies the wrong discount snapshot.** The user redeems at 9am with a 100% discount. At 10am, marketing edits the campaign to 50%. The cart re-validates the redemption and now sees 50%. Bug: the cart should use the `discount_applied` snapshot from the redemption row, not re-query the campaign. The snapshot is the contract; the campaign is the rule for *future* redemptions.
+
+**Bloom filter staleness.** Campaigns created after the filter was built are not in the filter. Mitigation: when a campaign is created, broadcast a "rebuild filter" event to all service pods, or include new codes in an additional small in-memory set checked alongside the main filter.
+
+**Per-user limit > 1.** If `per_user_limit = 5`, the unique index `(campaign_id, user_id)` is wrong; it allows only 1. Solution: change to `(campaign_id, user_id, redemption_seq)` where redemption_seq is an integer that increments per user per campaign. Enforce the limit in service code with a count check before insert.
+
+**POS / offline redemption.** A retail terminal goes offline, accepts a code, then syncs at 11pm. By then the same code may have been used online. Resolution requires per-channel policy: either "online wins" (POS redemption gets reversed) or "first-sync wins" (whoever syncs first wins, the other gets a chargeback). Pick one before you ship offline support; do not let it be ambiguous.
 
 ### 12. Follow-up answers
 
@@ -926,48 +890,35 @@ The Idempotency-Key in Redis (5min TTL) catches it. The retry's key matches the 
 
 If the Idempotency-Key cache also lost the entry (Redis failover), the retry hits Redis Lua again. The user is already in the user-set, so the script returns `already_redeemed` with the original redemption_id (looked up from Postgres). Idempotent.
 
-The bad case: Idempotency-Key cache lost, *and* Postgres lost the row (which should never happen with a healthy DB). Then the user successfully redeems a second time. Mitigation: synchronous Postgres write before returning success. This is why we accept the 5-10ms cost of the synchronous insert.
+The bad case is when the Idempotency-Key cache is lost *and* Postgres lost the row (which should never happen with a healthy DB). Then the user successfully redeems a second time. Mitigation: synchronous Postgres write before returning success. This is why we accept the 5-10ms cost of the synchronous insert.
 
 **2. 1000 codes in the campaign; 1003 in Postgres after launch.**
 
-Possible causes:
-- A bug in the release-on-refund flow: 3 codes were released and re-claimed; the original 3 plus the 3 re-claims = 1003 rows in redemptions, but only 1000 with `released_at IS NULL`. Not actually a problem if you count active redemptions correctly.
-- A real bug: the unique index was misconfigured (`WHERE released_at IS NULL` was missing), allowing two active rows per user.
-- A real bug: Redis and Postgres drifted because synchronous Postgres writes failed silently and Redis kept going. The campaign exhausted in Redis after 1000, but those 3 extra were ones that succeeded in Postgres after a Redis stutter.
+Three possible causes. A bug in the release-on-refund flow: 3 codes were released and re-claimed, so 1003 rows in redemptions but only 1000 with `released_at IS NULL`. Not actually a problem if you count active redemptions correctly. A real bug: the unique index was misconfigured (the `WHERE released_at IS NULL` clause was missing), allowing two active rows per user. A real bug: Redis and Postgres drifted because synchronous Postgres writes failed silently while Redis kept going; the campaign exhausted in Redis after 1000 but those 3 extra succeeded in Postgres after a Redis stutter.
 
 Detection: nightly reconciliation job comparing `SELECT COUNT(*) FROM redemptions WHERE campaign_id = ? AND released_at IS NULL` against the Redis counter. Alert on any drift.
 
-Prevention: synchronous Postgres write before returning success; the unique index is the backstop. The campaign should also have a Postgres-side hard cap: `INSERT INTO redemptions ... WHERE (SELECT COUNT(*) FROM redemptions WHERE campaign_id = ?) < total_codes`. This is expensive at burst (the count query is the bottleneck), so use it only as a periodic safety check, not in the hot path.
+Prevention: synchronous Postgres write before returning success; the unique index is the backstop. The campaign should also have a Postgres-side hard cap: `INSERT INTO redemptions... WHERE (SELECT COUNT(*) FROM redemptions WHERE campaign_id = ?) < total_codes`. Expensive at burst because the count query is the bottleneck, so use it only as a periodic safety check, not in the hot path.
 
 **3. Stacking SAVE10 + FREESHIP + BLACKFRI100.**
 
 The cart holds the list of applied coupons. Validate is called per coupon and is told what other coupons are in the cart.
 
-Coupon-side logic:
-- Each campaign has `stacking_rules`: `{"stackable_with": ["FREESHIP"], "excludes": ["BLACKFRI*"]}` (allowlist + denylist).
-- Validate computes: do the existing cart coupons satisfy this coupon's rules?
-- If BLACKFRI100 is in the cart and you try to validate SAVE10, the stacking check fails: "not_stackable_with_blackfri".
+On the coupon side, each campaign has `stacking_rules`: `{"stackable_with": ["FREESHIP"], "excludes": ["BLACKFRI*"]}` (allowlist plus denylist). Validate computes: do the existing cart coupons satisfy this coupon's rules? If BLACKFRI100 is in the cart and you try to validate SAVE10, the stacking check fails with `not_stackable_with_blackfri`.
 
-Cart-side logic:
-- The cart enforces a max number of coupons per cart (e.g., 3) regardless of stacking rules.
-- The cart computes the final discount: if both are percentages, decide compound (1 - 0.1)(1 - 0.5) vs sum 10% + 50% = 60% off (clamped at 100%). This is a business decision per campaign; default is sum, capped at 100%.
+On the cart side, the cart enforces a max number of coupons per cart (e.g., 3) regardless of stacking rules. The cart computes the final discount: if both are percentages, decide compound `(1 - 0.1)(1 - 0.5)` vs sum `10% + 50% = 60%` off (clamped at 100%). This is a business decision per campaign; default is sum, capped at 100%.
 
-The coupon service is the source of truth for stacking *rules*. The cart applies the rules. The split is important because the cart already has the context (other coupons, totals).
+The coupon service is the source of truth for stacking *rules*. The cart applies the rules. The split matters because the cart already has the context (other coupons, totals).
 
 **4. Refund releases the code, or not?**
 
 Per-campaign policy. Default: no release.
 
-If release is on:
-- `payment.refunded` event triggers the release procedure.
-- Set `released_at` on the redemption.
-- For pool: set the code row's state back to `unused` and push the code back to the Redis list.
-- For shared: `INCR` the Redis counter.
-- For unique per-user: the user can now re-redeem the same code.
+If release is on: `payment.refunded` triggers the release procedure. Set `released_at` on the redemption. For pool, set the code row's state back to `unused` and push the code back to the Redis list. For shared, `INCR` the Redis counter. For unique per-user, the user can re-redeem the same code.
 
-The hidden cost: a released code creates a parallel race. Someone else can claim it within milliseconds. Customer service hates this when the refunding customer asks "can you give me that code back so I can use it tomorrow."
+The hidden cost is the parallel race: someone else can claim it within milliseconds. Customer service hates this when the refunding customer asks "can you give me that code back so I can use it tomorrow."
 
-The cleaner answer: do not release. Refund the money. The discount is gone. If the customer is high-value, support manually issues a courtesy code from a separate budget. This avoids the race entirely.
+The cleaner answer is to not release. Refund the money. The discount is gone. If the customer is high-value, support manually issues a courtesy code from a separate budget. This avoids the race entirely.
 
 **5. Expiration in the wrong timezone.**
 
@@ -983,23 +934,17 @@ The Twitter-yelling avoided: a user in Tokyo who sees "expires in 3 hours" at 11
 
 The redemption snapshot is immutable; that is the contract. Updating the campaign's `discount` field does not retroactively change what past redemptions applied; the cart uses the snapshot in each redemption row.
 
-For unredeemed codes, the campaign update takes effect on next redeem. The `codes` table does not store the discount per code; it joins to the campaign. So updating the campaign updates every future redemption from any of its codes.
+For unredeemed codes, the campaign update takes effect on next redeem. The `codes` table does not store the discount per code; it joins to the campaign. Updating the campaign updates every future redemption from any of its codes.
 
-If the discount is wrong on already-redeemed orders (e.g., wrong percentage applied), that is an accounting/refund problem, not a coupon-system problem. The coupon-system change just stops the bleeding for new redemptions.
+If the discount is wrong on already-redeemed orders (e.g., wrong percentage applied), that is an accounting and refund problem, not a coupon-system problem. The coupon-system change just stops the bleeding for new redemptions.
 
 Code path: `UPDATE campaigns SET discount = ? WHERE campaign_id = ?`. One row. Fast. Cache invalidation event broadcast to all service pods to drop the cached campaign metadata.
 
 **7. Multi-region single-use guarantee.**
 
-Each code is "owned" by exactly one region at creation time (typically the region whose campaign created it). The owning region's Postgres holds the authoritative redemption row.
+Each code is owned by exactly one region at creation time (typically the region whose campaign created it). The owning region's Postgres holds the authoritative redemption row.
 
-If a code is redeemed in a non-owning region:
-- The non-owning region's service detects the mismatch (campaign metadata says "owned by us-east").
-- It forwards the redeem call via authenticated cross-region API to us-east.
-- us-east performs the atomic claim against its Postgres and Redis.
-- The response is returned across regions to the user.
-
-Latency cost: ~100ms cross-region. Acceptable for the rare cross-region case.
+If a code is redeemed in a non-owning region: the non-owning region's service detects the mismatch (campaign metadata says "owned by us-east"), forwards the redeem call via authenticated cross-region API to us-east, us-east performs the atomic claim against its Postgres and Redis, and the response is returned across regions to the user. Latency cost ~100ms cross-region. Acceptable for the rare cross-region case.
 
 Per-user uniqueness across regions: the unique index on `(campaign_id, user_id)` lives only in the owning region. Cross-region calls all funnel into it. The unique index does the work.
 
@@ -1011,7 +956,7 @@ Correct. A Bloom filter never says "definitely not present" for something that w
 
 What Bloom filters *do* have is **false positives**: occasionally saying "maybe present" for a code that was never inserted. This is fine for our use case: a false positive sends the request through to the cache/DB, which correctly returns 404. No harm done; just a tiny bit of leaked load.
 
-In this design, the filter is sized for 0.1% false-positive rate at 200M items. That means out of every 1000 brute-force attempts on bogus codes, ~999 are rejected at the filter and ~1 falls through to the DB. At a brute-force rate of 5000 attempts/sec, the DB sees ~5 lookups/sec from this source. Trivial.
+In this design, the filter is sized for 0.1% false-positive rate at 200M items. Out of every 1000 brute-force attempts on bogus codes, ~999 are rejected at the filter and ~1 falls through to the DB. At a brute-force rate of 5000 attempts/sec, the DB sees ~5 lookups/sec from this source. Trivial.
 
 What you must not do: rely on the filter to *prove* a code exists. You must still validate against the DB on a maybe-present hit, because the filter is approximate.
 
@@ -1027,35 +972,47 @@ If the per-user-limit is 1 and any of the 20 users had already redeemed SAVE10 p
 
 No. Codes are append-only forever, even after expiry.
 
-Reasons:
-- The codes table has a unique index on the code string. Reuse would require deleting the expired row, which loses audit history.
-- A user might bookmark the code or have it in an email. Reusing the string for a new campaign creates confusion ("why does my SAVE10 from last year suddenly apply 25% off?").
-- Fraud signal: trying an expired code is a useful pattern. Reusing the string erases that signal.
+The codes table has a unique index on the code string. Reuse would require deleting the expired row, which loses audit history. A user might bookmark the code or have it in an email; reusing the string for a new campaign creates confusion ("why does my SAVE10 from last year suddenly apply 25% off?"). Trying an expired code is itself a useful fraud signal; reusing the string erases that signal.
 
-What you can do: design the code namespace to be effectively infinite. 10 characters in base32 = ~10^15 codes. You will never run out. Just mint a new string for each new campaign.
+What you can do: design the code namespace to be effectively infinite. 10 characters in base32 is ~10^15 codes. You will never run out. Mint a new string for each new campaign.
 
 For pool campaigns where unclaimed codes pile up, the cost is the storage of those expired rows. At ~200 bytes each, 1M expired unredeemed codes is 200MB. Negligible. Optionally, archive expired codes to cold storage after 1 year.
 
-### 13. Trade-offs and what a senior would mention
+### 13. Trade-offs worth saying out loud
 
-- **Why Postgres unique index *and* Redis Lua.** Either alone is a single point of failure. The unique index alone melts under 10k QPS on one row. Redis Lua alone loses correctness if Redis drops state. Together they form a fast hot path with a strong safety net.
-- **Why not just a sequence-backed counter in Postgres.** A `SERIAL` column gives unique IDs but does not enforce the cap (the cap is a count check, not a uniqueness check). And the row-level contention is still there. The unique index on `(campaign_id, user_id)` is the right primitive.
-- **Why Bloom filter, not a Redis SET membership check.** Bloom filter is in-process, sub-microsecond, fixed memory. A Redis SISMEMBER is a network round-trip (1ms) and grows linearly with the number of issued codes. At 200M codes, the SET would be ~4GB in Redis; the Bloom filter is ~300MB in each pod's process memory. Bloom wins on cost and latency.
-- **Why an immutable redemptions log, not just "current state."** Finance auditors, fraud investigators, and refund workflows all need the history. Mutating in place destroys traceability.
-- **What I would revisit at 10x scale.** Move to a discount engine (rules-based, not just code-based). Pre-personalize coupons per user. Add A/B testing of discount values. The simple coupon model breaks once marketing wants to ask "what if we showed user X a 15% code and user Y a 10% code based on their cart value."
+**Why Postgres unique index *and* Redis Lua.** Either alone is a single point of failure. The unique index alone melts under 10k QPS on one row. Redis Lua alone loses correctness if Redis drops state. Together they form a fast hot path with a strong safety net.
+
+**Why not just a sequence-backed counter in Postgres.** A `SERIAL` column gives unique IDs but does not enforce the cap (the cap is a count check, not a uniqueness check). And the row-level contention is still there. The unique index on `(campaign_id, user_id)` is the right primitive.
+
+**Why a Bloom filter, not a Redis SET membership check.** Bloom filter is in-process, sub-microsecond, fixed memory. A Redis SISMEMBER is a network round-trip (1ms) and grows linearly with the number of issued codes. At 200M codes, the SET would be ~4GB in Redis; the Bloom filter is ~300MB in each pod's process memory. Bloom wins on cost and latency.
+
+**Why an immutable redemptions log, not just current state.** Finance auditors, fraud investigators, and refund workflows all need the history. Mutating in place destroys traceability.
+
+**What I would revisit at 10x scale.** Move to a discount engine (rules-based, not just code-based). Pre-personalize coupons per user. Add A/B testing of discount values. The simple coupon model breaks once marketing wants to ask "what if we showed user X a 15% code and user Y a 10% code based on their cart value."
 
 ### 14. Common interview mistakes
 
-1. **Diving straight into a `coupons` table without thinking about concurrency.** The whole question is about the 10k-QPS burst. If your design's first sentence is "we'll have a coupons table with a `times_used` column," you have missed the point. The interviewer will steer you to the race condition; you should arrive there yourself.
-2. **Using Redis without a Postgres backstop.** Redis can lose state. If you describe Redis as the source of truth and shrug at the failure modes, you fail the senior bar.
-3. **Forgetting the per-user uniqueness check.** Some candidates correctly atomic-claim the campaign counter and forget that the same user can race themselves with two browser tabs. The unique index on `(campaign_id, user_id)` is non-optional.
-4. **No idempotency on redeem.** Without Idempotency-Key, every network retry burns a code. At burst with flaky networks, this is catastrophic.
-5. **Conflating validate and redeem.** A POST that always consumes is a UX disaster (no preview of the discount). A GET that consumes violates HTTP semantics and breaks browser pre-fetch. Two endpoints, clear separation.
-6. **Ignoring brute-force.** Coupon namespaces get scraped. If you do not mention rate limiting and the Bloom filter (or some equivalent), you have not thought about the abuse model.
-7. **Hand-waving release-on-refund.** "Yeah, we'll just put it back" creates a parallel race the candidate has not thought through. The senior answer either says "we don't release" with reasons, or describes the release race explicitly.
-8. **No mention of the discount snapshot.** The cart applies the discount as it existed at redeem time, not as it exists now. Without the snapshot in the redemption row, marketing can retroactively change discounts on past orders, which breaks accounting.
-9. **Designing for write throughput.** Even at 1M users, sustained QPS is single digits. The design pressure is the launch burst and the abuse traffic, not steady state. Candidates who size for "millions of writes per second" have misread the problem.
-10. **Skipping the audit log.** Finance and fraud need it. The redemption table is your audit log; an immutable schema with a hash chain (at scale) is the senior addition.
+Most weak answers fall into one of these.
+
+**Diving straight into a `coupons` table without thinking about concurrency.** The whole question is about the 10k-QPS burst. If your design's first sentence is "we'll have a coupons table with a `times_used` column," you have missed the point. The interviewer will steer you to the race condition; you should arrive there yourself.
+
+**Using Redis without a Postgres backstop.** Redis can lose state. If you describe Redis as the source of truth and shrug at the failure modes, you fail the senior bar.
+
+**Forgetting the per-user uniqueness check.** Some candidates correctly atomic-claim the campaign counter and forget that the same user can race themselves with two browser tabs. The unique index on `(campaign_id, user_id)` is non-optional.
+
+**No idempotency on redeem.** Without Idempotency-Key, every network retry burns a code. At burst with flaky networks, this is catastrophic.
+
+**Conflating validate and redeem.** A POST that always consumes is a UX disaster (no preview of the discount). A GET that consumes violates HTTP semantics and breaks browser pre-fetch. Two endpoints, clear separation.
+
+**Ignoring brute-force.** Coupon namespaces get scraped. If you do not mention rate limiting and the Bloom filter (or some equivalent), you have not thought about the abuse model.
+
+**Hand-waving release-on-refund.** "Yeah, we'll just put it back" creates a parallel race the candidate has not thought through. The senior answer either says "we don't release" with reasons, or describes the release race explicitly.
+
+**No mention of the discount snapshot.** The cart applies the discount as it existed at redeem time, not as it exists now. Without the snapshot in the redemption row, marketing can retroactively change discounts on past orders, which breaks accounting.
+
+**Designing for write throughput.** Even at 1M users, sustained QPS is single digits. The design pressure is the launch burst and the abuse traffic, not steady state. Candidates who size for "millions of writes per second" have misread the problem.
+
+**Skipping the audit log.** Finance and fraud need it. The redemption table is your audit log; an immutable schema with a hash chain (at scale) is the senior addition.
 
 If you can hit 7 of these 10, you are interviewing at the senior level. The launch-burst correctness story is what separates strong candidates from generic "design a CRUD app" answers. Most candidates miss the per-user-race issue and the importance of the Postgres backstop behind the Redis hot path. Those two are the most common drop-points in interviews on this problem.
 {% endraw %}
