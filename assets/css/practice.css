@@ -93,7 +93,7 @@
   border: 1px solid var(--pr-border);
   overflow: hidden;
 }
-.pr-hero-inner { max-width: 760px; }
+.pr-hero-inner { width: 100%; }
 
 .pr-eyebrow {
   display: inline-block;

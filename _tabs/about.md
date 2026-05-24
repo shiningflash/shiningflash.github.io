@@ -330,21 +330,6 @@ order: 4
       <a href="https://github.com/shiningflash/django-reservation-system"><i class="fab fa-github"></i> GitHub</a>
     </div>
   </div>
-
-  <div class="ap-proj-card">
-    <div class="ap-proj-head">
-      <div class="ap-proj-icon ic-pink"><i class="fas fa-heartbeat"></i></div>
-      <h4 class="ap-proj-name">VH Online Hospital</h4>
-    </div>
-    <p class="ap-proj-desc">Android platform connecting patients with remote doctors — built during COVID-19. Integrated real-time chat and video calling for remote medical consultations, especially for underserved communities.</p>
-    <div class="ap-tags" style="margin-bottom:.75rem;">
-      <span class="ap-tag">Android</span><span class="ap-tag">Java</span><span class="ap-tag">REST APIs</span><span class="ap-tag">Video Call</span>
-    </div>
-    <div class="ap-proj-links">
-      <a href="https://github.com/shiningflash"><i class="fab fa-github"></i> GitHub</a>
-    </div>
-  </div>
-
 </div>
 
 <!-- ══════════════════════════════════════════

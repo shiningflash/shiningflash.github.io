@@ -176,7 +176,7 @@
   font-size: .96rem; line-height: 1.8;
   color: var(--text-color); opacity: .88;
   margin-bottom: 1.4rem;
-  max-width: 680px;
+  width: 100%;
   clear: both;
 }
 
