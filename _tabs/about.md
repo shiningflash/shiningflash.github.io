@@ -11,23 +11,10 @@ order: 4
 ══════════════════════════════════════════ -->
 <div class="ap-hero">
 
-  <!-- <div class="ap-avatar-wrap">
-    <img src="https://avatars.githubusercontent.com/u/35567854?v=4"
-         alt="Amirul Islam Al Mamun" class="ap-avatar-img" loading="lazy">
-  </div> -->
-
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
   <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
-  <div class="ap-hero-sub">Python · Cloud · Microservices · System Design</div>
   <div class="ap-hero-loc">
-    <i class="fas fa-map-marker-alt"></i> Malmö, Sweden
-  </div>
-
-  <div class="ap-badges">
-    <a href="https://www.linkedin.com/in/amirulislamalmamun/"><img src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white" alt="LinkedIn"></a>
-    <a href="https://github.com/shiningflash"><img src="https://img.shields.io/badge/-GitHub-black?style=flat-square&logo=github&logoColor=white" alt="GitHub"></a>
-    <a href="https://medium.com/@amirulislamalmamun"><img src="https://img.shields.io/badge/-Medium-03a57a?style=flat-square&labelColor=000000&logo=Medium" alt="Medium"></a>
-    <a href="mailto:amirulislamalmamun@gmail.com"><img src="https://img.shields.io/badge/-Email-c14438?style=flat-square&logo=Gmail&logoColor=white" alt="Email"></a>
+    <i class="fas fa-map-marker-alt"></i> Sweden
   </div>
 
   <p class="ap-hero-bio">
@@ -60,12 +47,6 @@ order: 4
       <div class="ap-stat-num">500+</div>
       <div class="ap-stat-lbl">Volunteers Led</div>
     </div>
-  </div>
-
-  <div class="ap-focus">
-    <div class="ap-focus-item"><span class="ap-dot dot-green"></span> Turning complex data systems into clean, reliable, and scalable pipelines.</div>
-    <div class="ap-focus-item"><span class="ap-dot dot-blue"></span> Bringing engineering discipline to AI-driven, real-time data environments.</div>
-    <div class="ap-focus-item"><span class="ap-dot dot-violet"></span> Writing code that's not only fast — but easy for teams to trust and extend.</div>
   </div>
 
 </div>
