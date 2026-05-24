@@ -83,69 +83,16 @@ h4, h5, h6 {
 }
 
 /* ─────────────────────────────────────────────────
-   Panel collapse/expand toggle (all pages globally)
+   Hide the right-side panel everywhere and let
+   the main column take the full width on xl screens.
 ───────────────────────────────────────────────── */
 
-/* Smooth collapse animation on .access */
-#panel-wrapper .access {
-  overflow: hidden;
-  max-height: 2000px;
-  opacity: 1;
-  transition: max-height .38s ease, opacity .28s ease;
-}
-#panel-wrapper.panel-collapsed .access {
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
+#panel-wrapper { display: none !important; }
 
-/* Toggle button injected by metadata-hook.html */
-#panel-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: .5rem;
-  width: 100%;
-  padding: .48rem .85rem;
-  margin-bottom: .9rem;
-  border-radius: 10px;
-  border: 1px solid var(--main-border-color);
-  background: var(--sidebar-bg);
-  color: var(--text-color);
-  font-size: .78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .2s, border-color .2s, color .2s;
-  font-family: inherit;
-  text-align: left;
+@media (min-width: 1200px) {
+  main.col-xl-9 {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
 }
-#panel-toggle:hover {
-  background: var(--c-blue-bg);
-  border-color: var(--c-blue);
-  color: var(--c-blue);
-}
-#panel-toggle i { font-size: .72rem; flex-shrink: 0; }
-.pnl-txt { font-size: .76rem; letter-spacing: .01em; }
-
-/* Panel section headings */
-#panel-wrapper .panel-heading {
-  font-size: .74rem;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  opacity: .55;
-  padding-bottom: .4rem;
-  border-bottom: 1px solid var(--main-border-color);
-  margin-bottom: .7rem;
-  margin-top: 1.2rem;
-}
-#panel-wrapper section:first-of-type .panel-heading {
-  margin-top: 0;
-}
-
-/* Recently updated links */
-#access-lastmod ul li {
-  padding: .2rem 0;
-  border-bottom: 1px solid var(--main-border-color);
-  font-size: .83rem;
-}
-#access-lastmod ul li:last-child { border-bottom: none; }
