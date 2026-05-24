@@ -187,15 +187,17 @@
   gap: .75rem; margin: 1.3rem 0 1.5rem;
 }
 .ap-stat {
+  --card-accent: var(--c-blue);
   text-align: center; padding: 1rem .5rem;
   border-radius: 13px;
   border: 1px solid var(--main-border-color);
   background: var(--main-bg);
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
   cursor: default;
 }
 .ap-stat:hover {
-  transform: translateY(-4px);
+  border-color: var(--card-accent);
+  transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(0,0,0,.12);
 }
 .ap-stat-num {
@@ -262,13 +264,16 @@
 .ic-teal   { background: var(--c-teal-bg);   color: var(--c-teal);   border: 1px solid var(--c-teal); }
 .ic-orange { background: var(--c-orange-bg); color: var(--c-orange); border: 1px solid var(--c-orange); }
 
-.bc-blue   { border-left-color: var(--c-blue)   !important; }
-.bc-green  { border-left-color: var(--c-green)  !important; }
-.bc-amber  { border-left-color: var(--c-amber)  !important; }
-.bc-violet { border-left-color: var(--c-violet) !important; }
-.bc-pink   { border-left-color: var(--c-pink)   !important; }
-.bc-teal   { border-left-color: var(--c-teal)   !important; }
-.bc-orange { border-left-color: var(--c-orange) !important; }
+/* bc-* classes set the per-card accent picked up on hover.
+   The accent shows only via border-color + subtle shadow tint when
+   the user is interacting with the card — no permanent colored bar. */
+.bc-blue   { --card-accent: var(--c-blue);   }
+.bc-green  { --card-accent: var(--c-green);  }
+.bc-amber  { --card-accent: var(--c-amber);  }
+.bc-violet { --card-accent: var(--c-violet); }
+.bc-pink   { --card-accent: var(--c-pink);   }
+.bc-teal   { --card-accent: var(--c-teal);   }
+.bc-orange { --card-accent: var(--c-orange); }
 
 /* border-color for section title underline */
 .bbt-blue   { border-bottom-color: var(--c-blue)   !important; }
@@ -294,17 +299,18 @@
 .ap-timeline { position: relative; }
 
 .ap-exp-card {
+  --card-accent: var(--c-blue);
   border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--main-border-color);
-  border-radius: 0 16px 16px 0;
+  border-radius: 16px;
   padding: 1.35rem 1.55rem;
   margin-bottom: 1.1rem;
   background: var(--main-bg);
-  transition: box-shadow .2s ease, transform .2s ease;
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
 .ap-exp-card:hover {
-  box-shadow: 0 6px 28px rgba(0,0,0,.1);
-  transform: translateX(4px);
+  border-color: var(--card-accent);
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+  transform: translateY(-3px);
 }
 
 .ap-exp-head {
@@ -385,15 +391,17 @@ details .det-body { margin-top: .55rem; }
   gap: 1rem;
 }
 .ap-proj-card {
+  --card-accent: var(--c-blue);
   border: 1px solid var(--main-border-color);
   border-radius: 16px; padding: 1.3rem 1.4rem;
   background: var(--main-bg);
-  transition: box-shadow .2s ease, transform .2s ease;
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
   display: flex; flex-direction: column;
 }
 .ap-proj-card:hover {
+  border-color: var(--card-accent);
   box-shadow: 0 8px 28px rgba(0,0,0,.11);
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 .ap-proj-head { display: flex; align-items: center; gap: .65rem; margin-bottom: .45rem; }
 .ap-proj-icon {
@@ -420,12 +428,17 @@ details .det-body { margin-top: .55rem; }
   gap: .9rem;
 }
 .ap-skill-card {
+  --card-accent: var(--c-blue);
   border: 1px solid var(--main-border-color);
   border-radius: 14px; padding: 1.05rem 1.2rem;
   background: var(--main-bg);
-  transition: box-shadow .2s ease;
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
-.ap-skill-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.ap-skill-card:hover {
+  border-color: var(--card-accent);
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  transform: translateY(-3px);
+}
 .ap-skill-card h4 {
   font-size: .87rem; font-weight: 700; margin: 0 0 .6rem;
   color: var(--heading-color); display: flex; align-items: center;
@@ -442,15 +455,17 @@ details .det-body { margin-top: .55rem; }
   gap: .8rem;
 }
 .ap-cert-card {
+  --card-accent: var(--c-blue);
   border: 1px solid var(--main-border-color);
   border-radius: 12px; padding: .9rem 1rem;
   background: var(--main-bg);
   display: flex; align-items: flex-start; gap: .72rem;
-  transition: box-shadow .2s ease, transform .2s ease;
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
 .ap-cert-card:hover {
+  border-color: var(--card-accent);
   box-shadow: 0 4px 16px rgba(0,0,0,.09);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 .ap-cert-logo {
   width: 34px; height: 34px; border-radius: 9px;
@@ -468,14 +483,16 @@ details .det-body { margin-top: .55rem; }
 
 .ap-award-list { display: flex; flex-direction: column; gap: .75rem; }
 .ap-award-item {
+  --card-accent: var(--c-amber);
   display: flex; align-items: flex-start; gap: .95rem;
   padding: .95rem 1.15rem; border-radius: 13px;
   border: 1px solid var(--main-border-color);
   background: var(--main-bg);
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .ap-award-item:hover {
-  transform: translateX(5px);
+  border-color: var(--card-accent);
+  transform: translateY(-3px);
   box-shadow: 0 3px 14px rgba(0,0,0,.08);
 }
 .ap-award-ic {
@@ -491,14 +508,18 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════════ */
 
 .ap-vol-card {
+  --card-accent: var(--c-violet);
   border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--c-violet);
-  border-radius: 0 14px 14px 0;
+  border-radius: 14px;
   padding: 1.15rem 1.45rem; margin-bottom: 1rem;
   background: var(--main-bg);
-  transition: box-shadow .2s ease;
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
-.ap-vol-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.09); }
+.ap-vol-card:hover {
+  border-color: var(--card-accent);
+  box-shadow: 0 4px 18px rgba(0,0,0,.09);
+  transform: translateY(-3px);
+}
 .ap-vol-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .3rem; }
 .ap-vol-role { font-size: 1rem; font-weight: 700; margin: 0; color: var(--heading-color); letter-spacing: -0.01em; }
 .ap-vol-date { font-size: .77rem; opacity: .55; align-self: center; }
@@ -525,12 +546,14 @@ details .det-body { margin-top: .55rem; }
   gap: .9rem;
 }
 .ap-lang-card {
+  --card-accent: var(--c-green);
   border: 1px solid var(--main-border-color);
   border-radius: 14px; padding: 1.2rem 1rem;
   background: var(--main-bg); text-align: center;
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .ap-lang-card:hover {
+  border-color: var(--card-accent);
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0,0,0,.1);
 }
@@ -560,11 +583,17 @@ details .det-body { margin-top: .55rem; }
 ══════════════════════════════════════════════ */
 
 .ap-pub-card {
+  --card-accent: var(--c-teal);
   border: 1px solid var(--main-border-color);
-  border-left: 4px solid var(--c-teal);
-  border-radius: 0 14px 14px 0;
+  border-radius: 14px;
   padding: 1.35rem 1.55rem;
   background: var(--main-bg);
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+.ap-pub-card:hover {
+  border-color: var(--card-accent);
+  box-shadow: 0 4px 18px rgba(0,0,0,.09);
+  transform: translateY(-3px);
 }
 
 /* ══════════════════════════════════════════════

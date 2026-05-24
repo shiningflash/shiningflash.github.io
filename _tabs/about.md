@@ -666,7 +666,7 @@ order: 4
   </details>
 </div>
 
-<div class="ap-vol-card" style="border-left-color: var(--c-pink);">
+<div class="ap-vol-card bc-pink">
   <div class="ap-vol-head">
     <p class="ap-vol-role">❤️ Head of Human Resources</p>
     <span class="ap-vol-date">Feb 2020 – Present</span>
@@ -685,7 +685,7 @@ order: 4
   </details>
 </div>
 
-<div class="ap-vol-card" style="border-left-color: var(--c-green);">
+<div class="ap-vol-card bc-green">
   <div class="ap-vol-head">
     <p class="ap-vol-role">📚 Founding Member &amp; Advisor</p>
     <span class="ap-vol-date">Feb 2018 – Present</span>
