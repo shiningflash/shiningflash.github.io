@@ -565,17 +565,6 @@ details .det-body { margin-top: .55rem; }
 .ap-lang-flag  { font-size: 2.2rem; line-height: 1; margin-bottom: .4rem; }
 .ap-lang-name  { font-size: .96rem; font-weight: 700; color: var(--heading-color); letter-spacing: -0.01em; }
 .ap-lang-level { font-size: .75rem; opacity: .6; margin-top: 3px; }
-.ap-lang-bar {
-  height: 5px; background: var(--main-border-color);
-  border-radius: 4px; margin-top: .6rem; overflow: hidden;
-}
-.ap-lang-fill {
-  height: 100%; border-radius: 4px;
-  background: var(--card-accent);
-  opacity: .65;
-  transition: opacity .25s ease;
-}
-.ap-lang-card:hover .ap-lang-fill { opacity: 1; }
 
 /* ══════════════════════════════════════════════
    14. COMPETITIVE PROGRAMMING CARD
