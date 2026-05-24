@@ -12,290 +12,415 @@ solution_lang: markdown
 ---
 
 {% raw %}
-## Scene
+## The scene
 
-The interviewer drops a one-line brief into the doc.
+You sit down for the interview. The interviewer writes one line on the whiteboard.
 
-> *Build a Dropbox-lite. Users upload files up to 5GB each, share them with other users by direct invite or by link, and set permissions (view, download, edit). Storage and bandwidth cost money, so don't waste either.*
+> *"Build a smaller version of Dropbox. Users upload files up to 5 GB. They share files with other users by invite or by link. They set permissions: view, download, or edit. Storage and bandwidth cost money, so do not waste either."*
 
-They lean back. "Take it from a weekend project to something that could survive a million users. I want to hear what you'd build at each stage and what you'd defer."
+Then they say: *"Start with a weekend project for 10 users. Walk me up to 1 million users. At each step, tell me what just broke and what you would add to fix it."*
 
-The trap is that this looks like a CRUD app on top of S3. It isn't. The interesting parts are how a 4GB upload survives hotel WiFi, how one share link gets revoked without breaking every other link, how the same file uploaded by fifty people sits on disk once, and how a file nobody has touched in two years stops costing you anything. A candidate who jumps to "POST the file to S3, write a row in Postgres" misses about 60% of the depth.
+It looks like a CRUD app sitting on top of S3. It is not. Here are the parts that get hard:
 
-## Step 1: clarify before you design
+- A 4 GB upload over hotel WiFi. The connection drops at 80%. What happens?
+- You share a link with one friend. A month later you revoke that one link. The other 999 links you created should still work.
+- Fifty people upload the same 200 MB software installer. Do you store it 50 times?
+- A file nobody has touched in two years. Do you keep paying full price to store it?
 
-Spend six minutes here. Eight or so questions that meaningfully change the design.
+A candidate who jumps to *"POST the file to S3, write a row in Postgres"* misses about 60% of the depth. We will walk through it step by step.
 
-<details>
-<summary><b>Reveal: questions a strong candidate asks</b></summary>
+A few terms before we start, so nothing trips you up:
 
-The first one I always ask is the max file size. 5GB was in the brief, but is that a hard cutoff or a soft one? Anything above a single-PUT limit forces chunked or multipart. A 50GB cap is bandwidth suicide if it tunnels through your app servers, so it forces presigned-direct-to-S3.
+- **S3.** Amazon's object storage. You put a file in, you get a URL back. Cheap, durable, huge.
+- **Presigned URL.** A URL the server signs that lets the client upload directly to S3 without going through your server. The signature has an expiry. After it expires, the URL stops working.
+- **TUS.** A standard protocol for resumable uploads. If your upload fails halfway, you continue from where it stopped instead of starting over.
+- **S3 multipart upload.** S3's own way to upload a big file in chunks. You start a session, upload chunks, then call "finalize" and S3 stitches them together.
+- **CDN.** Content Delivery Network. A worldwide cache that sits in front of your storage. The first download fetches from S3. The next 1000 downloads come from a cache close to the user.
+- **Content hash.** A short fingerprint of a file's bytes (we use SHA-256). Two files with the same bytes have the same hash. Two different files have different hashes.
 
-Second: sync or share-only. Is this Dropbox-the-sync-client, or Google-Drive-the-web-share? Sync means delta-sync, conflict resolution, and local file watchers; that's its own design problem. Share-only is much smaller. In an interview, the answer is almost always share-only.
+---
 
-Then virus scanning. Do we scan uploads at all, and if so do we block on the result or quarantine after the fact? Sync scanning kills the upload UX. Async means a file is downloadable for a few minutes before potentially being quarantined.
+## Step 1: Ask the right questions
 
-Versioning matters next. Does an edit create a new version or overwrite? How many do we keep? Versions multiply storage cost. A reasonable default is ten versions or thirty days, whichever comes first.
+Before you draw a single box, sit for five minutes. Write down questions that would change the design if the answer was different.
 
-Bandwidth limits and quotas. Per-user upload caps, account-wide storage quotas. The check has a sneaky race we'll come back to.
+A good answer is not "20 questions about every detail." It is the small handful of questions that change the design depending on the answer.
 
-Sharing model. Link share, direct invite, or both? What permission scopes: view-only preview, download, edit? Each scope has security implications and changes the download flow.
+<details markdown="1">
+<summary><b>Show: 8 questions that matter</b></summary>
 
-File preview. Do we render PDFs and images in the browser, or just offer download? Preview means a thumbnailing pipeline, which is a sub-service in itself.
+1. **What is the biggest file size?** 5 GB was in the brief, but is that a hard cap? Anything above ~100 MB rules out a single HTTP POST. You have to use chunked upload.
 
-Compliance and retention. GDPR delete? Customer-managed encryption keys for healthcare or finance? The answer changes the storage layer.
+2. **Sync or share-only?** Is this Dropbox-the-desktop-app (your local folder stays in sync with the cloud), or Google-Drive-the-web-page (you upload, you share)? Sync is a different problem: delta sync, conflict resolution, file watchers. Share-only is much smaller. In an interview, the answer is almost always share-only.
 
-Geographic reach. One region or global? If global, do we replicate the files or only the metadata? File replication is expensive; metadata replication is cheap.
+3. **Do we scan for viruses?** And if yes, do we block the upload until the scan finishes, or scan after the file is already saved? Sync scanning is slow. Async scanning means a file is downloadable for a couple of minutes before it might be flagged.
 
-Auth is usually out of scope, but worth confirming.
+4. **Versioning?** When a user edits a file, do we keep the old version? How many versions? A reasonable default is "keep 10 versions or 30 days, whichever is shorter."
 
-A strong candidate also names what's out of scope: real-time collaborative editing, full-text search inside documents, third-party integrations. Those are downstream products built on top of the storage primitive, not part of it.
+5. **Quotas?** Each user gets X GB? What happens when they hit the limit? Quota has a sneaky race condition we will come back to.
+
+6. **What kinds of sharing?** Direct invite (owner enters someone's email), link share (owner makes a URL anyone can open), or both? What permissions: view, download, edit?
+
+7. **Compliance?** GDPR delete? Customer-managed encryption keys for healthcare or finance? These change the storage layer.
+
+8. **What is NOT in this design?** Real-time co-editing (like Google Docs)? Full-text search inside PDFs? Third-party integrations? Out of scope. They are separate products that sit on top.
+
+A strong candidate also names what is out: real-time editing, search inside documents, integrations. Those are downstream products. Not part of the storage core.
 
 </details>
 
-## Step 2: capacity estimates
+---
 
-Two regimes.
+## Step 2: How big is this thing?
 
-**Small startup:**
+Same problem, two scales. Do the math before you design.
+
+**Weekend project (10,000 users):**
+
 - 10,000 users
-- 5 uploads per user per week, ~5MB average
-- Reads about 10x writes
+- 5 uploads per user per week
+- ~5 MB average file
+- Downloads run about 10x writes
 
-**Dropbox-scale:**
+**Dropbox-scale (100M users):**
+
 - 100M active users
-- 20 uploads per user per week, ~8MB average (mix of photos, docs, occasional video)
-- Reads 10x writes
-- Indefinite retention by default
+- 20 uploads per user per week
+- ~8 MB average (photos, docs, some videos)
+- Downloads run about 10x writes
+- Files kept forever by default
 
-For both, work out uploads per second (sustained and peak), downloads per second, storage growth per year before dedup, egress at peak download, and how much storage goes stale (untouched 90+ days) by year two.
+Work out: uploads per second, downloads per second, storage growth per year, and how much storage goes cold (not touched in 90 days) by year two.
 
-<details>
-<summary><b>Reveal: the math</b></summary>
+<details markdown="1">
+<summary><b>Show: the math</b></summary>
 
-**Small startup, 10k users.**
+**Weekend project (10k users):**
 
-Uploads come out to 10,000 times 5 per week, so 50,000 a week, around 7,000 a day, which is 0.08 per second sustained and maybe 0.25 at peak. Trivial. Downloads at 10x are still under 3 per second. Storage growth is 50,000 a week at 5MB, so roughly 13TB a year. One S3 bucket, no thought. Egress at peak is 2.5 downloads per second times 5MB, about 100 Mbps. Modest. By year two probably 60-70% of those files are stale (most things get looked at once and forgotten).
+- Uploads: 10,000 x 5 = 50,000 per week = ~7,000/day = **~0.08/sec sustained, ~0.25/sec at peak**. Tiny.
+- Downloads at 10x: **~0.8/sec sustained**.
+- Storage: 50,000/week x 5 MB = ~13 TB/year.
+- Egress at peak: ~100 Mbps.
+- Cold tail by year 2: maybe 60-70% of files untouched.
 
-A single app server plus S3 plus Postgres handles all of this. The system isn't interesting from a throughput angle. What's interesting is the upload UX for a 5GB file and the share-link permission model.
+One server. One Postgres. One S3 bucket. Done. The throughput is boring. What is interesting is the UX for a 5 GB upload and the share-link permission model.
 
-**Dropbox-scale, 100M users.**
+**Dropbox-scale (100M users):**
 
-Uploads: 100M times 20 per week is 2B per week, about 286M per day, which is ~3,300 per second sustained and ~10k at peak. Downloads at 10x are ~33k per second sustained, ~100k peak. Storage growth is 286M per day times 8MB, so 2.3 PB per day, around 840 PB per year before dedup. With ~30% dedup savings (people share popular images, identical PDFs) call it ~580 PB per year. Egress at peak is 100k times 8MB, which is 800 GB/s or ~6.4 Tbps. That's CDN territory; you can't serve it from a single region without one. By year two, ~70-80% of stored bytes are untouched 90+ days. On 1.2EB stored, that's ~900PB cold. Lifecycle to S3 IA plus Glacier saves ~70% of the cold-tier cost.
+- Uploads: 100M x 20 = 2B per week = **~3,300/sec sustained, ~10,000/sec at peak**.
+- Downloads at 10x: **~33,000/sec sustained, ~100,000/sec at peak**.
+- Storage growth: 286M/day x 8 MB = ~2.3 PB/day = **~840 PB/year raw**. With ~30% dedup savings: **~580 PB/year**.
+- Egress at peak: 100,000 x 8 MB = 800 GB/s = **~6.4 Tbps**. You cannot serve this from one region without a CDN.
+- Cold tail by year 2: ~70-80% of stored bytes untouched 90+ days.
 
-The math tells you a few things.
+What the math is telling you:
 
-The system is read-heavy by request count but write-heavy by bytes. Uploads dominate ingress; downloads (with CDN) dominate egress.
+The system is **read-heavy by request count** but **write-heavy by bytes**. Lots of small reads. Big upload bytes.
 
-Storage cost is the headline expense. 840 PB per year at $0.023/GB/month for S3 Standard is roughly $230M a year for raw storage alone. Lifecycle policies and dedup aren't optimizations, they're survival.
+**Storage cost is the headline expense.** 840 PB/year at $0.023/GB/month for S3 Standard is roughly $230M/year just for raw storage. Lifecycle policies (tier down to cheaper storage) and dedup (do not store duplicates) are not optional optimizations. They are survival.
 
-Per-server bandwidth is what dies first if you tunnel uploads. A 10Gbps NIC at full pelt handles ~1.25 GB/s, which is ~150 concurrent 8MB uploads per second. You'll run out of NICs long before you run out of CPU. That's why presigned URLs to S3 are the answer.
+> Why uploads through your server kill you. A 10 Gbps network card handles maybe 1.25 GB/s. That is around 150 concurrent 8 MB uploads per second. You run out of network capacity long before you run out of CPU. Now multiply by 10,000 concurrent uploads at peak. You would need 70 servers just to forward bytes. Presigned URLs let the client upload directly to S3. Your servers never touch the bytes. That single decision saves you an order of magnitude on the bandwidth bill.
 
-The metadata DB is small. 100M users times 1000 files each is 100B rows at ~500 bytes, so ~50TB. Sharded Postgres or a wide-column store handles it. The bytes live in S3; the metadata is what you actually run a database for.
+The metadata DB is tiny next to the bytes. 100B file rows at ~500 bytes each is ~50 TB. Sharded Postgres handles it. The bytes go to S3. The database holds the index.
 
 </details>
 
-## Step 3: upload protocols
+---
 
-The biggest single design decision is how the bytes get from the client to your storage. Three serious options. Take ten minutes and write down the pros and cons of each before peeking.
+## Step 3: How do the bytes get from the client to your storage?
 
-- **A. Direct upload (single HTTP POST).** Client streams the whole file in one request to your API server, which forwards to S3.
-- **B. Chunked resumable upload (TUS protocol, or S3 multipart).** Client splits the file into 5-100MB chunks and uploads them with retry-per-chunk semantics.
-- **C. Presigned S3 URL.** Your server hands the client a short-lived signed URL; the client uploads directly to S3, skipping your app servers entirely.
+This is the biggest single decision in the design. Three serious options. Pick wrong here and the system melts at scale.
 
-<details>
-<summary><b>Reveal: comparison</b></summary>
+Spend ten minutes. Write down the pros and cons of each before peeking.
+
+**A. Direct upload (one big POST).** Client streams the whole file in one HTTP POST to your server. Your server forwards to S3.
+
+**B. Chunked resumable upload (TUS protocol, or S3 multipart).** Client splits the file into pieces (5 to 100 MB each). Uploads each piece in its own request. Retries failed pieces.
+
+**C. Presigned S3 URL.** Your server gives the client a short-lived signed URL. The client uploads directly to S3. Your server never sees the bytes.
+
+<details markdown="1">
+<summary><b>Show: how each one stacks up</b></summary>
 
 | Approach | How it works | Pros | Cons |
-|----------|-------------|------|------|
-| **Direct (single POST)** | `POST /upload` with multipart body. Server buffers or streams to S3. | Simple. One request, one response. Works in any HTTP client. | Whole upload restarts on any network blip. 4GB upload on hotel WiFi never finishes. Saturates your app server bandwidth. Hard to show real progress. |
-| **Chunked resumable (TUS, S3 multipart)** | Initiate session, upload chunk 1 of N, then chunk 2, and so on, then finalize. Each chunk is its own HTTP request. Failed chunks retry independently. | Survives flaky networks. Real progress bars. Parallel chunks speed large files. Server can pause and resume. | More complex protocol. Server tracks per-session state (which chunks landed). Garbage collection of abandoned uploads. |
-| **Presigned S3 URL** | `POST /upload/init` returns a presigned URL valid for ~1h. Client `PUT`s directly to S3. On success, client calls `POST /upload/finalize` so server knows. | Zero bandwidth through your servers. Cheapest at scale. S3 handles the heavy lifting. Combines with multipart for huge files. | Client must speak S3 directly. Quota enforcement is harder (server didn't see the bytes). Virus scan is post-hoc. Signed URL leaks mean anyone can upload to that key. |
+|----------|--------------|------|------|
+| **Direct (one POST)** | Client does one big `POST /upload`. Server buffers or streams the bytes to S3. | Simple. One request. Works in any HTTP client. | Any network blip restarts the whole upload. A 4 GB file on hotel WiFi never finishes. Your server's network card is the bottleneck. Hard to show real progress. |
+| **Chunked resumable (TUS, S3 multipart)** | Init session. Upload chunk 1, chunk 2, ..., chunk N. Failed chunks retry on their own. Call finalize. | Survives flaky networks. Real progress bars. Parallel chunks speed up big files. Pause and resume work. | More complex. Server tracks which chunks landed. Abandoned uploads need cleanup. |
+| **Presigned S3 URL** | `POST /upload/init` returns a presigned URL. Client `PUT`s directly to S3. Client calls `POST /upload/finalize`. | Zero bandwidth through your servers. Cheapest at scale. S3 does the heavy lifting. | Client speaks S3 directly. Harder to enforce quota (you did not see the bytes). Virus scan happens after the upload. |
 
-My recommendation is hybrid: chunked plus presigned, depending on file size.
+**The right answer is hybrid.** Pick based on file size:
 
-Files under 5MB: single POST through the app server is fine. Simpler client.
+- **Under 5 MB.** Single POST through your server. Simpler client. Worth the small bandwidth cost.
+- **5 MB to 5 GB.** Presigned S3 multipart. Client splits into 8 MB chunks. Each chunk gets its own presigned URL. Chunks upload in parallel directly to S3. Client calls finalize.
+- **Over 5 GB.** Same as above, but with bigger chunks (64 MB) and explicit server-side caps.
 
-Files 5MB to 5GB: presigned S3 multipart. Client splits into 8MB chunks, gets a presigned URL per chunk (or one initiation token), uploads chunks in parallel directly to S3, calls finalize when done.
+> Why this matters. A 1 GB upload uses about 125 chunks at 8 MB each. If chunk 87 fails because of a momentary network blip, you retry just chunk 87. You do not start over from chunk 1. The user sees a progress bar that actually progresses. That is the difference between a happy user and a 1-star review.
 
-Files over 5GB: same approach with 64MB chunks and explicit server-side caps.
+Why bring up TUS at all? TUS is an open protocol for resumable uploads. Useful if your storage is not S3 (some shops use MinIO, NetApp, or their own object store) and you want a standard client library. If you are on AWS, S3 multipart is more native. TUS is for the "not on S3" case.
 
-The hybrid keeps the API simple for the common case and offloads the painful case to S3 entirely.
+Here is what the hybrid chunked upload looks like as a sequence:
 
-Why TUS at all? TUS (`tus.io`) is an open protocol for resumable uploads with a Go/Node server library that the client speaks to. Useful if your storage isn't S3 (some shops use MinIO, NetApp, or their own object store) and you want a standard client protocol. If you're on AWS, S3 multipart is more native; TUS is for the "S3 alternative" case.
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    participant S3 as S3
+
+    C->>S: POST /uploads/init {size, hash}
+    S->>S: check dedup, check quota
+    S->>S3: create multipart upload
+    S3-->>S: s3_upload_id
+    S->>S: generate presigned URL per chunk
+    S-->>C: 201 {upload_id, chunk_size, urls[]}
+
+    par chunk 1
+        C->>S3: PUT chunk 1 (presigned URL)
+        S3-->>C: ETag 1
+    and chunk 2
+        C->>S3: PUT chunk 2 (presigned URL)
+        S3-->>C: ETag 2
+    and chunk 3
+        C->>S3: PUT chunk 3 (presigned URL)
+        S3-->>C: ETag 3
+    end
+
+    C->>S: POST /uploads/{id}/finalize {parts: ETags}
+    S->>S3: complete multipart upload
+    S3-->>S: final S3 key
+    S->>S: insert file row, queue virus scan
+    S-->>C: 200 {file_id, status: "scanning"}
+```
 
 </details>
 
-## Step 4: incomplete architecture diagram
+---
 
-Sketch the high-level architecture. Fill in the five `[ ? ]` boxes. Each is one of: upload service, object store, metadata DB, share link resolver, virus scanner.
+## Step 4: Draw the system
 
-```
-                Client (browser, mobile, desktop sync agent)
-                              |
-                              v
-                    +------------------+
-                    |   API Gateway    |  (auth, rate limit, request shaping)
-                    +--------+---------+
-                             |
-        upload init,         |       download,
-        finalize, list       |       share link redeem
-                             |
-                +------------+------------+
-                |                         |
-                v                         v
-        +-------------+            +-------------+
-        |  [ ? ]      |            |  [ ? ]      |   (resolves /share/<token>
-        |             |            |             |    to a file + permission)
-        +-----+-------+            +------+------+
-              |                            |
-              |   presigned URLs           |
-              |                            |
-              v                            v
-        +--------------------------------------+
-        |  [ ? ]                               |  (the bytes live here;
-        |                                      |   cheap, durable, huge)
-        +--------------------------------------+
-              ^
-              |
-              |   reads/writes
-              |
-        +-----+--------+
-        |  [ ? ]       |   (file_id, owner, name, size,
-        |              |    hash, status, version)
-        +--------------+
+You know how the bytes move. Now draw the boxes.
 
-        Async pipeline:
-            +------------------+
-            |  [ ? ]           |  (consumes "file finalized" events,
-            |                  |   scans, marks quarantined if positive)
-            +------------------+
-```
-
-<details>
-<summary><b>Reveal: completed architecture</b></summary>
+Try to fill in the five `[ ? ]` boxes. Each one is one of: upload service, object store (S3), metadata DB, share link resolver, virus scanner.
 
 ```
-                Client (browser, mobile, desktop sync agent)
-                              |
-                              v
-                    +------------------+
-                    |   API Gateway    |  auth, rate limit, request shaping,
-                    |   + WAF          |  blocks obvious abuse
-                    +--------+---------+
-                             |
-        upload init,         |       download,
-        finalize, list       |       share link redeem
-                             |
-                +------------+------------+
-                |                         |
-                v                         v
-        +-----------------+         +------------------+
-        |  Upload Service |         |  Share Link      |
-        |  mints          |         |  Resolver        |
-        |  presigned      |         |  token ->        |
-        |  URLs, tracks   |         |  file + perms,   |
-        |  session state  |         |  checks expiry,  |
-        |                 |         |  password        |
-        +-----+-----------+         +------+-----------+
-              |                            |
-              |   presigned PUT URLs       |  presigned GET URLs
-              |                            |  (CloudFront-signed)
-              v                            v
-        +--------------------------------------+
-        |  Object Store (S3)                   |  Standard for hot,
-        |  Bucket layout:                      |  IA after 90 days,
-        |   /raw/<file_id>/<version>           |  Glacier after 365.
-        |   /chunks/<upload_id>/<n>            |  Lifecycle auto-migrates.
-        +--------------------------------------+
-              ^
-              |
-              |   metadata reads/writes
-              |
-        +-----+----------------+
-        |  Metadata DB         |   files, file_versions,
-        |  (Postgres, sharded  |   shares, share_links, audit.
-        |  by owner_id)        |   Cross-shard share lookups
-        |                      |   via separate index.
-        +----------------------+
+              Client (browser, mobile, desktop)
+                          |
+                          v
+                +------------------+
+                |  API Gateway     |  auth, rate limit
+                +--------+---------+
+                         |
+        upload init,     |     download,
+        finalize, list   |     share link redeem
+                         |
+            +------------+------------+
+            |                         |
+            v                         v
+     +-------------+           +-------------+
+     |  [ ? ]      |           |  [ ? ]      |  resolves /share/<token>
+     |             |           |             |  to a file + permission
+     +-----+-------+           +------+------+
+           |                          |
+           |   presigned URLs         |
+           v                          v
+     +-------------------------------------+
+     |  [ ? ]                              |  bytes live here.
+     |                                     |  cheap, durable, huge.
+     +-------------------------------------+
+            ^
+            |
+     +------+--------+
+     |  [ ? ]        |  file_id, owner, name,
+     |               |  size, hash, status
+     +---------------+
 
-        Async pipeline:
-
-                                       (file finalized event)
-                                  +-------------------------+
-                                  |  SQS / Kafka            |
-                                  +----------+--------------+
-                                             |
-                                             v
-                                  +----------------------+
-                                  |  Virus Scan Worker   |  ClamAV or
-                                  |  (Lambda or          |  3rd-party API.
-                                  |  long-running pod)   |  Flips status
-                                  |                      |  to quarantined
-                                  |                      |  if positive.
-                                  +----------------------+
-
-        CDN for downloads:
-            +------------------+
-            |  CloudFront      |  Signed URLs respect share link
-            |  in front of S3  |  permissions. Edge cache hot files.
-            +------------------+
+     Background pipeline:
+     +-----------------+
+     |  [ ? ]          |  scans the file after upload
+     +-----------------+
 ```
 
-A few notes on why each piece is there.
+<details markdown="1">
+<summary><b>Show: the full architecture</b></summary>
 
-API Gateway plus WAF is the first defense. Auth, rate limit (no client uploads 10k files in a minute), block obvious malicious requests.
+```
+              Client (browser, mobile, desktop)
+                          |
+                          v
+                +------------------+
+                |  API Gateway     |  auth, rate limit, WAF
+                +--------+---------+
+                         |
+        upload init,     |     download,
+        finalize, list   |     share link redeem
+                         |
+            +------------+------------+
+            |                         |
+            v                         v
+     +-----------------+        +------------------+
+     | Upload Service  |        | Share Link       |
+     | mints           |        | Resolver         |
+     | presigned URLs, |        | token -> file +  |
+     | tracks upload   |        | permission.      |
+     | sessions        |        | checks expiry,   |
+     |                 |        | password         |
+     +-----+-----------+        +------+-----------+
+           |                           |
+           | presigned PUT URLs        | signed GET URLs
+           v                           v (via CloudFront)
+     +--------------------------------------+
+     | Object Store (S3)                    |
+     | layout:                              |
+     |   /raw/<hash>          (deduped)     |
+     |   /chunks/<upload_id>/<n> (in-flight)|
+     | lifecycle:                           |
+     |   90d -> S3 IA (cheaper)             |
+     |   365d -> Glacier (cheapest)         |
+     +--------------------------------------+
+            ^
+            | metadata reads + writes
+            |
+     +------+------------+
+     | Metadata DB        |   files, file_versions,
+     | (Postgres,         |   blobs (dedup),
+     |  sharded by        |   shares, share_links,
+     |  owner_id)         |   upload_sessions, audit
+     +-------+-----------+
+             |
+             | events (CDC / outbox)
+             v
+     +-------------------+
+     |  SQS / Kafka      |  topics: file.finalized,
+     |                   |  file.deleted, share.created
+     +---+---------+-----+
+         |         |
+         v         v
+     +--------+ +------------------+
+     | Virus  | | Lifecycle        |
+     | Scan   | | Manager          |
+     | Worker | | (refcounts, cold |
+     | (Clam  | | tier transitions,|
+     | AV)    | | abandoned uploads)|
+     +--------+ +------------------+
 
-Upload Service owns the upload session lifecycle. Mints presigned URLs. Tracks "upload_id, chunks uploaded, finalize." Enforces per-user quota at init. Doesn't touch bytes.
+     CDN for downloads:
+     +-------------------+
+     | CloudFront        |  edge cache.
+     | in front of S3    |  short TTL so
+     |                   |  revokes propagate.
+     +-------------------+
+```
 
-Share Link Resolver is standalone so it scales independently. Hot path for any shared file. Lightweight: look up token, check expiry and password, return permission grant.
+What each piece does, in one line:
 
-Object Store is the source of truth for bytes. One bucket per environment, key layout that makes lifecycle and dedup easy.
-
-Metadata DB is the source of truth for everything that isn't bytes. Sharded by owner because most queries are "show me my files."
-
-Async virus scan pipeline is decoupled from upload latency. Files are downloadable as soon as finalized; if the scan flags them, status flips to quarantined and downloads start returning 451.
-
-CDN is what keeps egress affordable. Without it you pay full S3 egress plus your origin bandwidth. With it, the second download of a shared file comes from edge cache at a fraction of the cost.
+- **API Gateway + WAF.** First line of defense. Authentication. Rate limits (no client uploads 10,000 files per minute). Blocks obvious bad requests.
+- **Upload Service.** Owns the upload session lifecycle. Mints presigned URLs. Tracks "you uploaded chunks 1, 3, 5, you still need 2, 4." Checks quota at init. Never touches bytes.
+- **Share Link Resolver.** Its own service so it scales independently. The hot path for every shared file. Looks up the token, checks expiry and password, returns a permission.
+- **Object Store (S3).** Source of truth for bytes. One bucket per environment. The key layout makes dedup and lifecycle easy.
+- **Metadata DB (Postgres).** Source of truth for everything that is not bytes. Sharded by owner because almost every query is "show me my files."
+- **Virus Scan Worker.** Decoupled from upload. Files are downloadable as soon as finalized. If the scan flags them later, status flips to quarantined and downloads return an error.
+- **Lifecycle Manager.** Moves files from hot to cold storage as they age. Cleans up abandoned uploads. Garbage collects unused deduped blobs.
+- **CloudFront (CDN).** What keeps egress affordable. Without it you pay full S3 egress every download. With it, the second download of a shared file comes from the edge cache at a fraction of the cost.
 
 </details>
 
-## Step 5: share links and permissions
+---
+
+## Step 5: Share links and permissions
 
 Sharing has two flavors and three permission scopes.
 
-The two flavors are direct invite (owner enters someone's email, that user must have an account, file shows up in their "shared with me" tab) and share link (owner generates a URL, anyone with the URL gets in, account may or may not be required).
+**Two flavors:**
 
-The three permission scopes are view (preview-only, no download button), download (can fetch the file), and edit (can upload a new version).
+- **Direct invite.** Owner enters someone's email. That user must have an account. The file shows up in their "shared with me" tab.
+- **Share link.** Owner generates a URL. Anyone with the URL gets in. Account may or may not be required.
 
-What does the data model look like? How do you expire a link? How do you password-protect one? What stops an attacker from enumerating share tokens?
+**Three permission scopes:**
 
-<details>
-<summary><b>Reveal: share link design</b></summary>
+- **View.** Preview only. No download button. (Determined users can still grab bytes. Treat as a soft control, not a security boundary.)
+- **Download.** Can fetch the original file.
+- **Edit.** Can upload a new version.
 
-Two tables.
+Now think through these:
+
+- What does the data model look like?
+- How do you expire a link?
+- How do you password-protect one?
+- How do you stop attackers from guessing tokens?
+- What happens when someone clicks a share link?
+
+<details markdown="1">
+<summary><b>Show: how share links work end to end</b></summary>
+
+**Token generation.**
+
+```python
+import secrets
+token = base62(secrets.token_bytes(24))   # 24 bytes = 192 bits
+```
+
+192 bits is enormous. The chance of a collision (two random tokens being equal) is negligible until you have around 2^96 tokens. You will never collide. Just as important: the keyspace is too big for an attacker to guess by brute force.
+
+> Why a random token and not a hash of `(file_id, salt)`? A hash is deterministic. If someone learns the salt, they can compute every token. A pure random token has no relationship to the file it unlocks. Leaking the algorithm leaks nothing.
+
+**The resolution flow** for `GET /share/<token>` looks like this:
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant SLR as Share Link Resolver
+    participant DB as Metadata DB
+    participant CF as CloudFront
+
+    C->>SLR: GET /share/<token>
+    SLR->>DB: look up token
+    DB-->>SLR: link record
+
+    alt token not found
+        SLR-->>C: 404 Not Found
+    else token revoked
+        SLR-->>C: 410 Gone
+    else token expired
+        SLR-->>C: 410 Gone
+    else password required, none given
+        SLR-->>C: 401 Unauthorized
+    else all checks pass
+        SLR->>SLR: generate signed CloudFront URL (15 min)
+        SLR->>DB: increment redemptions counter
+        SLR-->>C: 302 redirect to signed URL
+        C->>CF: GET <signed URL>
+        CF-->>C: file bytes (from cache or S3)
+    end
+```
+
+**Why the 15-minute signed URL matters.** If the share link itself was the only credential, then a view-only share leaks the file the moment someone right-clicks "save target as." Force every download through a *fresh* signed URL each time. Short expiry. View-only shares mint URLs scoped to the preview renderer only, not the raw file.
+
+**Password protection.** Hash the password with Argon2 or bcrypt when the link is created. Verify on redeem. Never put the password in the URL.
+
+**Rate limit per token.** A single token getting 1000 redemption attempts per minute is brute-force traffic. Cap at ~10 attempts per IP per token per minute. Lock the token for 5 minutes if it trips.
+
+**Revoking a link.** Set `revoked_at = NOW()` on that one row. The other 999 links for the same file keep working. This is why we use one row per link, not one share per file.
+
+**The schema** behind it:
 
 ```sql
 -- Direct invites (recipient is a known user).
 CREATE TABLE shares (
     share_id      UUID PRIMARY KEY,
     file_id       UUID NOT NULL,
-    granted_to    BIGINT NOT NULL,    -- user_id
+    granted_to    BIGINT NOT NULL,        -- user_id
     granted_by    BIGINT NOT NULL,
-    permission    SMALLINT NOT NULL,  -- 1=view, 2=download, 3=edit
+    permission    SMALLINT NOT NULL,      -- 1=view, 2=download, 3=edit
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     revoked_at    TIMESTAMPTZ
 );
-CREATE INDEX idx_shares_recipient ON shares (granted_to) WHERE revoked_at IS NULL;
-CREATE INDEX idx_shares_file ON shares (file_id);
 
 -- Anonymous or semi-anonymous share links.
 CREATE TABLE share_links (
-    token              VARCHAR(32) PRIMARY KEY,  -- opaque, 192-bit random
+    token              VARCHAR(32) PRIMARY KEY,  -- opaque 192-bit random
     file_id            UUID NOT NULL,
     created_by         BIGINT NOT NULL,
     permission         SMALLINT NOT NULL,
-    expires_at         TIMESTAMPTZ,             -- NULL = never
+    expires_at         TIMESTAMPTZ,              -- NULL = never
     password_hash      BYTEA,                    -- NULL = no password
     require_account    BOOLEAN DEFAULT FALSE,
     max_redemptions    INT,                      -- NULL = unlimited
@@ -306,123 +431,128 @@ CREATE TABLE share_links (
 CREATE INDEX idx_links_file ON share_links (file_id);
 ```
 
-Token generation is straightforward:
-
-```python
-token = base62(secrets.token_bytes(24))   # 24 bytes = 192 bits of entropy
-```
-
-192 bits is enormous. Birthday collision probability is negligible until you have about 2^96 tokens. You'll never collide. Crucially, that keyspace is too large to brute-force, so attackers can't enumerate.
-
-Why opaque random instead of a hash of (file_id, salt)? Because hashed tokens are deterministic; if someone learns the salt they can compute all your tokens. Pure-random tokens have no relationship to the file they unlock, so leaking the algorithm leaks nothing.
-
-The resolution flow for `GET /share/<token>`:
-
-1. Look up token in `share_links`.
-2. Not found, 404.
-3. `revoked_at` set, 410 Gone.
-4. `expires_at < now`, 410.
-5. `max_redemptions` reached, 410.
-6. Password required, return 401 with WWW-Authenticate; on submission, verify against the stored hash.
-7. Account required, redirect to login; on return, log redemption against the user.
-8. Return file_id, file_name, permission, owner_name.
-9. Increment redemptions counter atomically.
-10. Issue a short-lived (15-minute) download cookie or signed CloudFront URL.
-
-The 15-minute signed URL matters. If the link itself is the only credential, then a view-only share leaks the file the moment someone right-clicks "save target as." Force every download through a signed URL that the share resolver mints fresh each time, with short expiry. View-only shares mint URLs scoped to the preview renderer only, not the raw file.
-
-`expires_at` drives a periodic sweeper that hard-deletes very old rows (90 days past expiry) to keep the table small. Until the sweep, expired rows return 410, which is the correct response.
-
-Password protection: bcrypt or Argon2 at create time. Verify at redeem. HTTP 401 on first request, then accept the password on a follow-up POST. Never put the password in the URL.
-
-Rate limit per token. A single token getting 1000 redemption attempts a minute is brute-force traffic. Cap at ~10 attempts per IP per token per minute; lock the token for 5 minutes if it trips.
-
-Direct invite permissions are simpler because the recipient is authenticated. The `shares` table is checked at file-access time: "is there a non-revoked row granting this user permission on this file?" Index on `granted_to` makes "show me shared-with-me" fast.
-
-Permission scope semantics. View serves through a preview renderer (PDF viewer, image viewer) with `Content-Disposition: inline` and no download button shown. Determined attackers can still pull bytes; treat view-only as a soft control, not a security boundary. Download serves the original file with `Content-Disposition: attachment`. Edit is download plus the API endpoint to upload a new version.
-
-Folder-level shares cascade to all files inside. Implementation: `shares.target_id` with `target_type = 'folder'` or `'file'`. At access-check time, traverse the parent chain: "is this file in a folder I have access to?" Cache the traversal aggressively because it's read-heavy.
+**Folder shares.** If you share a folder, every file inside inherits the permission. At access-check time, walk the file's parent chain: "is any folder above this file shared with me?" Cache aggressively. This is read-heavy.
 
 </details>
 
-## Step 6: storage tiers
+---
 
-A file uploaded today might be downloaded 50 times this week. A file uploaded two years ago is statistically never touched again. Paying S3 Standard rates for both is wasteful. What's the tiering strategy?
+## Step 6: Storage tiers (saving money on cold files)
 
-<details>
-<summary><b>Reveal: lifecycle policy and tier choice</b></summary>
+A file uploaded today might be downloaded 50 times this week. A file uploaded two years ago is probably never touched again. Paying full price for both wastes a lot of money.
 
-Three tiers.
+S3 has three tiers, in increasing order of cheapness and slowness:
 
-| Tier | Use case | Cost / GB / month | Retrieval latency | Retrieval cost |
-|------|----------|-------------------|--------------------|----------------|
-| **Hot (S3 Standard)** | Files accessed in the last 30 days. New uploads. | $0.023 | <100ms | $0 |
-| **Warm (S3 Infrequent Access)** | Files untouched 30-365 days. | $0.0125 | <100ms | $0.01 / GB retrieved |
-| **Cold (S3 Glacier Flexible Retrieval)** | Files untouched > 365 days. | $0.0036 | 1-5 min (expedited) or 3-5 hr (standard) | $0.03 / GB retrieved + per-request fee |
+| Tier | Cost per GB per month | Retrieval time | Use case |
+|------|------------------------|-----------------|----------|
+| **S3 Standard** (hot) | $0.023 | < 100 ms | Files used recently |
+| **S3 Infrequent Access** (warm) | $0.0125 | < 100 ms | Files quiet for 30-365 days |
+| **S3 Glacier** (cold) | $0.0036 | 1-5 min (fast) or 3-5 hr (standard) | Files quiet over 365 days |
 
-An S3-native lifecycle policy looks like this:
+The Glacier tier is roughly 6x cheaper than Standard. On 580 PB of cold storage, that is the difference between $160M/year and $25M/year. Tiering is not an optimization. It is the business model.
 
+Try to draw the tiering flowchart yourself first. When is a file in hot? When does it move to warm? When does it move to cold? What happens when a cold file gets accessed?
+
+<details markdown="1">
+<summary><b>Show: the tiering flow</b></summary>
+
+```mermaid
+flowchart TD
+    A[New file uploaded] --> B[S3 Standard - hot]
+    B --> C{Accessed in last 90 days?}
+    C -->|Yes| B
+    C -->|No| D[Move to S3 IA - warm]
+    D --> E{Accessed in last 365 days?}
+    E -->|Yes, stays warm| D
+    E -->|No| F[Move to Glacier - cold]
+    F --> G{User clicks Download?}
+    G -->|No| F
+    G -->|Yes| H[Restore to hot - takes 3-5 hr standard, or 1-5 min expedited]
+    H --> B
 ```
-Rule: tier-down-by-age
-  Apply to: bucket prefix /raw/
-  Transition to S3 IA: 90 days after upload
-  Transition to S3 Glacier: 365 days after upload
-  Expiration: never (we keep files until user deletes)
-```
 
-But that's crude. A file uploaded 91 days ago that's being actively downloaded shouldn't tier down. Two options to handle access patterns.
+**Two ways to implement tiering:**
 
-Option A is S3 Intelligent-Tiering. S3 monitors access per object and moves them between tiers automatically. Costs $0.0025 per 1000 objects per month for monitoring. Worth it once you have millions of objects with unpredictable access.
+- **S3 Intelligent-Tiering** (the easy way). S3 watches access patterns per object and moves files between tiers automatically. Costs $0.0025 per 1000 objects per month for the monitoring. Worth it once you have millions of objects with mixed access patterns.
+- **Custom tiering** (the controlled way). Log every download. A nightly job computes "files not touched in N days" and transitions them with the S3 SDK. More work. More control. Some compliance rules require you to control where data lives.
 
-Option B is custom tiering driven by your own access stats. You log every download to a `file_access` table or stream. A daily job computes "files not accessed in N days" and explicitly transitions them via S3 SDK. More control, more code.
+Pick Intelligent-Tiering unless you have a compliance reason not to.
 
-Pick A unless you have a specific reason to need B (compliance often requires explicit control of where data lives).
+**The retrieval-latency UX problem is real.** A Glacier file takes 3-5 hours to retrieve with standard retrieval. The user clicks Download and waits forever. Options:
 
-The retrieval-latency UX problem is real. A file in Glacier takes 3-5 hours to retrieve via standard retrieval. The user clicks Download and waits forever. A few ways out:
+- **Set expectations.** Show "This file is in cold storage. Restoring takes about 5 minutes. We will email you when ready." Users hate surprise waits more than they hate honest waits.
+- **Use Glacier Instant Retrieval.** Costs ~3x Glacier Flexible but reads are sub-second. Worth it for files users might re-open.
+- **Pre-warm on share.** When a user shares a Glacier file, start restoring immediately so by the time the recipient clicks, the file is hot.
 
-Show the wait explicitly. "This file is in cold storage. Restoring will take ~5 minutes. We'll email you when ready." Set the expectation up front.
+**Do not tier metadata.** The `files` row in Postgres stays where it is regardless of where the bytes live. The row has a `storage_tier` column so the API knows whether to expect a wait.
 
-Use Glacier Instant Retrieval instead. Costs ~3x Glacier Flexible but reads are sub-second. Worth it for files users might re-access.
+**Do not tier files smaller than ~128 KB.** S3 IA charges a minimum object size of 128 KB. Tiering a 10 KB file actually costs more than leaving it in Standard. Exclude small files from the lifecycle rule.
 
-Pre-warm on first share. When a user shares a Glacier-tier file, kick off restoration immediately so by the time the recipient clicks, the file is hot.
-
-Don't tier metadata. The `files` row stays in the hot DB regardless of where the bytes live. The row has a `storage_tier` column so the API knows whether to expect latency.
-
-Don't tier files smaller than ~128KB. S3 IA and Glacier charge minimum object sizes (128KB for IA). Tiering a 10KB file actually costs more than leaving it in Standard. Exclude small files from the lifecycle rule.
-
-Deletion in cold tiers has its own gotcha. A user deletes a file in Glacier, the object goes away but you still pay the 90-day minimum storage charge. Factor this into your cost model and into your trash-bin retention. Soft-delete first (`status = deleted_pending`), hard-delete after the user is past the regret window.
+**Watch out for delete penalties.** A user deletes a file in Glacier and the object goes away, but you still pay the 90-day minimum storage charge. Build this into your cost model. Soft-delete first (status flag, file still exists), hard-delete after the regret window.
 
 </details>
+
+---
+
+## Step 7: Content-addressed dedup (storing identical files once)
+
+Fifty different users upload the same 200 MB software installer. Do you store it 50 times?
+
+No. You hash the file content. Two files with the same bytes have the same hash. You store the bytes once and let many "file" rows point at the same blob.
+
+A blob is the bytes themselves. A file is a user-named pointer to a blob. The `files` table has one row per user-named pointer. The `blobs` table has one row per unique byte sequence. They are joined by content hash.
+
+```
+                Blobs table              Files table
+            (one per unique bytes)    (one per user pointer)
+
+            blob A: hash=abc...   <-- file "installer-2024.exe" (Alice)
+            refcount=3                <-- file "setup.exe" (Bob)
+                                      <-- file "v1.0.exe" (Carol)
+
+            blob B: hash=def...   <-- file "report.pdf" (Alice)
+            refcount=1
+```
+
+When Alice deletes her copy of the installer, you decrement the blob's refcount from 3 to 2. The blob stays alive because Bob and Carol still reference it. When the refcount finally hits zero, you schedule the actual bytes for deletion (after a grace period in case someone uploads it again).
+
+> Why this matters. Consumer file-sharing services often see ~30% storage savings from dedup. On 580 PB/year that is ~170 PB saved. At $0.023/GB/month for hot storage, dedup saves ~$50M/year. Worth getting right.
+
+One privacy note: knowing your file's hash matches another user's tells you they have the same content. For consumer use that is fine. For high-privacy products (legal, medical), disable cross-tenant dedup. Dedup only within one account.
+
+---
 
 ## Follow-up questions
 
 Try answering each in 2 to 4 sentences before reading the solution.
 
-1. **Resumable upload across days.** A user uploads 3GB of a 5GB file, then closes their laptop. The next morning they reopen the app. What happens? How does the client know which chunks already landed? How long do you keep abandoned uploads around?
+1. **Resume the next day.** A user uploads 3 GB of a 5 GB file, then closes their laptop. The next morning they reopen the app. What happens? How does the client know which chunks already landed? How long do you keep half-finished uploads around?
 
-2. **Quota enforcement race.** A user has 100MB of quota left. Two clients (their phone and laptop) initiate uploads of 80MB each at the same instant. Both pass the quota check at init. Both upload. Now the user is 60MB over quota. How do you prevent this?
+2. **Quota race.** A user has 100 MB of quota left. Their phone and laptop both start uploading 80 MB files at the same instant. Both pass the quota check at init. Both upload. Now the user is 60 MB over quota. How do you prevent this?
 
-3. **Content-addressed dedup.** Three different users upload the same 200MB software installer. How do you store it once? What does "delete" mean when one user deletes their copy? What about privacy (knowing my hash matches yours implies we have the same file)?
+3. **Dedup.** Three users upload the same 200 MB installer. How do you store it once? What does "delete" mean when one user deletes their copy? What about privacy (knowing my hash matches yours means we have the same file)?
 
-4. **Share link enumeration.** Your tokens are 192 bits, so brute force is out. But a security researcher finds your `created_at` timestamps in the response and notes that links from the same minute share a creation pattern. Is this a real attack? What other side channels leak?
+4. **Token guessing.** Your tokens are 192 bits, so brute force is out. But a researcher finds your `created_at` timestamps in the response. Is this a real attack? What other side channels leak?
 
-5. **Large file delete causing tombstone backlog.** A user with a 50TB account deletes 10TB in one click. Your metadata DB does 200k row updates and S3 issues 200k delete requests. What problems does this cause? How do you smooth it out?
+5. **Big delete.** A user with a 50 TB account deletes 10 TB in one click. Your metadata DB does 200,000 row updates and S3 issues 200,000 delete requests. What goes wrong? How do you smooth it out?
 
-6. **Virus scan returns positive after the file has been downloaded 500 times.** What is your incident response? Can you tell who downloaded it? Do you notify them? What about the share links pointing at the now-quarantined file?
+6. **Late-positive virus scan.** A scan flags a file as malware after 500 people have already downloaded it. What is your response? Can you tell who downloaded it? What about the share links?
 
-7. **Edit conflict.** Two users with Edit permission upload a new version of the same file within 10 seconds of each other. Whose version wins? Both? The first? The second? How does the loser find out?
+7. **Edit conflict.** Two users with Edit permission upload a new version of the same file within 10 seconds. Whose version wins? Both? The first? The second? How does the loser find out?
 
-8. **A specific shared file goes viral.** A YouTuber's public share link gets 1 million download requests in 24 hours. The file is a 200MB tutorial video. Your CDN cache hits 99% but the 1% miss rate still saturates one S3 prefix. What do you do?
+8. **Viral file.** A YouTuber's public share link gets 1 million downloads in 24 hours for a 200 MB tutorial video. Your CDN cache hits 99% but the 1% miss rate still hammers one S3 prefix. What do you do?
 
-9. **GDPR delete.** A user requests full deletion. Their account has 12,000 files, including some that other users have copies of (via dedup). They also created share links and were granted shares on other users' files. How do you fully erase them?
+9. **GDPR delete.** A user wants their data fully erased. Their account has 12,000 files, some of which are deduped with other users' files. They also created share links and were granted shares on other users' files. How do you erase them?
 
-10. **Cost attribution for an internal customer.** You sell this to enterprises. One enterprise customer wants a monthly invoice breakdown: storage GB by tier, egress GB, virus-scan-API calls, requests-per-million. How do you attribute every byte and every API call to a tenant?
+10. **Per-tenant billing.** You sell this to enterprises. One customer wants a monthly bill: storage GB by tier, egress GB, virus-scan calls, API requests. How do you attribute every byte and every call to the right tenant?
+
+---
 
 ## Related problems
 
-- **[Video Streaming (006)](../006-video-streaming/question.md)**. Same fundamental shape: bytes in S3, metadata in a DB, CDN in front. Video adds adaptive bitrate transcoding; this problem adds share-link permissions. The storage and CDN layer overlaps heavily.
-- **[Distributed Cache (009)](../009-distributed-cache/question.md)**. Hot files need an in-memory layer (or at least CDN edge cache) for popular share links. The eviction and warming patterns there apply directly.
-- **[Read-Heavy System Patterns (017)](../017-read-heavy-patterns/question.md)**. The "show me my files" dashboard and share-link resolution are textbook read-heavy paths. The cache tiering and read-replica strategies from that problem apply directly.
+- **[Video Streaming (006)](../006-video-streaming/question.md).** Same shape: bytes in S3, metadata in a DB, CDN in front. Video adds adaptive bitrate transcoding. This problem adds share-link permissions. The storage and CDN layer overlaps heavily.
+- **[Distributed Cache (009)](../009-distributed-cache/question.md).** Hot files need an in-memory layer (or at least CDN edge cache) for popular share links. The eviction and warming patterns there apply directly.
+- **[Read-Heavy System Patterns (017)](../017-read-heavy-patterns/question.md).** The "show me my files" dashboard and share-link resolution are textbook read-heavy paths.
 {% endraw %}
 
 <div class="pr-solution-divider"></div>
@@ -430,39 +560,62 @@ Try answering each in 2 to 4 sentences before reading the solution.
 {% raw %}
 ## Solution: File Upload & Share Service
 
-### TL;DR
+### The short version
 
-At first glance this is an HTTP wrapper around S3. The actual design work is everything around the bytes: how a 5GB upload survives a flaky network (chunked, presigned), how the same file uploaded by a hundred people is stored once (content-addressed dedup by SHA-256), how a single share link gets revoked instantly without invalidating the other 999 valid links (token table with `revoked_at`), and how a file nobody has touched in a year stops costing money (S3 lifecycle to IA, then Glacier).
+This looks like a thin HTTP wrapper around S3. It is not. The interesting design is everything around the bytes:
 
-The data model fits on a napkin. `files`, `file_versions`, `blobs`, `shares`, `share_links`, `upload_sessions`, `audit`. Bytes live in S3, addressed by content hash. Metadata is sharded by owner because almost every query is "show me my stuff." Uploads go client-to-S3 directly via presigned URLs so app servers never touch the bytes; that one decision saves an order of magnitude on bandwidth cost.
+- **How does a 5 GB upload survive a bad network?** Chunked upload with presigned URLs. Each chunk uploads on its own. Failed chunks retry without restarting the whole file.
+- **How do you store the same file once when 50 people upload it?** Content-addressed dedup. Hash the file. Two files with the same hash share one set of bytes.
+- **How do you revoke one share link without breaking 999 others?** One row per link in a `share_links` table with a `revoked_at` column. Revoke is one UPDATE.
+- **How does a file nobody has touched in two years stop costing money?** S3 lifecycle policy moves it to cheaper tiers (S3 IA after 90 days, Glacier after 365 days).
 
-The scaling story is a four-stage journey. Stage 1 is a single app server with local disk plus Postgres for 10 users. Stage 2 moves bytes to S3 via presigned URL for 1000 users. Stage 3 adds chunked TUS-style uploads, async virus scan, a share-link service, and lifecycle policy for 100k users. Stage 4 goes regional with CDN, multi-region metadata, and per-tenant quota isolation for 1M users. At every stage, build only what just broke.
+The data model fits on a napkin. Seven tables: `files`, `file_versions`, `blobs`, `shares`, `share_links`, `upload_sessions`, `audit`. Bytes live in S3, addressed by their content hash. Metadata is sharded by owner because almost every query is "show me my stuff."
+
+Uploads go client-to-S3 directly via presigned URLs. Your app servers never touch the bytes. That one decision saves you an order of magnitude on bandwidth cost.
+
+The scaling story is four stages:
+
+- **Stage 1 (10 users):** one VM, local disk, Postgres.
+- **Stage 2 (1k users):** bytes go to S3 via presigned URL.
+- **Stage 3 (100k users):** chunked uploads, async virus scan, share link service, CDN, lifecycle to cold tier.
+- **Stage 4 (1M users):** regional buckets, sharded metadata, multi-region.
+
+At every stage, build only what just broke.
+
+---
 
 ### 1. Clarifying questions, recap
 
-The most consequential question is "max file size." Anything above about 100MB rules out single-POST and forces chunked or presigned. The second most consequential is "sync or share-only." File sync (the Dropbox desktop client) is a fundamentally different problem with delta sync, conflict resolution, and local file watchers. Share-only (Google Drive web UI) is what this problem actually is.
+The two most important questions:
+
+- **What is the biggest file size?** Anything above ~100 MB forces chunked or presigned uploads.
+- **Sync or share-only?** Sync (Dropbox desktop) is a different problem with delta sync, conflict resolution, and file watchers. Share-only (Google Drive web) is what this design solves.
 
 Everything else (versioning, virus scan, GDPR, quotas) follows from those two answers.
 
-### 2. Capacity, with the math
+---
 
-At 10k users you see roughly 0.08 uploads per second sustained and 0.25 at peak. Downloads track at 0.8 per second. Storage growth is around 13TB a year. Egress at peak is maybe 100 Mbps. One server's NIC.
+### 2. Capacity, in plain numbers
 
-At 100M users it gets interesting. Uploads run ~3,300 per second sustained, ~10k at peak. Downloads ~33k sustained, ~100k peak. Storage growth is ~840 PB per year raw, ~580 PB after dedup. Egress at peak is ~6.4 Tbps. CDN is non-negotiable. By year two ~70% of stored bytes are cold; lifecycle to IA plus Glacier cuts ~70% off the cost of that tier.
+| Scale | Uploads/sec | Downloads/sec | Storage/year | Egress peak |
+|-------|-------------|----------------|---------------|--------------|
+| 10k users (weekend) | ~0.08 sustained, ~0.25 peak | ~0.8 | ~13 TB | ~100 Mbps |
+| 100M users (Dropbox-scale) | ~3,300 sustained, ~10k peak | ~33k sustained, ~100k peak | ~580 PB (after 30% dedup) | ~6.4 Tbps |
 
-Two numbers matter more than the throughput:
+Two numbers matter more than throughput:
 
-The system is read-heavy by request count but *write-heavy by bytes*. Uploads dominate ingress, CDN absorbs most downloads.
+- **The system is read-heavy by request count, but write-heavy by bytes.** Uploads dominate ingress. CDN absorbs most of the download traffic.
+- **Storage cost is the headline expense.** At PB scale, $0.023/GB/month for hot S3 turns into hundreds of millions per year. Lifecycle to cheaper tiers and dedup are survival, not optimization.
 
-Storage cost is the headline expense. At PB scale, $0.023/GB/month for S3 Standard turns into hundreds of millions per year if you don't tier.
+The metadata DB is small compared to the object store. 100B file rows at ~500 bytes is ~50 TB. Sharded Postgres handles it easily.
 
-App-server bandwidth is what dies first if you tunnel uploads. A 10Gbps NIC handles maybe 150 concurrent 8MB uploads per second. Presigned URLs to S3 take that ceiling away entirely.
+> Why presigned URLs and not upload through your server? Uploading a 5 GB file through your server means: 5 GB in to your server, then 5 GB out to S3. You doubled the bandwidth bill and burned your server's CPU on copying bytes. Presigned URL lets the client upload directly to S3 in one trip. Your server only handles a tiny "give me a URL" request.
 
-The metadata DB is small compared to the object store. 100B file rows at ~500 bytes is ~50TB; sharded Postgres holds this easily.
+---
 
-### 3. API
+### 3. The API
 
-Five endpoints carry the whole product. Init an upload, upload chunks, finalize, create a share link, redeem it. Everything else is a read.
+Five endpoints carry the whole product. Init an upload, upload chunks (to S3 directly), finalize, create a share link, redeem a share link. Everything else is reading data back.
 
 ```
 POST /api/v1/uploads/init
@@ -472,9 +625,9 @@ Authorization: Bearer <token>
   "file_name": "vacation.mp4",
   "size": 1572864000,                 # 1.5 GB
   "mime_type": "video/mp4",
-  "content_hash": "sha256:abc123...", # client-computed for dedup hint
+  "content_hash": "sha256:abc123...", # client computes this for dedup
   "parent_folder_id": "fld_xyz",
-  "client_idempotency_key": "uuid"    # retry doesn't create a new session
+  "client_idempotency_key": "uuid"    # retry returns same session
 }
 ```
 
@@ -482,13 +635,13 @@ Responses:
 
 | Status | Meaning | Body |
 |--------|---------|------|
-| 201 Created | New upload session | `{"upload_id": "...", "chunk_size": 8388608, "presigned_urls": [{"part": 1, "url": "..."}, ...], "expires_at": "..."}` |
-| 200 OK | Dedup hit; file already exists; no upload needed | `{"file_id": "...", "deduped": true}` |
-| 400 Bad Request | Invalid mime, oversize, name invalid | `{"error": "file_too_large", "max_bytes": 5368709120}` |
-| 402 Payment Required | Out of quota | `{"error": "quota_exceeded", "available_bytes": 12345}` |
-| 409 Conflict | A file with this name already exists at this path | `{"error": "name_conflict"}` |
+| 201 Created | New upload session | `{"upload_id": "...", "chunk_size": 8388608, "presigned_urls": [{"part": 1, "url": "..."}, ...]}` |
+| 200 OK | Dedup hit. File already exists. No upload needed. | `{"file_id": "...", "deduped": true}` |
+| 400 | File too big or invalid | `{"error": "file_too_large", "max_bytes": 5368709120}` |
+| 402 | Out of quota | `{"error": "quota_exceeded", "available_bytes": 12345}` |
+| 409 | Name conflict at this path | `{"error": "name_conflict"}` |
 
-The client then `PUT`s directly to the presigned S3 URLs. My server is not in the path. S3 returns an ETag the client must remember.
+The client then `PUT`s directly to the presigned S3 URLs. Your server is not in the path. S3 returns an ETag the client must remember.
 
 ```
 POST /api/v1/uploads/{upload_id}/finalize
@@ -516,21 +669,21 @@ POST /api/v1/files/{file_id}/share_links
 
 Returns `{"token": "...", "url": "https://app.example.com/s/<token>"}`.
 
-Redemption is `GET /api/v1/share/{token}` (with an optional password query). It returns file metadata plus a short-lived signed download URL.
+Redemption is `GET /api/v1/share/{token}` (with an optional password). Returns file metadata plus a short-lived signed download URL.
 
 Direct download is `GET /api/v1/files/{file_id}/download`, which returns a 307 redirect to a signed CloudFront URL valid for 15 minutes.
 
-A few small but load-bearing choices:
+**Three small but load-bearing choices:**
 
-Idempotency on upload init is required. The same `client_idempotency_key` returns the existing upload session, not a new one. Mobile clients retry on timeout; without the key, you get orphaned half-uploads.
+- **Idempotency on upload init is required.** Mobile clients retry on timeout. Without the key, retries create new sessions and you get half-uploaded orphans everywhere.
+- **The dedup hint at init is what makes "I am re-uploading my photo library" instant.** Client computes SHA-256. Server checks if a blob with this hash already exists. If yes, return the existing file_id and skip the upload. The bytes never cross the network.
+- **Finalize takes ETags because S3 multipart finalize needs them.** S3 stitches the chunks together based on the part list with ETags. The client tracks these. Your server forwards them.
 
-The dedup hint at init is what makes "I'm re-uploading my photo library" instant. Client computes SHA-256 and sends it. Server checks if a blob with this hash already exists; if so, return the existing file_id and skip the upload entirely. Cheaper than the bytes ever crossing the network.
+---
 
-Finalize takes ETags because S3 multipart finalize needs the part list with ETags. The client tracks this; your server forwards it to S3.
+### 4. The data model
 
-### 4. Data model
-
-Seven tables. Two large, five small.
+Seven tables. The two most interesting:
 
 ```sql
 -- Files (the user-facing entity).
@@ -539,112 +692,41 @@ CREATE TABLE files (
     owner_id         BIGINT NOT NULL,
     parent_folder_id UUID,
     name             TEXT NOT NULL,
-    mime_type        TEXT NOT NULL,
     size_bytes       BIGINT NOT NULL,
-    content_hash     BYTEA NOT NULL,           -- SHA-256 of file contents
+    content_hash     BYTEA NOT NULL,           -- SHA-256 of bytes
     current_version  INT NOT NULL DEFAULT 1,
     status           SMALLINT NOT NULL,        -- 1=uploading, 2=ready, 3=quarantined, 4=deleted
     storage_tier     SMALLINT NOT NULL,        -- 1=hot, 2=warm, 3=cold
     created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at       TIMESTAMPTZ
 );
-CREATE INDEX idx_files_owner ON files (owner_id, parent_folder_id);
-CREATE INDEX idx_files_hash ON files (content_hash);            -- dedup lookups
-CREATE INDEX idx_files_status ON files (status) WHERE status != 2;
+CREATE INDEX idx_files_owner  ON files (owner_id, parent_folder_id);
+CREATE INDEX idx_files_hash   ON files (content_hash);            -- dedup lookups
 
--- File versions (history; current_version on files points at the latest).
-CREATE TABLE file_versions (
-    file_id          UUID NOT NULL,
-    version          INT NOT NULL,
-    content_hash     BYTEA NOT NULL,
-    size_bytes       BIGINT NOT NULL,
-    uploaded_by      BIGINT NOT NULL,
-    uploaded_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    storage_key      TEXT NOT NULL,            -- S3 key
-    PRIMARY KEY (file_id, version)
-);
-
--- Content-addressed blob registry (the dedup table).
+-- The dedup table. One row per unique byte sequence.
 CREATE TABLE blobs (
     content_hash     BYTEA PRIMARY KEY,
     size_bytes       BIGINT NOT NULL,
-    storage_key      TEXT NOT NULL,            -- S3 key under /raw/<hash>
-    refcount         INT NOT NULL DEFAULT 1,
+    storage_key      TEXT NOT NULL,            -- S3 key /raw/<hash>
+    refcount         INT NOT NULL DEFAULT 1,   -- how many files point at this blob
     first_uploaded   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     storage_tier     SMALLINT NOT NULL DEFAULT 1
 );
-
--- Direct invites.
-CREATE TABLE shares (
-    share_id         UUID PRIMARY KEY,
-    file_id          UUID NOT NULL,
-    granted_to       BIGINT NOT NULL,
-    granted_by       BIGINT NOT NULL,
-    permission       SMALLINT NOT NULL,        -- 1=view, 2=download, 3=edit
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    revoked_at       TIMESTAMPTZ
-);
-CREATE INDEX idx_shares_recipient ON shares (granted_to) WHERE revoked_at IS NULL;
-CREATE INDEX idx_shares_file ON shares (file_id);
-
--- Share links (anonymous or semi-anonymous).
-CREATE TABLE share_links (
-    token            VARCHAR(32) PRIMARY KEY,
-    file_id          UUID NOT NULL,
-    created_by       BIGINT NOT NULL,
-    permission       SMALLINT NOT NULL,
-    expires_at       TIMESTAMPTZ,
-    password_hash    BYTEA,
-    require_account  BOOLEAN NOT NULL DEFAULT FALSE,
-    max_redemptions  INT,
-    redemptions      INT NOT NULL DEFAULT 0,
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    revoked_at       TIMESTAMPTZ
-);
-CREATE INDEX idx_links_file ON share_links (file_id);
-
--- Upload sessions (state of in-progress chunked uploads).
-CREATE TABLE upload_sessions (
-    upload_id        UUID PRIMARY KEY,
-    user_id          BIGINT NOT NULL,
-    file_name        TEXT NOT NULL,
-    expected_size    BIGINT NOT NULL,
-    expected_hash    BYTEA,
-    chunks_uploaded  INT NOT NULL DEFAULT 0,
-    total_chunks     INT NOT NULL,
-    s3_upload_id     TEXT NOT NULL,            -- S3 multipart upload ID
-    status           SMALLINT NOT NULL,        -- 1=active, 2=finalized, 3=abandoned
-    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at       TIMESTAMPTZ NOT NULL
-);
-CREATE INDEX idx_sessions_user ON upload_sessions (user_id, status);
-CREATE INDEX idx_sessions_expires ON upload_sessions (expires_at) WHERE status = 1;
-
--- Audit (append-only).
-CREATE TABLE audit (
-    event_id         UUID PRIMARY KEY,
-    occurred_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actor_id         BIGINT,
-    event_type       TEXT NOT NULL,            -- upload.initiated, file.downloaded, share.created, etc.
-    file_id          UUID,
-    payload          JSONB
-);
-CREATE INDEX idx_audit_actor ON audit (actor_id, occurred_at DESC);
-CREATE INDEX idx_audit_file ON audit (file_id, occurred_at DESC);
 ```
 
-A few choices worth defending out loud.
+The other five (`file_versions`, `shares`, `share_links`, `upload_sessions`, `audit`) follow the same shape: an ID, a foreign reference, a few state columns, timestamps. `share_links` was shown in question.md Step 5.
 
-Sharded by `owner_id` because most queries are "list my files in folder X." Co-locating one user's files on one shard makes those queries single-shard. The exception is share lookups (you might be granted shares on files owned by anyone); handle that with a secondary global index on `shares.granted_to`.
+**Four choices worth defending out loud:**
 
-`content_hash` is a real column with an index. Enables dedup at insert time. SHA-256 over a few PB of data has astronomically low collision probability; treat collisions as impossible for design purposes (and as a corruption signal if one ever appears).
+**Sharded by `owner_id`.** Almost every query is "list my files in folder X." Co-locating one user's files on one shard makes those queries single-shard. The exception is share lookups (you can be granted access to files owned by anyone). For that, use a separate global index on `shares.granted_to`.
 
-The `blobs` table is separate from `files` for a reason. The blob is the actual byte payload, addressed by hash. A file is a user-named pointer to a blob. Many files can point at one blob. The `refcount` tracks how many files reference each blob; when it hits zero, the blob is eligible for deletion (with a grace period for safety).
+**`content_hash` is a real indexed column.** It enables dedup at insert time. SHA-256 over a few PB of data has astronomically low collision probability. Treat collisions as impossible (and as a corruption signal if one ever appears).
 
-`upload_sessions` lives in Postgres, not Redis. Sessions can live for hours and survive Redis evictions. Volume is low (one row per in-flight upload).
+**The `blobs` table is separate from `files`.** A blob is the actual bytes, addressed by hash. A file is a user-named pointer to a blob. Many files can point at one blob. `refcount` tracks how many files reference each blob. When it hits zero, the blob is eligible for deletion (with a grace period for safety).
 
-`audit` is append-only because every business product eventually needs compliance. Hot 90 days in Postgres, cold to S3 after that.
+**`upload_sessions` lives in Postgres, not Redis.** Sessions can live for hours and must survive any cache eviction. Volume is low (one row per in-flight upload).
+
+---
 
 ### 5. Core algorithms
 
@@ -652,30 +734,31 @@ The chunked upload state machine is small:
 
 ```python
 def init_upload(user_id, file_name, size, content_hash, idempotency_key):
-    # Idempotency
+    # Idempotency: same key returns same session.
     existing = db.find_session_by_idempotency(user_id, idempotency_key)
     if existing:
         return existing
 
-    # Dedup hint
+    # Dedup hint: skip the upload entirely if we already have these bytes.
     if content_hash:
         blob = db.find_blob(content_hash)
         if blob and blob.size_bytes == size:
-            # Instant dedup: register a new file pointing at existing blob
             file_id = create_file_pointing_at_blob(user_id, file_name, blob)
             return {"deduped": True, "file_id": file_id}
 
-    # Quota check (atomic; see follow-up 2)
+    # Quota check (atomic; see follow-up 2).
     if not reserve_quota(user_id, size):
         raise QuotaExceeded
 
-    # Initiate S3 multipart
+    # Start S3 multipart upload.
     s3_upload_id = s3.create_multipart_upload(
         bucket="user-data",
         key=f"raw/pending/{uuid4()}"
     )
     chunk_size = 8 * 1024 * 1024
     total_chunks = ceil(size / chunk_size)
+
+    # Generate one presigned URL per chunk.
     presigned_urls = [
         s3.presign_upload_part(s3_upload_id, part_number=i+1, expires_in=3600)
         for i in range(total_chunks)
@@ -688,6 +771,7 @@ def init_upload(user_id, file_name, size, content_hash, idempotency_key):
     )
     return {"upload_id": session.id, "chunk_size": chunk_size, "presigned_urls": presigned_urls}
 
+
 def finalize_upload(upload_id, parts):
     session = db.lock_session(upload_id)
     if session.status != ACTIVE:
@@ -695,13 +779,13 @@ def finalize_upload(upload_id, parts):
     if len(parts) != session.total_chunks:
         raise MissingChunks
 
-    # Complete S3 multipart
+    # Tell S3 to stitch the chunks together.
     result = s3.complete_multipart_upload(session.s3_upload_id, parts)
 
-    # Create blob (or increment refcount if hash already exists)
+    # Create blob (or increment refcount if hash already exists).
     blob = db.upsert_blob(session.expected_hash, session.expected_size, result.key)
 
-    # Create the file
+    # Create the file row pointing at the blob.
     file_id = db.insert_file(session.user_id, session.file_name, blob)
 
     db.mark_session_finalized(upload_id)
@@ -709,104 +793,58 @@ def finalize_upload(upload_id, parts):
     return file_id
 ```
 
-Share link generation and resolution looks like this:
-
-```python
-def create_share_link(file_id, user_id, permission, expires_at=None, password=None):
-    require_permission(user_id, file_id, "share")
-
-    token = base62(secrets.token_bytes(24))      # 192-bit
-    password_hash = argon2.hash(password) if password else None
-
-    db.insert_share_link(
-        token=token, file_id=file_id, created_by=user_id,
-        permission=permission, expires_at=expires_at,
-        password_hash=password_hash
-    )
-    return token
-
-def resolve_share_link(token, supplied_password=None, viewer_user_id=None):
-    link = db.find_share_link(token)
-    if not link:
-        return error("not_found", 404)
-    if link.revoked_at:
-        return error("revoked", 410)
-    if link.expires_at and link.expires_at < now():
-        return error("expired", 410)
-    if link.max_redemptions and link.redemptions >= link.max_redemptions:
-        return error("exhausted", 410)
-    if link.password_hash and not argon2.verify(supplied_password, link.password_hash):
-        return error("password_required", 401)
-    if link.require_account and not viewer_user_id:
-        return error("login_required", 302)
-
-    if rate_limiter.too_many(token, ip):
-        return error("rate_limited", 429)
-
-    db.atomic_increment_redemptions(token)
-    audit("share.redeemed", file_id=link.file_id, actor=viewer_user_id)
-
-    download_url = cloudfront.sign(
-        s3_key_for_file(link.file_id),
-        expires_in=900,                          # 15 minutes
-        permission=link.permission
-    )
-    return {
-        "file": fetch_file_metadata(link.file_id),
-        "permission": link.permission,
-        "download_url": download_url
-    }
-```
+Share link resolution is the same shape, just simpler: look up the token, check `revoked_at` (410), check `expires_at` (410), check `max_redemptions` (410), verify password if set (401), rate-limit-check, increment redemptions, sign a 15-minute CloudFront URL, return.
 
 The `cloudfront.sign` call produces a signed URL where the signature itself encodes "you may GET this S3 key until time T." CloudFront verifies the signature at request time and returns the file from edge cache or S3.
 
-### 6. Architecture
+---
 
-Here's the whole picture. Drawn small enough to fit one screen.
+### 6. The architecture, drawn out
+
+Here is the whole picture, small enough to fit one screen.
 
 ```
-                   +------------------+
-   Clients ------> |   CloudFront     |   Edge cache for downloads.
-   (web, mobile,   |   (CDN)          |   Signed URLs for permission.
-    desktop)       +---------+--------+
-                             |
-                             v   (uncached requests)
-                   +------------------+
-                   |   API Gateway    |   Auth, rate limit, WAF.
-                   |   + WAF          |
-                   +---------+--------+
-                             |
-            +----------------+----------------+
-            |                |                |
-            v                v                v
-    +-------------+   +-------------+  +--------------+
-    |  Upload     |   |  File API   |  |  Share Link  |
-    |  Service    |   |  (list,     |  |  Resolver    |
-    |  (init,     |   |   metadata, |  |  (token ->   |
-    |   finalize, |   |   delete,   |  |   file +     |
-    |   sessions) |   |   download) |  |   perms)     |
-    +-----+-------+   +------+------+  +------+-------+
-          |                  |                 |
-          |                  v                 |
-          |           +------------------+     |
-          |           |  Permission      |<----+
-          |           |  Resolver        |   Cached "can user X
-          |           |  (cached)        |   access file Y" lookups.
-          |           +------------------+
-          |
-          |   presigned PUTs                 +-------------------------+
-          +----------------------------------+    Object Store (S3)    |
-                                             |                         |
-          +----------------------------------+  /raw/<hash>            |
-          |   signed GETs (via CloudFront)   |  /chunks/<upload_id>/<n>|
-          |                                  |                         |
-          v                                  |  Lifecycle:             |
-   +--------------+                          |   30d -> IA             |
-   |  Metadata DB |                          |   365d -> Glacier       |
-   |  (Postgres,  |                          |                         |
-   |   sharded    |                          +-------------------------+
-   |   by         |
-   |   owner_id)  |
+                  +------------------+
+   Clients -----> |   CloudFront     |  edge cache for downloads.
+   (web, mobile,  |   (CDN)          |  signed URLs for permission.
+    desktop)      +---------+--------+
+                            |
+                            v   (uncached requests)
+                  +------------------+
+                  |   API Gateway    |  auth, rate limit, WAF
+                  |   + WAF          |
+                  +---------+--------+
+                            |
+           +----------------+----------------+
+           |                |                |
+           v                v                v
+   +-------------+   +-------------+  +--------------+
+   | Upload      |   | File API    |  | Share Link   |
+   | Service     |   | (list,      |  | Resolver     |
+   | (init,      |   |  metadata,  |  | (token ->    |
+   |  finalize,  |   |  delete,    |  |  file +      |
+   |  sessions)  |   |  download)  |  |  perms)      |
+   +-----+-------+   +------+------+  +------+-------+
+         |                  |                |
+         |                  v                |
+         |           +------------------+    |
+         |           | Permission       |<---+
+         |           | Resolver         |   cached "can user X
+         |           | (cached)         |   access file Y" checks
+         |           +------------------+
+         |
+         |   presigned PUTs              +-------------------------+
+         +-------------------------------+    Object Store (S3)    |
+                                         |                         |
+         +-------------------------------+  /raw/<hash>            |
+         |   signed GETs (CloudFront)    |  /chunks/<upload_id>/<n>|
+         |                               |                         |
+         v                               |  Lifecycle:             |
+   +--------------+                      |   90d -> IA             |
+   | Metadata DB  |                      |   365d -> Glacier       |
+   | (Postgres,   |                      |                         |
+   |  sharded by  |                      +-------------------------+
+   |  owner_id)   |
    |              |
    | files,       |
    | blobs,       |
@@ -819,190 +857,298 @@ Here's the whole picture. Drawn small enough to fit one screen.
           |  CDC / outbox
           v
    +------------------+
-   |   SQS / Kafka    |   Topics: file.finalized,
+   |   SQS / Kafka    |   topics: file.finalized,
    |                  |           file.deleted,
    |                  |           share.created
    +-----+------+-----+
          |      |
          v      v
    +---------+ +-----------------+
-   | Virus   | |  Lifecycle      |
-   | Scan    | |  Manager        |
-   | Worker  | |  (refcounts,    |
-   | (Lambda | |   tiering hints,|
-   |  + Clam | |   GC of orphan  |
-   |  AV)    | |   chunks)       |
+   | Virus   | | Lifecycle       |
+   | Scan    | | Manager         |
+   | Worker  | | (refcount GC,   |
+   | (Clam   | |  tier transitions,|
+   |  AV)    | |  abandoned uploads)|
    +---------+ +-----------------+
 ```
 
-Five things to notice while reading this.
+**Five things to notice while reading this:**
 
-The Upload Service mints presigned URLs but never touches the bytes. That single decision is what lets one small pod handle thousands of uploads per second. The bytes go client-to-S3.
+- **The Upload Service mints presigned URLs but never touches the bytes.** That single decision is what lets one small pod handle thousands of uploads per second. The bytes go client-to-S3.
+- **CloudFront sits in front of S3 for downloads.** Signed URLs respect share-link permissions. Cache TTL is short (60 seconds typical) so revocations propagate fast. Without it, a viral file melts your S3 egress bill.
+- **The Permission Resolver is its own service** because it is the hottest read path. "Can user X do Y on file Z?" combines owner check, direct share check, and folder share inheritance. Cache the result for 30 seconds per `(user, file)` pair. Most lookups never touch the DB.
+- **Virus scan, lifecycle GC, and audit archival are all downstream of SQS/Kafka.** They are not in the write path. If the scan worker falls behind, uploads still succeed. Downloads of very recent uploads return 425 Too Early until the scan lands.
+- **The metadata DB is sharded by `owner_id`.** Cross-shard share lookups go through a separate global index. Bytes are not the problem at scale. Rows are. And rows are split by who owns them.
 
-CloudFront sits in front of S3 for downloads. Signed URLs respect share-link permissions; the cache TTL is short (60 seconds typical) so revocations propagate fast. Without it, a viral file melts S3 egress.
+---
 
-The Permission Resolver is a service on its own because it's the hottest read path. "Can user X do Y on file Z" combines owner check, direct share check, and folder-share inheritance. Cache the result for 30 seconds per (user, file) and most lookups never touch the DB.
+### 7. An upload, drawn end to end
 
-Virus scan, lifecycle GC, and audit archival are all downstream of SQS or Kafka. They're not in the write path of upload finalize. If the scan worker is behind, uploads still succeed; downloads of recent uploads return 425 Too Early until the scan lands.
+The chunked upload flow looks like this:
 
-The metadata DB is sharded by `owner_id`. Cross-shard queries (share lookups by recipient) use a separate global index. Bytes are not the problem at scale; rows are, and rows are split by who owns them.
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as API Gateway
+    participant US as Upload Service
+    participant S3 as S3
+    participant DB as Metadata DB
+    participant Q as SQS/Kafka
 
-### 7. What an upload looks like, end to end
+    C->>API: POST /uploads/init
+    API->>US: validate, authenticate
+    US->>DB: check dedup by content_hash
 
-Here's the chunked upload flow drawn as a sequence:
+    alt dedup hit
+        US-->>API: 200 {deduped, file_id}
+        API-->>C: 200
+    else new upload
+        US->>DB: reserve quota
+        US->>S3: create multipart upload
+        S3-->>US: s3_upload_id
+        US->>US: presign N chunk URLs
+        US->>DB: insert upload_session
+        US-->>API: 201 + presigned URLs
+        API-->>C: 201
 
-```
-   Client      API GW    Upload Svc       S3            DB         SQS
-     |           |           |             |             |          |
-     | POST /init|           |             |             |          |
-     |---------->|           |             |             |          |
-     |           |--validate>|             |             |          |
-     |           |           | check dedup |             |          |
-     |           |           |------------------------>  |          |
-     |           |           |<------------------------  |          |
-     |           |           |             |             |          |
-     |           |           | reserve quota             |          |
-     |           |           |------------------------>  |          |
-     |           |           |                           |          |
-     |           |           | create multipart          |          |
-     |           |           |------------>|             |          |
-     |           |           |<------------|             |          |
-     |           |           |                           |          |
-     |           |           | presign N URLs            |          |
-     |           |           | insert session            |          |
-     |           |           |------------------------>  |          |
-     |           | 201 + URLs|             |             |          |
-     |<----------|<----------|             |             |          |
-     |                                                              |
-     | PUT chunk 1 (directly to S3, presigned)                      |
-     |--------------------------->|                                 |
-     |<-- ETag 1 -----------------|                                 |
-     |                                                              |
-     | PUT chunk 2,3,4 in parallel                                  |
-     |--------------------------->|                                 |
-     |<-- ETags ------------------|                                 |
-     |                                                              |
-     | POST /finalize {parts:[...]}                                 |
-     |---------->|           |             |             |          |
-     |           |---------->|             |             |          |
-     |           |           | complete multipart        |          |
-     |           |           |------------>|             |          |
-     |           |           |<-- key, etag|             |          |
-     |           |           |                           |          |
-     |           |           | BEGIN TX                  |          |
-     |           |           | UPSERT blobs (refcount++) |          |
-     |           |           | INSERT files (status=uploading)      |
-     |           |           | INSERT audit                          |
-     |           |           | COMMIT                    |          |
-     |           |           |------------------------>  |          |
-     |           |           |                                      |
-     |           |           | emit file.finalized                  |
-     |           |           |--------------------------------->    |
-     |           | 200 + id  |             |             |          |
-     |<----------|<----------|             |             |          |
-     |                                                              |
-     |                       virus scan worker consumes             |
-     |                                                              |<--+
-     |                       scan ClamAV                            |
-     |                       UPDATE files SET status=ready          |
-     |                       (or status=quarantined)                |
+        par chunk 1
+            C->>S3: PUT chunk 1 (presigned)
+            S3-->>C: ETag 1
+        and chunk 2
+            C->>S3: PUT chunk 2 (presigned)
+            S3-->>C: ETag 2
+        and chunk N
+            C->>S3: PUT chunk N (presigned)
+            S3-->>C: ETag N
+        end
+
+        C->>API: POST /finalize {parts: [ETags]}
+        API->>US: forward
+        US->>S3: complete multipart upload
+        S3-->>US: final S3 key
+        US->>DB: BEGIN TX
+        US->>DB: upsert blob (refcount++)
+        US->>DB: insert file (status=uploading)
+        US->>DB: insert audit
+        US->>DB: COMMIT
+        US->>Q: emit file.finalized
+        US-->>API: 200 + file_id
+        API-->>C: 200
+
+        Note over Q: async
+        Q->>Q: virus scan worker consumes
+        Q->>DB: UPDATE files SET status = ready (or quarantined)
+    end
 ```
 
-Download has its own short flow. Client hits CloudFront. Cache hit returns 302 + bytes immediately. Cache miss falls through to the File API, which checks permissions via the Permission Resolver, mints a signed CloudFront URL valid for 15 minutes, and 307s the client to it. CloudFront fetches from S3 (or origin shield) and starts caching.
+**The download flow** is simpler:
 
-Target latencies for a sense of scale: init P99 around 200ms (bottleneck is the dedup lookup when cache is cold). Finalize P99 around 500ms (S3 multipart completion latency). Permission resolution P99 around 50ms (cached). Download cache hit is whatever CloudFront's edge latency is, usually under 30ms.
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant CF as CloudFront
+    participant API as File API
+    participant PR as Permission Resolver
+    participant S3 as S3
 
-### 8. Scaling journey: 10 to 1M users
+    C->>API: GET /files/{id}/download
+    API->>PR: can user view file?
+    PR-->>API: yes, permission = download
+    API->>API: sign CloudFront URL (15 min)
+    API-->>C: 307 redirect to signed URL
+    C->>CF: GET <signed URL>
 
-The point of this section is: build only what just broke. At every stage, name the pain and the fix.
+    alt cache hit
+        CF-->>C: file bytes (fast, from edge)
+    else cache miss
+        CF->>S3: fetch
+        S3-->>CF: file bytes
+        CF-->>C: file bytes (and cache for next time)
+    end
+```
 
-**Stage 1: 10 users (weekend project).** One small VM running Node, Go, or Python. Files saved to local disk under `/var/data/<user_id>/<file_id>`. Postgres on the same machine. Direct POST upload, files capped at 100MB. Direct invite sharing only, no anonymous links, owner-or-shared permissions only. No virus scan, no versioning, no quota. About $20 a month. Ships in a weekend.
+**Target latencies, for a sense of scale:**
 
-This is enough because you have 10 users and 50 total files ever. Bandwidth is whatever the VM's NIC gives you. Nothing is big enough to fail mid-upload.
+- Upload init: P99 ~200 ms (dedup lookup is the slow part when cache is cold).
+- Finalize: P99 ~500 ms (S3 multipart completion takes a moment).
+- Permission resolution: P99 ~50 ms (cached).
+- Download cache hit: usually under 30 ms (whatever CloudFront's edge latency is).
 
-**Stage 2: 1,000 users (Series-A territory).** Something breaks. Local disk fills up. One 50GB user takes the VM into a degraded state. Backups are now your problem. A user's 2GB upload drops at 1.8GB and they have to start over. They complain on Twitter.
+---
 
-The fixes, in order. Move bytes to S3 via presigned PUT URLs; the app server is no longer in the byte path. Add anonymous share links with a `share_links` table and 192-bit tokens. Add the view/download/edit permission scopes. Add per-user quota (`users.quota_bytes` and `users.used_bytes`). Add soft delete with a 30-day trash bin so support stops getting "I deleted it by accident" tickets.
+### 8. Storage tiers (saving money on cold files)
 
-Still no chunked upload (presigned PUT handles up to S3's 5GB single-PUT limit). No virus scan yet, acceptable for trusted early users. No CDN. One DB, no sharding. Cost is ~$100-300 a month.
+A file uploaded today is hot. A file uploaded two years ago is probably cold. Paying full price for both is wasteful.
 
-**Stage 3: 100,000 users.** Several things break at once. A power user trying to upload a 4GB video on hotel WiFi fails at 80%; the whole upload restarts; they uninstall. A malware-laden PDF gets shared and downloaded; you get a security report. Storage cost is $3-5k a month and growing 30% per quarter, with most stored bytes untouched after 30 days. `share_links` has 5M rows. S3 egress costs $2k a month because every share-link download streams full-cost from S3.
+```mermaid
+flowchart TD
+    A[New file uploaded] --> B[S3 Standard - hot]
+    B --> C{Accessed in last 90 days?}
+    C -->|Yes| B
+    C -->|No| D[Move to S3 IA - warm]
+    D --> E{Accessed in last 365 days?}
+    E -->|Yes| D
+    E -->|No| F[Move to Glacier - cold]
+    F --> G{User clicks Download?}
+    G -->|No| F
+    G -->|Yes| H[Restore: 1-5 min expedited, or 3-5 hr standard]
+    H --> B
+```
 
-The fixes in order. Add chunked upload via S3 multipart, TUS-style protocol. Init returns a list of presigned PUT URLs (one per chunk); client uploads chunks in parallel and retries only failed chunks; finalize completes the multipart. A flaky-network 4GB upload now survives. Add the virus scan pipeline: SQS topic `file.finalized` triggers a Lambda invoking ClamAV; result updates `files.status`. Files are downloadable in the 1-3 minute gap; when the scan flags them, status flips and downloads return 451. Document the gap explicitly. Split the Share Link Resolver into its own pod set with its own read replica and a small in-process LRU for the hottest tokens. Add the S3 lifecycle policy: 30 days to IA, 365 to Glacier, saves ~70% on cold-tier cost. Put CloudFront in front of S3; signed URLs from share links route through it with a 60-second TTL so revocations propagate. Egress drops by an order of magnitude. Add two Postgres read replicas. Make quota enforcement atomic with a reservation pattern (see follow-up 2). Tier the audit log: hot 90 days in Postgres, archive to S3 Parquet after.
+The three tiers and what they cost:
 
-Still single-region. The DB doesn't need sharding yet (100M rows at ~500 bytes is 50GB, fits in one big Postgres). Server-side encryption with S3-managed keys, no client-side yet. Cost is ~$10-20k a month.
+| Tier | Cost per GB per month | Retrieval | Retrieval cost |
+|------|------------------------|-----------|-----------------|
+| **S3 Standard** (hot) | $0.023 | < 100 ms | free |
+| **S3 IA** (warm) | $0.0125 | < 100 ms | $0.01/GB retrieved |
+| **Glacier** (cold) | $0.0036 | 1-5 min fast, 3-5 hr standard | $0.03/GB + per-request fee |
 
-**Stage 4: 1M users (global).** New pains. EU users complain about upload latency from Berlin to us-east-1 (latency dominates RTT times chunk count). A regulated healthcare customer demands data residency. A viral share link gets 1M downloads in 24 hours; CloudFront catches 99% but the 1% concentrates on one S3 prefix and triggers throttling. Metadata DB primary at 60% CPU at peak. A quota race lets three accounts overflow by 200GB each. A 4-hour S3 outage takes everything dark.
+The S3 lifecycle policy looks like this:
 
-Regional S3 buckets per region; files land in the user's home region, with lazy cross-region replication only on cross-region share access. Metadata DB sharded by `owner_id` and multi-region; each region is primary for its own users, with a global directory mapping `file_id` to home region. Share links are global; the token's first few characters encode the home region of the file so any region can route to the right backend. CloudFront with multiple origins per region; viral files get hash-prefix-sharded S3 keys so one prefix is never a bottleneck. Per-user quota cached in Redis with INCRBY for reservations and periodic reconciliation against the DB; resolves the overflow race. A daily job models per-file access patterns and pre-emptively tiers files. Enterprise tenants get a per-tenant KMS key allowing customer-controlled kill-switch. Metadata replicas in two regions for cross-region failover.
+```
+Rule: tier-down-by-age
+  Apply to: bucket prefix /raw/
+  Transition to S3 IA: 90 days after upload
+  Transition to S3 Glacier: 365 days after upload
+  Expiration: never (we keep files until user deletes)
+```
 
-Even at 1M users you peak at ~10 uploads per second and ~100 downloads per second (most absorbed by CDN). The system is large in bytes and organizational complexity, not in QPS. The architecture is the same shape as stage 3, multiplied across regions and with isolation boundaries added. Cost ~$200-500k a month, dominated by S3 storage and egress.
+> Why this matters. On 580 PB of cold storage at Glacier prices ($0.0036/GB/month), you pay about $25M/year. At Standard prices ($0.023/GB/month), the same data costs about $160M/year. The lifecycle policy is the difference. It is not a small optimization. It is the business model.
 
-What you'd do at 10M+ users: multi-tenancy becomes the primary axis (noisy-neighbor isolation, per-tenant rate limiting, per-request cost attribution). Custom layer over S3 with stronger consistency guarantees. Edge upload acceleration (upload to nearest edge, async replicate to home region). Specialized hardware for inline virus scanning to remove the async gap.
+**Three gotchas to mention:**
 
-### 9. Reliability
+- **Glacier retrieval latency surprises users.** Standard retrieval takes 3-5 hours. The user clicks Download and waits. Either use Glacier Instant Retrieval (3x cost, sub-second reads) or set explicit expectations: "Restoring. We will email you when ready."
+- **Do not tier small files.** S3 IA has a 128 KB minimum object size charge. Tiering a 10 KB file actually costs more. Exclude small files from the lifecycle rule.
+- **Cold tier deletes have penalties.** A file deleted in Glacier still incurs the 90-day minimum storage charge. Build this into your trash-bin retention. Soft-delete first. Hard-delete after the regret window.
 
-Interrupted upload resume is built in. Upload sessions live 24 hours in `upload_sessions`. The client calls `GET /uploads/{upload_id}` to ask "which chunks have you got?" Server queries S3 `ListParts` and returns the part numbers already uploaded. Client re-uploads only the missing parts. After 24 hours, the session expires and the abandoned S3 multipart is aborted by the Lifecycle Manager (S3 charges for in-flight parts until aborted).
+---
 
-Orphan chunks are the Lifecycle Manager's job, running every 6 hours. For each session with `status=active AND expires_at < now()`, call `s3.abort_multipart_upload(s3_upload_id)` and mark the session abandoned. As a safety net, a global S3 lifecycle rule aborts any multipart older than 7 days.
+### 9. Scaling journey: 10 to 1M users
 
-Virus scan failures come in three flavors. A scan worker dies mid-scan, SQS visibility timeout expires, another worker picks up the message; scan result is the same, so idempotent. The third-party scan API is down: worker retries with backoff; if down for over an hour, escalate to a human queue; files remain `status=uploading` and downloads return 425 Too Early. A scan finds a virus after the file has been downloaded: flip `status=quarantined`, set `revoked_at` on all share links pointing at the file, audit log captures it, notify any downloaders with identities. The 1-3 minute window between finalize and scan completion is the exposure.
+The point is: build only what just broke. Name the pain. Add the fix. Do not pre-build.
 
-Metadata DB primary failure is standard Postgres failover. Promote a replica; reads continue from other replicas during the 30-60 second promotion. In-flight upload sessions see a few errors and retry.
+#### Stage 1: 10 users (weekend project)
 
-S3 outage is the hardest one to design around. If the region's S3 is down, presigned PUTs return 5xx, signed GETs return 5xx, and CloudFront serves whatever it has cached. Metadata operations still work. Honest answer: wait for S3 to recover. Multi-region replication helps for read availability if you have a hot copy elsewhere; it's expensive and only justified for high-availability tiers.
+One small VM. Files saved to local disk under `/var/data/<user_id>/<file_id>`. Postgres on the same machine. Direct POST upload, files capped at 100 MB. Direct invite sharing only. No anonymous links. No virus scan, no versioning, no quota. About $20/month. Ships in a weekend.
 
-### 10. Observability
+This is enough because you have 10 users and 50 total files ever. Bandwidth is whatever the VM gives you. Nothing is big enough to fail mid-upload.
+
+#### Stage 2: 1,000 users
+
+Something breaks:
+
+- Local disk fills up. One 50 GB user takes the VM into a degraded state.
+- Backups are now your problem.
+- A user's 2 GB upload drops at 1.8 GB. They have to start over. They complain on Twitter.
+
+Fixes, in order:
+
+- **Move bytes to S3 via presigned PUT URLs.** Your app server is no longer in the byte path.
+- **Add anonymous share links.** `share_links` table with 192-bit tokens.
+- **Add the view/download/edit permission scopes.**
+- **Add per-user quota.** `users.quota_bytes` and `users.used_bytes`.
+- **Add soft delete with a 30-day trash bin.** Support stops getting "I deleted by accident" tickets.
+
+Still no chunked upload (presigned PUT handles up to S3's 5 GB single-PUT limit). No virus scan yet (acceptable for trusted early users). No CDN. One DB. Cost ~$100-300/month.
+
+#### Stage 3: 100,000 users
+
+Several things break at once:
+
+- A power user uploads a 4 GB video on hotel WiFi. Fails at 80%. The whole upload restarts. They uninstall the app.
+- A malware-laden PDF gets shared and downloaded. You get a security report.
+- Storage cost is $3-5k/month and growing 30% per quarter. Most stored bytes are untouched after 30 days.
+- `share_links` has 5M rows.
+- S3 egress costs $2k/month because every share-link download streams full-cost from S3.
+
+Fixes, in order:
+
+- **Chunked upload via S3 multipart.** Init returns a list of presigned PUT URLs (one per chunk). Client uploads chunks in parallel and retries only failed chunks. Finalize completes the multipart. A flaky 4 GB upload now survives.
+- **Virus scan pipeline.** SQS topic `file.finalized` triggers a Lambda invoking ClamAV. Result updates `files.status`. Files are downloadable in the 1-3 minute gap; when the scan flags them, status flips to quarantined and downloads return 451. Document the gap explicitly.
+- **Split the Share Link Resolver into its own pod set.** Its own read replica and a small in-process LRU for the hottest tokens.
+- **S3 lifecycle policy.** 90 days to IA, 365 to Glacier. Saves ~70% on cold-tier cost.
+- **CloudFront in front of S3.** Signed URLs from share links route through it with a 60-second TTL so revocations propagate. Egress drops by an order of magnitude.
+- **Two Postgres read replicas.** Dashboards read from replicas. Engine writes go to primary.
+- **Atomic quota enforcement** with a reservation pattern (see follow-up 2).
+- **Tier the audit log.** Hot 90 days in Postgres. Archive to S3 Parquet after.
+
+Still single-region. The DB does not need sharding yet (100M rows at ~500 bytes is 50 GB, fits one big Postgres). Server-side encryption with S3-managed keys, no client-side yet. Cost ~$10-20k/month.
+
+#### Stage 4: 1 million users (global)
+
+New pains:
+
+- EU users complain about upload latency from Berlin to us-east-1.
+- A regulated healthcare customer demands data residency.
+- A viral share link gets 1M downloads in 24 hours. CloudFront catches 99% but the 1% concentrates on one S3 prefix and triggers throttling.
+- Metadata DB primary at 60% CPU at peak.
+- A quota race lets three accounts overflow by 200 GB each.
+- A 4-hour S3 outage takes everything dark.
+
+Fixes:
+
+- **Regional S3 buckets per region.** Files land in the user's home region. Lazy cross-region replication only on cross-region share access.
+- **Shard metadata DB by `owner_id`.** Multi-region. Each region is primary for its own users. Global directory maps `file_id` to home region.
+- **Share links are global.** The token's first few characters encode the home region of the file so any region routes correctly.
+- **CloudFront with multiple origins per region.** Viral files get hash-prefix-sharded S3 keys so one prefix is never a bottleneck.
+- **Per-user quota in Redis** with `INCRBY` reservations and periodic reconciliation against the DB. Resolves the overflow race.
+- **Per-tenant KMS keys** for enterprise customers (customer-controlled kill switch).
+- **Metadata replicas in two regions** for cross-region failover.
+
+Even at 1M users you peak at ~10 uploads/sec and ~100 downloads/sec (most absorbed by CDN). The system is large in bytes and organizational complexity, not in QPS. The architecture is the same shape as Stage 3, multiplied across regions with isolation boundaries. Cost ~$200-500k/month, dominated by S3 storage and egress.
+
+---
+
+### 10. Reliability
+
+**Interrupted upload resume.** Upload sessions live 24 hours in `upload_sessions`. Client calls `GET /uploads/{upload_id}` to ask "which chunks have you got?" Server queries S3 `ListParts` and returns the part numbers already uploaded. Client re-uploads only the missing parts. After 24 hours, the session expires and the abandoned S3 multipart is aborted by the Lifecycle Manager (S3 charges for in-flight parts until aborted).
+
+**Orphan chunks.** Lifecycle Manager runs every 6 hours. For each session with `status=active AND expires_at < now()`, call `s3.abort_multipart_upload(s3_upload_id)` and mark the session abandoned. Safety net: a global S3 lifecycle rule aborts any multipart older than 7 days.
+
+**Virus scan failures.** Three flavors:
+
+- Scan worker dies mid-scan. SQS visibility timeout expires. Another worker picks up the message. Scan result is the same. Idempotent.
+- Third-party scan API is down. Worker retries with backoff. If down over an hour, escalate to a human queue. Files remain `status=uploading`. Downloads return 425 Too Early.
+- Scan finds a virus after the file has been downloaded. Flip `status=quarantined`. Set `revoked_at` on all share links pointing at the file. Audit log captures everything. Notify any authenticated downloaders.
+
+**Metadata DB primary failure.** Standard Postgres failover. Promote a replica. Reads continue from other replicas during the 30-60 second promotion. In-flight upload sessions see a few errors and retry.
+
+**S3 outage.** The hardest one. If the region's S3 is down, presigned PUTs return 5xx, signed GETs return 5xx, CloudFront serves whatever it has cached. Metadata operations still work. Honest answer: wait for S3 to recover. Multi-region replication helps for reads but is expensive and only justified for high-availability tiers.
+
+---
+
+### 11. Observability
 
 | Metric | Why it matters |
 |--------|----------------|
 | `upload.init.rate` | Sudden drop signals auth or API issues. |
-| `upload.success_rate` (finalize/init) | The headline UX SLO. If 60% of inits never finalize, something is broken. |
-| `upload.bytes_per_user.p99` | Outlier detection: someone uploading 10x normal might be a backup tool gone wrong. |
-| `upload.duration` by file size bucket | Lets you tell "uploads are slow" from "uploads of 1GB+ files are slow." |
-| `download.rate` by file_id (top-N) | Identifies viral files; lets you pre-warm CDN. |
+| `upload.success_rate` (finalize/init) | Headline UX SLO. If 60% of inits never finalize, something is broken. |
+| `upload.duration` by file size bucket | Tells you "uploads are slow" from "uploads of 1 GB+ files are slow." |
 | `download.cache_hit_rate` (CDN) | Should be > 95% in steady state. |
 | `share_link.resolution.p99` | Hot path latency. |
 | `share_link.brute_force_alerts` | Tokens with > 50 failed redemption attempts in an hour. |
-| `quota.exceeded.rate` | Spikes signal a user (or integration) gone rogue. |
-| `virus_scan.queue_depth` | If growing, scanner can't keep up; downloads of recent uploads risk gap exposure. |
-| `virus_scan.positive_rate` | Sudden spike = malware campaign. |
-| `blob.refcount.zero.count` | Eligible-for-GC blobs; should drain. |
-| `storage.by_tier.bytes` | Hot/warm/cold breakdown; cost forecasting input. |
+| `quota.exceeded.rate` | Spikes signal a user or integration gone rogue. |
+| `virus_scan.queue_depth` | If growing, scanner cannot keep up. Downloads of recent uploads risk exposure. |
+| `virus_scan.positive_rate` | Sudden spike means a malware campaign. |
+| `blob.refcount.zero.count` | Eligible-for-GC blobs. Should drain. |
+| `storage.by_tier.bytes` | Hot/warm/cold breakdown. Cost forecasting input. |
 | `egress.bytes_per_region` | Where the money goes. |
-| `lifecycle.transition.rate` | If transitions stall, cost forecast is wrong. |
 
-Page on: upload success rate under 90% for 5 min, virus scan queue depth over 10k, CDN origin error rate over 1%. File a ticket on: per-user bandwidth anomaly, quota race detected, storage growth more than 2σ above forecast.
+**Page on:** upload success rate under 90% for 5 min. Virus scan queue depth over 10k. CDN origin error rate over 1%.
 
-### 11. Gotchas the senior interviewer is listening for
+**Ticket on:** per-user bandwidth anomaly. Quota race detected. Storage growth more than 2-sigma above forecast.
 
-Some of these only come out when the interviewer asks "what happens if..." The senior candidate brings them up unprompted.
-
-**File size lies in HTTP headers.** A client claims `Content-Length: 1MB` at init but uploads 5GB. Enforce size at presigned URL generation (S3 respects the `Content-Length` you sign) and at finalize (compare expected to actual). Reject mismatches.
-
-**Quota race condition.** Two concurrent uploads from the same user both pass the check at init. Without atomic reservation, both succeed and the user is over quota. Fix: atomic `UPDATE users SET reserved_bytes = reserved_bytes + ? WHERE reserved_bytes + used_bytes + ? <= quota`. Returns 0 rows if overflow. On finalize or session-abort, reservation moves to `used_bytes` or is released.
-
-**Share link enumeration.** Even with 192-bit tokens, side channels can leak: timing differences on lookup, error messages that distinguish "not found" from "expired," `created_at` in responses. Mitigate with constant-time response, generic "not found or expired" message, no metadata in unauthenticated responses.
-
-**Large file delete tombstone backlog.** Deleting a 10TB folder triggers 200k row updates and 200k S3 deletes. Single-shot times out, holds DB locks, and overwhelms S3. Fix: enqueue a deletion job processing in batches of 1000 with rate limiting; UI shows "deletion in progress" until done.
-
-**Dedup with privacy.** Knowing your file's SHA-256 matches another user's leaks the fact that you both have the same file. For most use cases this is fine; for high-privacy products (legal, healthcare) skip dedup or do it only within a single tenant.
-
-**Presigned URL TTL too long.** A presigned URL valid for 24 hours that leaks (logs, chat, CI variables) is a 24-hour data breach. Default to 1 hour for upload, 15 minutes for download. Re-mint on retry.
-
-**Refcount race in dedup.** Two users delete the last two files referencing a blob at the same instant. Without atomicity, both see `refcount=2`, both decrement to 1, blob never GC'd; or both see `refcount=1`, both delete, the second user's data is lost. Fix: atomic `UPDATE blobs SET refcount = refcount - 1 WHERE content_hash = ? RETURNING refcount`. Only the transaction that returns 0 triggers actual S3 deletion, and that deletion is deferred by 24 hours in case a new file is created with the same hash.
-
-**Folder permission inheritance is recursive.** Sharing a folder grants access to all descendants. Checking "can user X view file Y" walks Y's parent chain looking for a share grant. Cache aggressively (per `(user, file)` for 30s) or denormalize by materializing the closure on share-grant changes.
-
-**Glacier retrieval latency surprises users.** Standard retrieval takes 3-5 hours. User clicks Download and waits hours. Either use Glacier Instant Retrieval (3x cost, sub-second) or set explicit expectations ("Restoring; we'll email when ready").
-
-**Versioning interacts with dedup.** A user uploads `report.pdf`, then a slightly edited `report.pdf`. Two versions, two blobs (different hashes), both stored. After 10 edits, the file has 10 blobs even though most pages are identical. For large editable files, consider block-level dedup; for documents, accept the cost.
+---
 
 ### 12. Follow-up answers
 
-**1. Resumable upload across days.** The client persists `upload_id` locally. On reopen, it calls `GET /uploads/{upload_id}`. Server queries S3 `ListParts` for the multipart upload, returns the list of uploaded part numbers and the original chunk size. Client uploads only the missing parts and finalizes. If `upload_id` is past the 24-hour TTL (session expired, multipart aborted), the client gets 410 Gone and must start a new upload. Abandoned sessions are GC'd every 6 hours by the Lifecycle Manager calling `AbortMultipartUpload` on S3 and marking the session row abandoned.
+**1. Resumable upload across days.**
 
-**2. Quota enforcement race.** Common and real. Fix it with an explicit reservation column:
+The client persists `upload_id` locally. On reopen, it calls `GET /uploads/{upload_id}`. Server queries S3 `ListParts`, returns the list of uploaded part numbers and the original chunk size. Client uploads only the missing parts and finalizes. If `upload_id` is past the 24-hour TTL, the client gets 410 Gone and must start over. Abandoned sessions get GC'd every 6 hours by the Lifecycle Manager calling `AbortMultipartUpload` on S3.
+
+**2. Quota race.**
+
+Common and real. Fix with an explicit reservation column:
 
 ```sql
 UPDATE users
@@ -1012,77 +1158,154 @@ WHERE user_id = ?
 RETURNING reserved_bytes;
 ```
 
-If this returns 0 rows, the upload is rejected. Reservation is held until upload finalize (moves to `used_bytes`) or session expiry (released back). At higher scale the same logic runs in Redis with `INCRBY` and CAS, with periodic reconciliation back to the DB.
+If this returns 0 rows, the upload is rejected. Reservation is held until finalize (moves to `used_bytes`) or session expiry (released). At higher scale, run the same logic in Redis with `INCRBY` and CAS, with periodic reconciliation back to the DB.
 
-**3. Content-addressed dedup.** A `blobs` table keyed by SHA-256. On finalize, `INSERT INTO blobs... ON CONFLICT (content_hash) DO UPDATE SET refcount = refcount + 1`. The S3 key is `/raw/<hash>`; if the blob exists, no new S3 object is written. The `files` row points at the blob.
+**3. Content-addressed dedup.**
+
+A `blobs` table keyed by SHA-256. On finalize:
+
+```sql
+INSERT INTO blobs (content_hash, size_bytes, storage_key, refcount)
+VALUES (?, ?, ?, 1)
+ON CONFLICT (content_hash) DO UPDATE SET refcount = blobs.refcount + 1;
+```
+
+The S3 key is `/raw/<hash>`. If the blob exists, no new S3 object is written. The `files` row points at the blob.
 
 Delete decrements the blob's refcount atomically. When refcount hits zero, schedule the blob's S3 object for deletion after a 24-hour grace period (in case a new file is created with the same hash).
 
-Privacy: dedup can leak existence. If you upload a file and it dedups instantly, you've confirmed someone else has the same content. For sensitive use cases (legal, medical), disable cross-tenant dedup; dedup only within a single account.
+Privacy: dedup can leak existence. If you upload a file and it dedups instantly, you have confirmed someone else has the same content. For sensitive use cases (legal, medical), disable cross-tenant dedup. Dedup only within a single account.
 
-**4. Share link enumeration.** 192 bits of entropy makes direct brute-force impossible. Side channels are the concern. Timing: token-not-found vs token-found-but-expired should take the same time. Use constant-time comparison and unified error paths. Error responses: return the same generic 404 for "no such token" and "expired" (or 410 for both); don't include `expired_at` in unauthenticated responses. Predictable creation timestamps: pure-random tokens from `secrets.token_bytes` leak nothing. Rate limiting: per-IP limits on `/share/*` thwart any high-volume probing. Web logs: tokens appear in access logs; treat them as secrets, scrub from logs or hash before logging.
+**4. Share link enumeration.**
 
-**5. Large delete tombstone backlog.** A 10TB delete triggers 200k file row updates and 200k S3 DELETE requests. Synchronously: HTTP timeout, DB lock contention, S3 throttling, user clicks Delete again, double the load.
+192 bits of entropy makes direct brute force impossible. Side channels are the real concern:
 
-The fix is to write a single `deletion_jobs` row `(user_id, target_folder_id, requested_at)` and return 202 Accepted with a job_id. A background worker processes the job in batches of 1000: soft-delete in DB (status flip + `deleted_at`), decrement blob refcounts, enqueue S3 deletion (S3 bulk-delete handles 1000 objects per call). UI shows "deletion in progress" with a progress bar; items disappear from listings immediately (filtered by status). After 30 days (trash retention), a separate sweeper hard-deletes from S3 the blobs whose refcount reached zero.
+- **Timing.** Token-not-found vs token-found-but-expired should take the same time. Use constant-time comparison and unified error paths.
+- **Error responses.** Return the same generic 404 for "no such token" and "expired." Do not include `expired_at` in unauthenticated responses.
+- **Predictable creation timestamps.** Pure-random tokens from `secrets.token_bytes` leak nothing. The token has no relationship to creation time.
+- **Rate limiting.** Per-IP limits on `/share/*` thwart high-volume probing.
+- **Web logs.** Tokens appear in access logs. Treat them as secrets. Scrub from logs or hash before logging.
 
-**6. Virus scan returns positive late.** Incident response in order: flip `status` to quarantined; `UPDATE share_links SET revoked_at = NOW() WHERE file_id = ?`; invalidate CloudFront for the file's signed URL prefix; query the `audit` table for `event_type = 'file.downloaded' AND file_id = ?` to identify downloaders (user_ids for authenticated, IPs for share-link); notify authenticated downloaders in-app and by email ("A file you downloaded was later found to contain malware; we recommend you scan your system"); anonymous downloaders can't be notified directly but the share link itself now displays a warning; notify the uploader ("Your file was flagged; if this was a mistake, request rescan"). Pre-mitigation: keep the post-finalize, pre-scan window short. Faster scanning narrows the exposure.
+**5. Large delete tombstone backlog.**
 
-**7. Edit conflict.** Two users with Edit upload new versions within 10 seconds. Default: both succeed; both create new versions. `file_versions` has rows `version=2` (first to land) and `version=3` (second). `files.current_version` points to version 3. The losing user's version still exists in history. The system surfaces a conflict notification: "User B also uploaded a new version of this file at the same time. Your version is current; theirs is at /history/version/2." For stronger guarantees, add an optional `If-Match: <current_version>` header on upload; mismatch returns 412 Precondition Failed and the client surfaces a conflict UI.
+A 10 TB delete triggers 200k file row updates and 200k S3 DELETE requests. Synchronously: HTTP timeout, DB lock contention, S3 throttling, user clicks Delete again, double the load.
 
-**8. Viral share link.** 200MB video, 1M downloads in 24h, 99% CDN cache hit. The 1% miss is 10k requests to origin S3 over 24h, about 0.1 req/sec on average; that's fine for S3 overall. The concern is *prefix throttling*: S3 limits requests per prefix to 5500 GET/s. If all those requests hit one prefix at one moment, you get 503s.
+The fix: write a single `deletion_jobs` row `(user_id, target_folder_id, requested_at)` and return 202 Accepted with a job_id. A background worker processes the job in batches of 1000:
 
-Mitigations: pre-warm CDN edges when a link is created with a known-popular file (push to all CloudFront edges immediately rather than waiting for first-miss). Spread the prefix by storing blobs at `/raw/<hash[0:2]>/<hash[2:4]>/<hash>` so popular files land on different prefixes naturally. CloudFront origin shield acts as a regional cache between edges and S3, collapsing many edge misses into one S3 fetch. For enterprise tier, multi-CDN (CloudFront plus Fastly plus Akamai) for resilience.
+- Soft-delete in DB (status flip + `deleted_at`).
+- Decrement blob refcounts.
+- Enqueue S3 deletion (S3 bulk-delete handles 1000 objects per call).
 
-**9. GDPR delete.** Multi-step process for a user with 12,000 files. First, `UPDATE users SET deletion_requested_at = NOW(), status = 'deleting'`; user is logged out and account read-only frozen. Enqueue a `deletion_jobs` row to trigger background processing. Walk owned files: decrement each blob's refcount, update audit, revoke all share links the user created. Walk received shares: set `revoked_at` on each row where the user is `granted_to` (the user loses access; the file itself remains for the owner). Walk audit log: replace `actor_id` with a hash, drop PII from payloads. Delete the user row after the grace period (often 30 days). Email the deletion certificate.
+UI shows "deletion in progress." Items disappear from listings immediately (filtered by status). After 30 days (trash retention), a sweeper hard-deletes the blobs whose refcount reached zero.
 
-The tricky bit: files deduped with other users. Decrementing the refcount may leave the blob alive because other users still reference it. That's correct; the user's *pointer* is gone, even though the bytes might persist (referenced by someone else). If the user demands the bytes be deleted regardless: disable dedup for that user retroactively (copy the blob to a user-private location for any remaining references, then delete the original). Expensive; only do on explicit request.
+**6. Late-positive virus scan.**
 
-**10. Cost attribution per tenant.** Every billable action gets tagged with `tenant_id`. Storage: S3 inventory runs daily, lists all objects with size and tier; each object's key embeds `tenant_id` (`/raw/<tenant>/<hash>`); aggregate by tenant. Egress: CloudFront real-time logs include the request URL; URLs encode tenant_id; daily job aggregates bytes-out per tenant. API requests: API Gateway access logs include the JWT's `tenant_id` claim; aggregate per tenant per endpoint. Virus scan API costs: scan worker records each scan in a `scan_invocations` table with `tenant_id`. A nightly job rolls these into a `billing_lines` table:
+Incident response, in order:
+
+- Flip `status` to quarantined.
+- `UPDATE share_links SET revoked_at = NOW() WHERE file_id = ?`.
+- Invalidate CloudFront for the file's signed URL prefix.
+- Query the `audit` table for `event_type = 'file.downloaded' AND file_id = ?` to identify downloaders (user_ids for authenticated, IPs for anonymous share-link).
+- Notify authenticated downloaders in-app and by email: "A file you downloaded was later found to contain malware. We recommend you scan your system."
+- Anonymous downloaders cannot be notified directly, but the share link itself now displays a warning.
+- Notify the uploader: "Your file was flagged. If this was a mistake, request a rescan."
+
+Pre-mitigation: keep the post-finalize, pre-scan window short. Faster scanning narrows the exposure.
+
+**7. Edit conflict.**
+
+Two users with Edit upload new versions within 10 seconds. Default: both succeed, both create new versions. `file_versions` has rows `version=2` (first to land) and `version=3` (second). `files.current_version` points to version 3. The losing user's version still exists in history.
+
+Surface a conflict notification: "User B also uploaded a new version at the same time. Your version is current. Theirs is at /history/version/2."
+
+For stronger guarantees, accept an optional `If-Match: <current_version>` header on upload. Mismatch returns 412 Precondition Failed and the client surfaces a conflict UI.
+
+**8. Viral file.**
+
+200 MB video, 1M downloads in 24 h, 99% CDN cache hit. The 1% miss is 10k requests to origin S3 over 24 h, about 0.1 req/sec on average. Fine for S3 overall. The concern is **prefix throttling**: S3 limits requests per prefix to 5500 GET/s. If all those requests hit one prefix at one moment, you get 503s.
+
+Mitigations:
+
+- **Pre-warm CDN edges** when a link is created with a known-popular file (push to all CloudFront edges immediately rather than waiting for first-miss).
+- **Spread the prefix.** Store blobs at `/raw/<hash[0:2]>/<hash[2:4]>/<hash>` so popular files land on different prefixes naturally.
+- **CloudFront origin shield.** A regional cache between edges and S3, collapsing many edge misses into one S3 fetch.
+- **Multi-CDN** for enterprise tier (CloudFront plus Fastly plus Akamai) for resilience.
+
+**9. GDPR delete.**
+
+Multi-step process for a user with 12,000 files.
+
+- `UPDATE users SET deletion_requested_at = NOW(), status = 'deleting'`. User is logged out and account frozen read-only.
+- Enqueue a `deletion_jobs` row for background processing.
+- Walk owned files: decrement each blob's refcount, update audit, revoke all share links the user created.
+- Walk received shares: set `revoked_at` where the user is `granted_to`. (The user loses access. The file itself remains for the owner.)
+- Walk audit log: replace `actor_id` with a hash. Drop PII from payloads.
+- Delete the user row after the grace period (often 30 days).
+- Email the deletion certificate.
+
+The tricky part: files deduped with other users. Decrementing the refcount may leave the blob alive because other users still reference it. That is correct. The user's pointer is gone, even though the bytes might persist (referenced by someone else).
+
+If the user demands the bytes be deleted regardless: disable dedup for that user retroactively. Copy the blob to a user-private location for any remaining references, then delete the original. Expensive. Only do on explicit request.
+
+**10. Per-tenant cost attribution.**
+
+Every billable action gets tagged with `tenant_id`:
+
+- **Storage:** S3 inventory runs daily, lists all objects with size and tier. Each object's key embeds `tenant_id` (`/raw/<tenant>/<hash>`). Aggregate by tenant.
+- **Egress:** CloudFront real-time logs include the request URL. URLs encode tenant_id. Daily job aggregates bytes-out per tenant.
+- **API requests:** API Gateway access logs include the JWT's `tenant_id` claim. Aggregate per tenant per endpoint.
+- **Virus scan API costs:** Scan worker records each scan in a `scan_invocations` table with `tenant_id`.
+
+A nightly job rolls these into a `billing_lines` table:
 
 ```
-tenant_id | period | storage_hot_gb | storage_warm_gb | storage_cold_gb | egress_gb | api_requests | scan_calls
+tenant_id | period | storage_hot_gb | storage_warm_gb | storage_cold_gb |
+          | egress_gb | api_requests | scan_calls
 ```
 
-Invoice generation reads this table. Spot-check: the sum of per-tenant attributions should match your AWS bill within ~1%; gaps are platform overhead, S3 inventory itself, etc.
+Invoice generation reads this table. Spot-check: the sum of per-tenant attributions should match your AWS bill within ~1%. Gaps are platform overhead, S3 inventory itself, etc.
+
+---
 
 ### 13. Trade-offs worth saying out loud
 
-**Single big PUT vs chunked.** Single PUT is simpler for files under 100MB and supported by every HTTP client. Chunked (S3 multipart, TUS) is necessary above 5GB (S3's single-PUT limit) and strongly recommended above 100MB for network resilience. The right answer is hybrid: single PUT below a threshold, chunked above.
+**Single big PUT vs chunked.** Single PUT is simpler for files under 100 MB and works in every HTTP client. Chunked is necessary above 5 GB (S3's single-PUT limit) and strongly recommended above 100 MB for network resilience. Right answer: hybrid. Single PUT below a threshold, chunked above.
 
-**Client-side encryption.** Optional but important for high-security customers. Encrypt with a key the server never sees; server stores ciphertext. Tradeoffs: no dedup possible (ciphertext differs even for identical plaintext), no server-side preview (can't render an encrypted PDF), key management burden is now the customer's. Implement as an opt-in for enterprise tier.
+**Client-side encryption.** Optional but important for high-security customers. Encrypt with a key the server never sees. Tradeoffs: no dedup possible (ciphertext differs even for identical plaintext), no server-side preview (cannot render an encrypted PDF), key management burden is now the customer's. Implement as opt-in for enterprise tier.
 
-**Dedup by content hash.** Saves ~30% on storage at consumer scale (people share popular files), less in business contexts (everyone uploads unique documents). Adds complexity: refcount management, GC, blob lifecycle, privacy considerations. Worth it at scale; skip for the first 1000 users.
+**Dedup by content hash.** Saves ~30% on storage at consumer scale, less in business contexts. Adds complexity: refcount management, GC, blob lifecycle, privacy. Worth it at scale. Skip for the first 1000 users.
 
-**Lifecycle to cold tier.** Saves 50-70% of storage cost on the cold tail. Costs: retrieval latency surprises users, retrieval fees on access, minimum-storage-duration penalties on early delete. Tune the transition age to your actual access pattern; default 90 days is usually too aggressive (some files are bursty re-accessed in week 5).
+**Lifecycle to cold tier.** Saves 50-70% of storage cost on the cold tail. Costs: retrieval latency surprises users, retrieval fees on access, minimum-storage-duration penalties on early delete. Tune the transition age to your actual access pattern. Default 90 days is sometimes too aggressive (some files are bursty re-accessed in week 5).
 
-**Postgres vs DynamoDB for metadata.** Postgres gives you joins, transactions, and a familiar query layer. DynamoDB gives you infinite horizontal scale and predictable latency. For metadata under 100M files, Postgres is simpler. Above that, sharding Postgres becomes annoying and DynamoDB is worth considering. Don't switch preemptively.
+**Postgres vs DynamoDB for metadata.** Postgres gives you joins, transactions, and a familiar query layer. DynamoDB gives you infinite horizontal scale and predictable latency. For metadata under 100M files, Postgres is simpler. Above that, sharding Postgres becomes annoying and DynamoDB is worth considering. Do not switch preemptively.
 
-**Synchronous vs async virus scan.** Sync blocks the upload UX (a 2GB file's scan takes minutes) but guarantees zero exposure. Async returns immediately and accepts a 1-3 minute exposure window. Almost everyone picks async; the exposure is small and the UX win is large.
+**Sync vs async virus scan.** Sync blocks the upload UX (a 2 GB file's scan takes minutes) but guarantees zero exposure. Async returns immediately and accepts a 1-3 minute exposure window. Almost everyone picks async. The exposure is small, the UX win is large.
 
-### 14. Common interview mistakes
+---
 
-Most weak answers fall into one of these.
+### 14. Common mistakes
 
-**Tunneling uploads through your app server.** The single biggest scaling mistake. Bandwidth cost is per-byte; doubling traffic doubles your NIC bill. Presigned-direct-to-S3 (or equivalent for non-S3 storage) is non-negotiable above ~100 concurrent uploads.
+Most weak answers fall into one of these:
 
-**Single POST for all uploads.** Works until the first 4GB upload fails on hotel WiFi. Chunked is mandatory above ~100MB; lower the threshold if your users are on mobile networks.
+**Tunneling uploads through your app server.** The single biggest scaling mistake. Bandwidth cost is per-byte. Doubling traffic doubles your NIC bill. Presigned-direct-to-S3 is non-negotiable above ~100 concurrent uploads.
 
-**No quota enforcement at all.** "We'll add it later" turns into "one user uploaded their entire Steam library and ate our budget." Quota at signup is easier than quota retrofitted.
+**Single POST for all uploads.** Works until the first 4 GB upload fails on hotel WiFi. Chunked is mandatory above ~100 MB.
 
-**Forgetting to GC abandoned uploads.** S3 multipart uploads that never finalized continue to cost money. A nightly sweeper catches them; an S3 lifecycle rule that aborts multiparts older than 7 days is the safety net.
+**No quota enforcement at all.** "We will add it later" turns into "one user uploaded their Steam library and ate our budget." Quota at signup is easier than quota retrofitted.
 
-**Share links that are just file IDs in the URL.** `https://app.com/file/abc123` is not a share link; it's a permanent backdoor. Use an opaque high-entropy token with explicit expiry and revocation.
+**Forgetting to GC abandoned uploads.** S3 multipart uploads that never finalized continue to cost money. A nightly sweeper catches them. An S3 lifecycle rule that aborts multiparts older than 7 days is the safety net.
 
-**No virus scan at all.** Acceptable for an internal tool, indefensible for a public product. Even basic ClamAV catches most known malware and signals to your incident-response process that scanning exists.
+**Share links that are just file IDs in the URL.** `https://app.com/file/abc123` is not a share link. It is a permanent backdoor. Use an opaque high-entropy token with explicit expiry and revocation.
 
-**Hot path doing folder traversal for permissions.** "Is this file in any folder shared with me?" naive implementation walks the parent chain on every download. Cache or materialize the access set per user.
+**No virus scan at all.** Fine for an internal tool. Indefensible for a public product. Even basic ClamAV catches most known malware.
+
+**Hot path doing folder traversal for permissions.** "Is this file in any folder shared with me?" walked on every download is slow. Cache or materialize the access set per user.
 
 **Skipping the `status` field.** Without an explicit upload/ready/quarantined/deleted state machine, you end up with weird edge cases (downloads of half-finalized files, deletes of in-flight uploads). The `files.status` smallint pays for itself in week 1.
 
-**Mixing user files and system files in one bucket without prefixing.** Lifecycle rules apply to a bucket or prefix; if you mix, you can't tier user files independently of thumbnails or temp data. Pick a prefix scheme on day one.
+**Mixing user files and system files in one bucket without prefixing.** Lifecycle rules apply per bucket or prefix. If you mix, you cannot tier user files independently of thumbnails or temp data. Pick a prefix scheme on day one.
 
 **No audit log.** When the security report comes in ("user X claims their file was leaked"), the lack of "who accessed this and when" turns a 1-hour investigation into a 1-week investigation. Audit is cheap to build, painful to retrofit.
 
-If you can hit 7 of these 10 and walk through the upload-protocol trade-off and the scaling journey in the same conversation, you're interviewing well above the bar.
+If you can hit 7 of these 10 and walk through the upload-protocol trade-off and the scaling journey in the same conversation, you are interviewing well above the bar.
 {% endraw %}
