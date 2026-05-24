@@ -179,6 +179,7 @@ defaults:
       layout: practice-problem
       comments: false
       toc: false
+      mermaid: true
   - scope:
       path: assets/js/dist
     values:
