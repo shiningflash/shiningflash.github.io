@@ -548,14 +548,12 @@ details .det-body { margin-top: .55rem; }
 .ap-lang-card {
   --card-accent: var(--c-green);
   border: 1px solid var(--main-border-color);
-  border-top: 3px solid var(--card-accent);
   border-radius: 14px; padding: 1.2rem 1rem;
   background: var(--main-bg); text-align: center;
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .ap-lang-card:hover {
   border-color: var(--card-accent);
-  border-top-color: var(--card-accent);
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0,0,0,.1);
 }
