@@ -569,7 +569,13 @@ details .det-body { margin-top: .55rem; }
   height: 5px; background: var(--main-border-color);
   border-radius: 4px; margin-top: .6rem; overflow: hidden;
 }
-.ap-lang-fill { height: 100%; border-radius: 4px; }
+.ap-lang-fill {
+  height: 100%; border-radius: 4px;
+  background: var(--card-accent);
+  opacity: .65;
+  transition: opacity .25s ease;
+}
+.ap-lang-card:hover .ap-lang-fill { opacity: 1; }
 
 /* ══════════════════════════════════════════════
    14. COMPETITIVE PROGRAMMING CARD

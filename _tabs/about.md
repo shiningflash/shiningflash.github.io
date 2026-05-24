@@ -699,15 +699,15 @@ order: 4
     <div class="ap-lang-name">Bangla</div>
     <div class="ap-lang-level">Native</div>
     <div class="ap-lang-bar">
-      <div class="ap-lang-fill" style="width:100%;background:linear-gradient(90deg,var(--c-green),var(--c-teal));"></div>
+      <div class="ap-lang-fill" style="width:100%;"></div>
     </div>
   </div>
   <div class="ap-lang-card">
     <div class="ap-lang-flag">🇬🇧</div>
     <div class="ap-lang-name">English</div>
-    <div class="ap-lang-level">Fluent — Professional</div>
+    <div class="ap-lang-level">Fluent · Professional</div>
     <div class="ap-lang-bar">
-      <div class="ap-lang-fill" style="width:92%;background:linear-gradient(90deg,var(--c-blue),var(--c-violet));"></div>
+      <div class="ap-lang-fill" style="width:92%;"></div>
     </div>
   </div>
   <div class="ap-lang-card">
@@ -715,7 +715,7 @@ order: 4
     <div class="ap-lang-name">Swedish</div>
     <div class="ap-lang-level">Learner · SFI</div>
     <div class="ap-lang-bar">
-      <div class="ap-lang-fill" style="width:28%;background:linear-gradient(90deg,var(--c-amber),var(--c-orange));"></div>
+      <div class="ap-lang-fill" style="width:28%;"></div>
     </div>
   </div>
 </div>
