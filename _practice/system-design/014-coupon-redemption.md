@@ -426,7 +426,7 @@ Sketch defenses. 5 minutes per scenario.
 
 ```mermaid
 flowchart TD
-    Start[Redeem attempt arrives] --> A{Same IP over 50<br/>attempts in 1 min?}
+    Start[Redeem attempt arrives] --> A{Same IP > 50<br/>attempts in 1 min?}
     A -->|Yes| Ban1[Temp ban IP for 1 hour]
     A -->|No| B{Bloom filter<br/>says 'maybe present'?}
     B -->|No| Reject1[404 unknown code<br/>never hits DB]
