@@ -413,7 +413,7 @@ stateDiagram-v2
     driver_arriving --> cancelled: rider or driver cancels
     driver_arriving --> no_show: driver waited, rider didn't show
     in_progress --> completed: driver taps End Trip
-    in_progress --> cancelled: rare; system or fraud cancel
+    in_progress --> cancelled: rare, system or fraud cancel
     completed --> [*]
     cancelled --> [*]
     no_show --> [*]
@@ -928,7 +928,7 @@ stateDiagram-v2
     driver_arriving --> cancelled: rider/driver cancels
     driver_arriving --> no_show: driver waited, rider didn't show
     in_progress --> completed: driver taps End Trip
-    in_progress --> cancelled: rare; system / fraud
+    in_progress --> cancelled: rare, system / fraud
     completed --> [*]
     cancelled --> [*]
     no_show --> [*]

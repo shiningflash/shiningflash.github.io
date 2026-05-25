@@ -461,7 +461,7 @@ sequenceDiagram
     Web-->>Fetcher: 200 OK + HTML body
     Fetcher->>Frontier: ack: status 200, content_hash=abc...
     Fetcher->>Parser: send raw HTML
-    Parser->>Parser: find all <a href> links
+    Parser->>Parser: find all anchor (a href) links
     Parser->>Parser: canonicalize each link
     Parser->>Dedup: are these URLs new?
     Dedup-->>Parser: 18 new, 7 already seen

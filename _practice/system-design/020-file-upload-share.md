@@ -371,7 +371,7 @@ sequenceDiagram
     participant DB as Metadata DB
     participant CF as CloudFront
 
-    C->>SLR: GET /share/<token>
+    C->>SLR: GET /share/{token}
     SLR->>DB: look up token
     DB-->>SLR: link record
 
@@ -387,7 +387,7 @@ sequenceDiagram
         SLR->>SLR: generate signed CloudFront URL (15 min)
         SLR->>DB: increment redemptions counter
         SLR-->>C: 302 redirect to signed URL
-        C->>CF: GET <signed URL>
+        C->>CF: GET (signed URL)
         CF-->>C: file bytes (from cache or S3)
     end
 ```
@@ -956,7 +956,7 @@ sequenceDiagram
     PR-->>API: yes, permission = download
     API->>API: sign CloudFront URL (15 min)
     API-->>C: 307 redirect to signed URL
-    C->>CF: GET <signed URL>
+    C->>CF: GET (signed URL)
 
     alt cache hit
         CF-->>C: file bytes (fast, from edge)

@@ -420,12 +420,12 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     A[Measure last segment download speed] --> B{Buffer level?}
-    B -->|Buffer < 5 sec| C[Drop one quality<br/>refill fast]
+    B -->|Buffer under 5 sec| C[Drop one quality<br/>refill fast]
     B -->|Buffer 5-25 sec| D{Bandwidth check}
-    B -->|Buffer > 25 sec| E[Try next quality up]
+    B -->|Buffer over 25 sec| E[Try next quality up]
 
-    D -->|Bandwidth × 0.8 > current bitrate| F[Keep current quality]
-    D -->|Bandwidth × 0.8 < current bitrate| G[Drop one quality]
+    D -->|Bandwidth x 0.8 over current bitrate| F[Keep current quality]
+    D -->|Bandwidth x 0.8 under current bitrate| G[Drop one quality]
 
     C --> H[Fetch next segment]
     F --> H

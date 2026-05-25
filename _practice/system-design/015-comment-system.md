@@ -452,7 +452,7 @@ sequenceDiagram
     Mod->>Mod: ML toxicity (100-500ms)
     Mod->>Mod: Link scanner
 
-    alt Score > 0.7 (high toxicity)
+    alt Score over 0.7 (high toxicity)
         Mod->>DB: UPDATE state = removed_auto
         Mod->>Mod: Invalidate cache for article
     else Score 0.2 to 0.7
@@ -1038,7 +1038,7 @@ sequenceDiagram
     Kafka->>Mod: consume comment.created
     Mod->>Mod: ML toxicity (100-500ms)
 
-    alt high confidence spam (score > 0.7)
+    alt high confidence spam (score over 0.7)
         Mod->>DB: UPDATE state = removed_auto
         Mod->>Mod: invalidate cache
     end

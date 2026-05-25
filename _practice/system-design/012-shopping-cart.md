@@ -357,7 +357,7 @@ sequenceDiagram
     Cart->>DB: INSERT carts_merged audit row
     Cart->>DB: COMMIT
     Cart-->>API: merged cart
-    API-->>U: 200 OK + Set-Cookie: cart_token=; Max-Age=0
+    API-->>U: 200 OK + Set-Cookie cart_token cleared (Max-Age=0)
     Note over U: cart_token cookie cleared
 ```
 
