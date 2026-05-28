@@ -41,6 +41,27 @@ layout: page
   </div>
 </section>
 
+{% if page.feature_card %}
+<a class="pr-feature-card" href="{{ page.feature_card.href | relative_url }}">
+  <div class="pr-feature-card-inner">
+    <div class="pr-feature-card-icon">{{ page.feature_card.icon | default: "🧭" }}</div>
+    <div class="pr-feature-card-body">
+      <div class="pr-feature-card-eyebrow">{{ page.feature_card.eyebrow | default: "Start here" }}</div>
+      <h2 class="pr-feature-card-title">{{ page.feature_card.title }}</h2>
+      {% if page.feature_card.description %}
+        <p class="pr-feature-card-desc">{{ page.feature_card.description }}</p>
+      {% endif %}
+      {% if page.feature_card.meta %}
+        <div class="pr-feature-card-meta">
+          {% for item in page.feature_card.meta %}<span>{{ item }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="pr-feature-card-arrow" aria-hidden="true">→</div>
+  </div>
+</a>
+{% endif %}
+
 <section class="pr-toolbar" aria-label="Filter problems">
 
   <div class="pr-toolbar-row">

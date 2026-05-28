@@ -843,3 +843,117 @@
   .hp-prep-icon { font-size: 2rem; }
   .hp-prep-cta { margin-left: 0; }
 }
+
+/* --- Feature card on practice-index pages -------------------------------- */
+/* A single prominent card rendered above the filter toolbar when the index */
+/* declares page.feature_card. Visually distinct from problem cards.        */
+
+.pr-feature-card {
+  display: block;
+  margin: 1.5rem 0 2rem;
+  padding: 0;
+  background: var(--pr-card-bg);
+  border: 1px solid var(--pr-border);
+  border-radius: 16px;
+  text-decoration: none !important;
+  color: inherit;
+  box-shadow: var(--pr-card-shadow);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pr-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(139,92,246,.08));
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+
+.pr-feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pr-card-shadow-hover);
+  border-color: rgba(59,130,246,.4);
+}
+.pr-feature-card:hover::before { opacity: 1; }
+
+.pr-feature-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.4rem 1.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.pr-feature-card-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.pr-feature-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pr-feature-card-eyebrow {
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--pr-accent, #3b82f6);
+  margin-bottom: .25rem;
+}
+
+.pr-feature-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 .35rem;
+  color: var(--heading-color, inherit);
+  line-height: 1.3;
+}
+
+.pr-feature-card-desc {
+  font-size: .92rem;
+  color: var(--pr-text-muted);
+  margin: 0 0 .6rem;
+  line-height: 1.5;
+}
+
+.pr-feature-card-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: .78rem;
+  color: var(--pr-text-muted);
+}
+.pr-feature-card-meta span {
+  display: inline-flex;
+  align-items: center;
+}
+.pr-feature-card-meta span + span::before {
+  content: "•";
+  margin-right: 1rem;
+  opacity: .5;
+}
+
+.pr-feature-card-arrow {
+  font-size: 1.5rem;
+  color: var(--pr-text-muted);
+  flex: 0 0 auto;
+  transition: transform .2s ease, color .2s ease;
+}
+.pr-feature-card:hover .pr-feature-card-arrow {
+  transform: translateX(4px);
+  color: var(--pr-accent, #3b82f6);
+}
+
+@media (max-width: 640px) {
+  .pr-feature-card-inner { padding: 1.1rem 1.2rem; gap: .9rem; }
+  .pr-feature-card-icon { font-size: 2rem; }
+  .pr-feature-card-arrow { display: none; }
+}
