@@ -1,0 +1,90 @@
+---
+layout: default
+refactor: true
+---
+
+{% include lang.html %}
+
+{%- assign sd_count = site.practice | where: "track", "system-design" | size -%}
+{%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
+{%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
+
+<link rel="stylesheet" href="/assets/css/practice.css">
+<link rel="stylesheet" href="/assets/css/landing.css">
+
+<section class="pr-hero home-hero">
+  <div class="pr-hero-inner">
+    <span class="pr-eyebrow">Welcome</span>
+    <h1 class="pr-title">Notes and practice problems for working engineers.</h1>
+    <p class="pr-subtitle">
+      I'm Amirul. I write about data engineering and system design, and I build practice problems for people preparing for senior interviews. Everything here is free, updated often, and written from real experience.
+    </p>
+  </div>
+</section>
+
+<section class="pr-tracks home-tracks">
+
+  <a class="pr-track-card" href="/practice/system-design/">
+    <div class="pr-track-emoji">🏗️</div>
+    <h2 class="pr-track-name">System Design</h2>
+    <p class="pr-track-desc">
+      Interview-style design questions with capacity math, partial diagrams you complete, and senior-level follow-ups.
+    </p>
+    <div class="pr-track-meta">
+      <span><strong>{{ sd_count }}</strong> problems</span>
+      <span>Medium to Hard</span>
+    </div>
+  </a>
+
+  <a class="pr-track-card" href="/practice/data-engineering/">
+    <div class="pr-track-emoji">🧩</div>
+    <h2 class="pr-track-name">Data Engineering</h2>
+    <p class="pr-track-desc">
+      Real production scenarios: late streams, schema drift, silent ETL bugs, SQL plan reading, cost incidents.
+    </p>
+    <div class="pr-track-meta">
+      <span><strong>{{ de_count }}</strong> problems</span>
+      <span>Easy to Hard</span>
+    </div>
+  </a>
+
+  <a class="pr-track-card" href="/practice/system-design/roadmap/">
+    <div class="pr-track-emoji">🧭</div>
+    <h2 class="pr-track-name">System Design Roadmap</h2>
+    <p class="pr-track-desc">
+      A staged learning path from networking basics to designing Instagram on a whiteboard. Six months, in order.
+    </p>
+    <div class="pr-track-meta">
+      <span><strong>7</strong> stages</span>
+      <span>Beginner to Expert</span>
+    </div>
+  </a>
+
+</section>
+
+<section class="home-latest">
+  <div class="home-latest-head">
+    <h2 class="home-latest-title">Latest writing</h2>
+    <a class="home-latest-all" href="/posts/">See all writing &rarr;</a>
+  </div>
+
+  <ul class="home-post-list">
+    {% for post in latest_posts limit: 5 %}
+      <li class="home-post-item">
+        <a class="home-post-link" href="{{ post.url | relative_url }}">
+          <span class="home-post-title">{{ post.title }}</span>
+          <span class="home-post-meta">
+            <i class="far fa-calendar fa-fw"></i>
+            {% include datetime.html date=post.date lang=lang %}
+            {% if post.categories.size > 0 %}
+              <span class="home-post-cats">
+                <i class="far fa-folder-open fa-fw"></i>
+                {{ post.categories | join: ", " }}
+              </span>
+            {% endif %}
+          </span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
