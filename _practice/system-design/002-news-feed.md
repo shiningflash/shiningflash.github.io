@@ -12,149 +12,94 @@ solution_lang: markdown
 ---
 
 {% raw %}
-## The scene
+## What we are building
 
-You sit down. The interviewer leans in.
+A news feed shows a ranked, personalized list of posts from accounts a user follows. Alice opens Instagram. She sees 50 posts from the 300 people she follows, ordered roughly by how likely she is to engage with them, not by raw time. When Bob posts a photo, it appears in Alice's feed within a few seconds.
 
-> *"Think about Twitter's home feed. When I log in, I see a list of posts from people I follow. Design that. Start with a small app, a thousand users. Then grow it until we're at Twitter scale, three hundred million daily users."*
->
-> *"And tell me: what's the single number that decides the whole design?"*
+That sounds like `SELECT ... ORDER BY time`. It is not.
 
-It sounds like a simple list query. It is not.
+There are five hard problems hiding in this product:
 
-The trap is the word "feed." It sounds like a `SELECT ... ORDER BY time`. The real question is hidden:
+1. **Where do the post_ids come from?** Computing a feed by joining posts and follows on every read is too slow once a user follows hundreds of accounts.
+2. **How do you fan out a post?** When a celebrity with 100 million followers posts, writing to every follower's feed is 100 million database writes from one event.
+3. **How does ranking work without blocking the read?** ML models change weekly and use signals that only exist at read time. You cannot pre-rank at write time.
+4. **What happens when a post is deleted?** The post_id is in 100 million pre-built feeds. You cannot scrub them all.
+5. **How do you keep the feed fast across all user types?** A user who follows 5,000 accounts, a new user with an empty feed, and a user returning after 30 days all need fast first loads.
 
-- What happens when one person has 100 million followers and posts right now?
-- How do you show anyone's feed in under 200ms?
-- How do you handle a post being deleted after it has already reached a million feeds?
-- Where does ranking live, and what breaks if you get it wrong?
-
-We will start with 1,000 users and a single database. Then we add one pressure at a time and watch the design grow.
+We start with 1,000 users and a single database. Then we add one pressure at a time.
 
 ---
 
-## Step 1: Picture one feed
+## The lifecycle of one feed load
 
-Before boxes or SQL, picture what a feed is. Alice follows Bob and Carol. She opens the app.
+Before drawing any boxes, picture what happens when Alice opens the app.
 
 ```mermaid
 stateDiagram-v2
     direction LR
     [*] --> Empty: Alice opens app
-    Empty --> Loading: request sent
-    Loading --> Hydrating: post_ids fetched from cache
-    Hydrating --> Ranked: scores computed
-    Ranked --> Displayed: top 50 shown
+    Empty --> Fetching: GET /timeline/home
+    Fetching --> Hydrating: post_ids fetched from cache
+    Hydrating --> Ranking: 500 candidates scored by ML model
+    Ranking --> Displayed: top 50 shown
     Displayed --> [*]
 ```
 
-That is the whole read path. The interesting design work is in the loading and hydrating steps: where do those post_ids come from, and how do they get there?
+The interesting design work is in `Fetching` and `Hydrating`: where do those post_ids come from, and how did they get there before Alice asked for them?
 
-> **Take this with you.** A feed is not a query against a posts table. It is a pre-built list of post_ids, assembled when people post, ready to read in milliseconds.
+> **Take this with you.** A feed is not a query. It is a pre-built list of post_ids, assembled at write time, ready to read in milliseconds.
 
 ---
 
-## Step 2: Ask the right questions
+## How big this gets
 
-In a real interview, pause for two minutes and write down what you want to ask. Not twenty questions. Five good ones.
+A Twitter-shaped product gives us these numbers.
+
+| Input | Number |
+|-------|--------|
+| Daily active users | 300 million |
+| Posts per day | 500 million |
+| Times each user opens the app per day | 10 |
+| Median follower count per user | 100 |
+| Top celebrity follower count | 100 million |
+| Feed load latency target (P99) | under 200ms |
+
+From these we derive everything else.
 
 <details markdown="1">
-<summary><b>Show: 5 questions that change the design</b></summary>
+<summary><b>Show: the derived numbers</b></summary>
 
-1. **What is the biggest user's follower count?** Median user has maybe 100 followers. Top user: 1 million? 100 million? *This single number decides the whole architecture. If the biggest user has 1,000 followers, you can push to everyone. If they have 100 million, you cannot.*
-2. **Time order or ranked by an algorithm?** Old Twitter was time order. New Twitter, Instagram, and Facebook all run an ML ranking step. Ranking adds 30ms on the read path and forces ranking to live there, not at write time.
-3. **How fast must the feed load?** Sub-200ms P99 is the target. Anything slower feels broken.
-4. **How many reads per write?** Posts are rare; scrolling is constant. About 100 reads per post write is typical. That ratio justifies pre-building feeds rather than computing them on demand.
-5. **How fresh must the feed be?** My own post should appear instantly (client-side prepend). A friend's post can take 5 seconds. Knowing the tolerance shapes how aggressively we can cache.
+| Metric | Value | How |
+|--------|-------|-----|
+| Posts/sec, steady | ~5,800 | 500M / 86,400 |
+| Posts/sec, peak | ~17,000 | 3x steady |
+| Feed loads/sec, steady | ~35,000 | 300M × 10 / 86,400 |
+| Feed loads/sec, peak | ~100,000 | 3x steady |
+| Timeline writes/sec (naive push) | ~580,000 | 5,800 × 100 followers |
+| One celebrity post (100M followers) | 100M writes | single event |
+| Storage for pre-built feeds (post_ids only) | ~6 TB | 300M users × 1,000 post_ids × 20 bytes |
 
-A strong candidate also asks the meta question: *"Is the biggest user 1 million followers or 100 million?"* The two answers lead to very different architectures.
+Three observations:
+
+1. **The hard number is not throughput.** 580,000 timeline writes per second is large but manageable across a pool of workers. The hard number is the ratio between an average post (100 writes) and a celebrity post (100M writes): six orders of magnitude. No single strategy handles both.
+2. **Reads beat writes 100 to 1.** Most users scroll without posting. That ratio justifies pre-building feeds even at the cost of write amplification.
+3. **Feed storage is expensive but bounded.** 6 TB of post_ids spreads across many Redis shards. Storing full post content instead of post_ids would be 25x that. Store post_ids, hydrate at read.
 
 </details>
 
----
-
-## Step 3: How big is this thing?
-
-Same product, two very different scales.
-
-| Scale | Posts/sec | Feed loads/sec | One celebrity post |
-|-------|-----------|----------------|-------------------|
-| 1,000-user app | ~0.01 | ~0.1 | not relevant |
-| 300M DAU (Twitter) | ~5,800 (peak 17k) | ~35,000 (peak 100k) | 100M writes, one post |
-
-<details markdown="1">
-<summary><b>Show: how the numbers come out</b></summary>
-
-**Inputs:** 300M daily active users, 500M posts per day, each user opens the app 10 times per day, median user has 100 followers, top celebrity has 100M followers.
-
-**Posts per second.** 500M / 86,400 ≈ **5,800/sec** steady. Peak 3x = ~17,000/sec.
-
-**Feed loads per second.** 300M × 10 = 3B loads/day ÷ 86,400 ≈ **35,000/sec** steady. Peak ~100,000/sec.
-
-**Naive push: write every post to every follower's feed.** On average, each post goes to 100 followers. 5,800 × 100 = **580,000 timeline writes/sec**. A lot, but manageable.
-
-**One celebrity post.** One post by a user with 100M followers = 100M timeline writes. If they post once a minute, that is 100M writes per minute from one account. This is what breaks the system. The fan-out queue grows without bound. Other users see slow feeds.
-
-**Storage for pre-built feeds.** 300M users × 1,000 post_ids per feed × 20 bytes per entry = **6 TB**. Spread across many Redis shards, this fits.
-
-**What the math tells you.** The hard number is not throughput. It is the gap between an average post (100 writes) and a celebrity post (100M writes), which spans six orders of magnitude. No single strategy works for both.
-
-</details>
+> **Take this with you.** The hard number is not average throughput. It is the gap between a normal user (100 followers) and a celebrity (100 million followers). Those two cases need different strategies.
 
 ---
 
-## Step 4: The core decision
+## The smallest version that works
 
-Before drawing any boxes, settle one question: when Alice posts, what do you do?
-
-```mermaid
-flowchart TD
-    A[Alice posts] --> B{How many followers<br/>does Alice have?}
-    B -->|Under 1M - normal user| C[Push: copy post_id into<br/>every follower's feed list]
-    B -->|Over 1M - celebrity| D[Skip push.<br/>Write to author's<br/>own recent-posts list.]
-
-    E[Bob opens his feed] --> F[Read Bob's pre-built<br/>feed from cache]
-    F --> G{Does Bob follow<br/>any celebrities?}
-    G -->|No| H[Rank and return 50 posts]
-    G -->|Yes| I[Pull recent posts from<br/>each celebrity Bob follows]
-    I --> J[Merge push-side + pull-side,<br/>rank, return 50]
-    H --> K[Done]
-    J --> K
-
-    classDef ok fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
-```
-
-This is hybrid fan-out. Push for normal users; pull for celebrities at read time.
-
-<details markdown="1">
-<summary><b>Show: why each pure approach fails</b></summary>
-
-| Approach | Read speed | Write cost | Breaks when |
-|----------|------------|------------|-------------|
-| **Push only** | ~10ms (cached) | One write per follower | A celebrity posts. 100M writes for one post. |
-| **Pull only** | Slow, maybe 500ms | One write per post | A user follows 5,000 accounts: 5,000 reads per feed load. |
-| **Hybrid** | ~10ms push + ~10ms celeb pull | Bounded: only push to non-celebrities | Edge cases at the threshold. |
-
-Push fails because of celebrity math. Pull fails because of heavy followers. Hybrid takes the cheap path in each case.
-
-The threshold (1M followers) is not fixed. A user with 800k followers who posts 50 times a day creates the same fan-out load as a celeb who rarely posts. A background job tunes the threshold per author based on `followers × post_rate`.
-
-</details>
-
-> **Take this with you.** This one decision shapes every other choice: the data stores, the worker pool, the read path. If you say "push for everyone" in the interview, the next 30 minutes go nowhere.
-
----
-
-## Step 5: The smallest thing that works
-
-Forget Twitter scale. We have 1,000 users and a single Postgres. One feed query. No workers.
+One Postgres, one app server, two services. The feed is a join.
 
 ```mermaid
 flowchart LR
-    A([Alice]):::user --> API[/"Post Service<br/>(write)"/]:::app
-    API --> DB[("Postgres<br/>posts + follows")]:::db
-    B([Bob]):::user --> TS[/"Timeline Service<br/>(read)"/]:::app
+    A([Alice]):::user --> PS[/"Post Service"/]:::app
+    B([Bob]):::user --> TS[/"Timeline Service"/]:::app
+    PS --> DB[("Postgres\nposts + follows")]:::db
     TS --> DB
 
     classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
@@ -162,18 +107,29 @@ flowchart LR
     classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
 ```
 
-The feed query is a join:
+Two endpoints carry the whole product.
+
+| Endpoint | What it does |
+|----------|--------------|
+| `POST /posts` | Save post, return post_id |
+| `GET /timeline/home?cursor=<opaque>&limit=50` | Return 50 ranked posts for the caller |
+
+<details markdown="1">
+<summary><b>Show: the feed query at small scale</b></summary>
 
 ```sql
 SELECT p.*
   FROM posts p
   JOIN follows f ON f.followee_id = p.author_id
  WHERE f.follower_id = :user_id
+   AND p.deleted_at IS NULL
  ORDER BY p.created_at DESC
  LIMIT 50;
 ```
 
-Fine for 1,000 users. Starts to hurt at 100,000 when users follow 200+ accounts.
+</details>
+
+Fine for 1,000 users. Starts hurting at 100,000 when users follow 200+ accounts.
 
 ```mermaid
 sequenceDiagram
@@ -185,182 +141,206 @@ sequenceDiagram
     Bob->>TS: GET /timeline/home
     TS->>DB: SELECT posts JOIN follows WHERE follower=Bob LIMIT 50
     DB-->>TS: 50 rows (~20ms at small scale)
-    TS-->>Bob: feed
+    TS-->>Bob: 200 + feed
 ```
 
-> **Take this with you.** Start here. The interesting interview question is what happens next, not what you build on day one.
+> **Take this with you.** Start here. The interesting question is what breaks first as the product grows, not what you build on day one.
 
 ---
 
-## Step 6: The first crack
+## Decision 1: how do we fan-out posts?
 
-The app grows to 100,000 users. Carol follows 400 accounts. Her feed query now scans 400 author IDs, sorts by time, and consistently hits 800ms. Users are complaining.
-
-The fix: stop computing the feed on every read. Compute it at write time instead. When Alice posts, write her post_id into each follower's pre-built feed list. When Bob reads, he gets a single cached list, not a join.
-
-This is the push strategy. It moves work from the read path to the write path.
+When Alice posts, we have two choices: write her post_id into every follower's feed list right now, or wait and fetch her recent posts when each follower opens their feed.
 
 ```mermaid
-flowchart LR
-    A([Alice]):::user --> PS[/"Post Service"/]:::app
-    PS --> DB[("Posts DB")]:::db
-    DB -->|CDC outbox| K{{"Kafka<br/>posts.created"}}:::queue
-    K --> D["Fan-out<br/>Dispatcher"]:::app
-    D --> W["Fan-out<br/>Workers"]:::app
-    W --> TS[("Timeline Store<br/>Redis sorted sets")]:::cache
+flowchart TB
+    subgraph Push["Option A: Push at write time"]
+        PA["Alice posts"] --> PB["Write post_id into\nevery follower's feed list"]
+        PC["Bob reads"] --> PD["Read Bob's feed list\n~5ms"]
+        PE["Problem: 1 post × 100M followers\n= 100M writes"]:::bad
+    end
+    subgraph Pull["Option B: Pull at read time"]
+        QA["Alice posts"] --> QB["Write to posts table only"]
+        QC["Bob reads"] --> QD["Fetch posts from\neach account Bob follows"]
+        QE["Problem: Bob follows 5,000 accounts\n= 5,000 reads per feed load"]:::bad
+    end
+    subgraph Hybrid["Option C: Hybrid (what we build)"]
+        HA["Alice posts (250 followers)"] --> HB["Push: 250 ZADDs"]
+        HC["Celeb posts (100M followers)"] --> HD["Skip push. Write to\nauthor_recent only."]
+        HE["Bob reads"] --> HF["Merge push feed\n+ celebrity pull\nRank. Hydrate."]
+    end
 
-    B([Bob]):::user --> TSvc[/"Timeline Service"/]:::app
-    TSvc --> TS
-
-    classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef app fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef cache fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
-    classDef queue fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
 ```
 
-The timeline store is a Redis sorted set per user, keyed by `timeline:{user_id}`. Score is the post's creation timestamp. Members are `post_id`s. We keep the top 1,000 entries and trim on insert.
+Hybrid fan-out: push for normal users, pull for celebrities at read time.
 
 <details markdown="1">
-<summary><b>Show: the Redis data shape</b></summary>
+<summary><b>Show: why the threshold matters and how to set it</b></summary>
 
-```
-Key:    timeline:{user_id}
-Type:   ZSET
-Score:  created_at (unix ms)
-Member: post_id (64-bit Snowflake ID)
-Cap:    top 1,000 entries; ZREMRANGEBYRANK trims on insert
-```
+The threshold is not just follower count. A user with 800k followers who posts 50 times per day creates more fan-out load than a celebrity with 5M followers who posts once a week. The right metric is `followers × daily_post_rate`.
 
-Insert: `ZADD timeline:bob <timestamp> <post_id>` then `ZREMRANGEBYRANK timeline:bob 0 -1001` to trim.
+A background job recomputes the threshold per author hourly and stores it in Redis. The fan-out dispatcher reads that flag when it sees a new post event. No hard-coded cutoff.
 
-Read: `ZREVRANGE timeline:bob 0 199` returns 200 candidates in reverse time order.
-
-One write per follower per post. One read per feed load. No joins.
+The risk of setting the threshold too low: borderline users get treated as celebrities. Their followers do an extra Redis pull per feed load. Across many borderline users, the pull side gets expensive.
 
 </details>
 
-> **Take this with you.** Pre-building feeds at write time is the single biggest performance unlock. It trades write amplification for sub-10ms reads.
+> **Take this with you.** This one decision shapes the entire system. If you say "push to everyone" in the interview, the celebrity math kills the answer. If you say "pull at read time," a user following 5,000 accounts kills it.
 
 ---
 
-## Step 7: Build the architecture, one layer at a time
+## Decision 2: how do we store and read pre-built feeds?
 
-We have push fan-out working. Now build the full system around it, one layer at a time.
+We have settled on push for normal users. We need a data structure that supports:
 
-### v1: post → push fan-out → cache → read
+- Insert a post_id with a timestamp score (at write time, from fan-out workers)
+- Fetch the top N post_ids in reverse time order (at read time)
+- Trim to a maximum depth (cap at 1,000 entries per user to bound memory)
+
+A Redis sorted set does all three with three commands.
 
 ```mermaid
-flowchart TB
-    C([Client]):::user --> PS["Post Service"]:::app
-    PS --> DB[("Posts DB")]:::db
-    DB -->|outbox| K{{"Kafka"}}:::queue
-    K --> D["Fan-out Dispatcher"]:::app
-    D --> W["Fan-out Workers"]:::app
-    W --> TS[("Timeline Store<br/>Redis")]:::cache
-    B([Client]):::user --> TSvc["Timeline Service"]:::app
-    TSvc --> TS
+flowchart LR
+    W["Fan-out Worker"]:::app
+    W -->|"ZADD timeline:bob 1716120000000 post_id_123\n~0.3ms per write"| R[("Redis\ntimeline:{user_id}\nZSET, score=ts_ms, member=post_id\ncap=1,000 entries")]:::cache
+    B([Bob]):::user --> TSvc["Timeline Service"]:::app
+    TSvc -->|"ZREVRANGE timeline:bob 0 199\nreturns 200 post_ids, ~5ms"| R
 
     classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
     classDef app fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
     classDef cache fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
-    classDef queue fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
 ```
 
-This handles one million users. But no celebrity handling yet.
+<details markdown="1">
+<summary><b>Show: the three Redis commands</b></summary>
 
-### v2: add celebrity pull path
+```
+# Write (fan-out worker, once per follower per post)
+ZADD timeline:{user_id} {created_at_ms} {post_id}
+ZREMRANGEBYRANK timeline:{user_id} 0 -1001   # trim to top 1,000
 
-When Alice has 50M followers and posts, we skip push. Her post_id goes into `author_recent:{alice_id}`. When Bob opens his feed and follows Alice, the read path pulls from that list.
+# Read (timeline service, once per feed load)
+ZREVRANGE timeline:{user_id} 0 199            # top 200 candidates in reverse time order
+```
+
+ZADD is O(log N). ZREMRANGEBYRANK trims stale entries. ZREVRANGE returns top N. Three commands. No joins.
+
+</details>
+
+For celebrity authors, we use the same structure but keyed by author instead of by user:
+
+```
+author_recent:{author_id}  →  ZSET of recent post_ids, capped at 50
+```
+
+At read time the Timeline Service fetches from `timeline:{user_id}` (push side) and from `author_recent:{celeb}` for every celebrity the user follows (pull side), then merges.
+
+> **Take this with you.** Redis sorted sets are a near-perfect fit for pre-built feeds. ZADD inserts with ordering, ZREVRANGE reads top N, ZREMRANGEBYRANK bounds memory. Three commands per write, one per read.
+
+---
+
+## Decision 3: where does ranking live?
+
+Modern feeds rank by predicted engagement, not raw time. The ML model takes a list of candidate post_ids, fetches features for each, and returns scores. Where does this step happen?
 
 ```mermaid
-flowchart TB
-    subgraph Write["Write path"]
-        PS["Post Service"]:::app
-        DB[("Posts DB")]:::db
-        K{{"Kafka<br/>posts.created"}}:::queue
-        D["Fan-out Dispatcher<br/>(push or skip)"]:::app
-        W["Fan-out Workers"]:::app
+flowchart LR
+    subgraph WriteRank["Option A: Rank at write time"]
+        WA["Post fans out to\n250 followers"] --> WB["Score each post\nfor each follower"]
+        WC["Problem: model updates weekly.\nRecompute 300M feeds\non every model deploy."]:::bad
+    end
+    subgraph ReadRank["Option B: Rank at read time (what we build)"]
+        RA["Timeline Service\nfetches ~500 candidates"] --> RB["Ranking Service\nscores candidates\n~30ms"]
+        RB --> RC["Pick top 50\nwith diversity rules"]
     end
 
-    subgraph Stores["Data stores"]
-        TS[("Timeline Store<br/>Redis: push feeds")]:::cache
-        CR[("Celeb Recent<br/>Redis: pull feeds")]:::cache
-    end
-
-    subgraph Read["Read path"]
-        TSvc["Timeline Service"]:::app
-        R["Ranking Service"]:::app
-    end
-
-    C([Client]):::user --> PS
-    PS --> DB
-    DB -->|CDC| K
-    K --> D
-    D -->|push path| W
-    D -->|celebrity path| CR
-    W --> TS
-    B([Client]):::user --> TSvc
-    TSvc --> TS
-    TSvc --> CR
-    TSvc --> R
-
-    classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef app fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef cache fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
-    classDef queue fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
 ```
 
-### v3: add API gateway and post hydration
+Ranking lives on the read path. Three reasons:
 
-Feed reads return `post_id`s from Redis. We need to hydrate them to full post content. Add a Post Service on the read path (batch lookup by post_id). Also add an API gateway for auth and rate limiting.
+1. **Model changes weekly.** Write-time ranking means recomputing 300M feeds on every deploy. Not feasible.
+2. **Some signals only exist at read time.** What did Bob click this morning? What is trending right now? These are not available at write time.
+3. **Small candidate set.** We score ~500 posts per feed load, not billions. At 500 candidates, scoring takes ~30ms and fits inside a 200ms budget.
 
-### v4: full architecture at Twitter scale
+> **Take this with you.** Pre-ranking sounds efficient. It breaks every time the ML team ships a new model, which is weekly. Score on the read path against a small candidate set.
+
+---
+
+## Decision 4: how do we handle deletes, blocks, and unfollows?
+
+A post can be in 100 million pre-built feeds. A block or unfollow can affect thousands. Eagerly scrubbing feed lists is not practical.
+
+```mermaid
+flowchart TD
+    Delete["Alice deletes a post"] --> SD["Set deleted_at in Posts DB"]
+    SD --> HD["At hydration time:\nskip posts where deleted_at IS NOT NULL"]
+    HD --> FO["post_ids age out of feeds\nas new posts push them down"]
+    FO --> OK1["No scrubbing needed"]:::ok
+
+    Block["Bob blocks Carol"] --> BS["Add Carol to blocked:{bob} Redis set"]
+    BS --> HB["At hydration time:\nfilter candidates against blocked set\n~0.5ms for 500 candidates"]
+    HB --> OK2["Covers both push and pull paths"]:::ok
+
+    Unfollow["Bob unfollows Alice"] --> Lazy["Let Alice's posts age out naturally"]
+    Lazy --> OK3["Active user: gone within a day\nNot worth eager scrubbing"]:::ok
+
+    classDef ok fill:#dcfce7,stroke:#15803d,color:#14532d
+```
+
+The pattern is: store post_ids, not content, in the feed cache. Hydrate at read time. Filter at hydration. All three operations (delete, block, unfollow) are handled cleanly by a single filter step rather than by scrubbing millions of sorted sets.
+
+> **Take this with you.** Lazy delete and lazy filter at hydration time are not shortcuts. They are the correct architecture. They work because we store post_ids, not post content, in the timeline cache.
+
+---
+
+## The full architecture
+
+Putting the four decisions together:
 
 ```mermaid
 flowchart TB
     subgraph Edge["Client edge"]
         C([Web / Mobile]):::user
-        GW["API Gateway<br/>(auth · rate limit)"]:::edge
+        GW["API Gateway\n(auth · rate limit)"]:::edge
     end
 
     subgraph WritePath["Write path"]
         PS["Post Service"]:::app
-        DB[("Posts DB<br/>Cassandra / sharded PG")]:::db
-        K{{"Kafka<br/>posts.created"}}:::queue
-        D["Fan-out Dispatcher<br/>(push vs pull decision)"]:::app
-        W["Fan-out Workers<br/>(stateless pool)"]:::app
-        FollowIdx[("Follow Index<br/>sharded by followee_id")]:::db
+        DB[("Posts DB\nCassandra / sharded PG")]:::db
+        K{{"Kafka\nposts.created"}}:::queue
+        D["Fan-out Dispatcher\n(push vs celebrity decision)"]:::app
+        W["Fan-out Workers\n(stateless pool, ~200 pods at peak)"]:::app
+        FIdx[("Follow Index\nsharded by followee_id")]:::db
     end
 
     subgraph Stores["Data stores"]
-        TStore[("Timeline Store<br/>Redis sorted sets")]:::cache
-        CStore[("Celeb Recent Posts<br/>Redis sorted sets")]:::cache
+        TStore[("Timeline Store\nRedis sorted sets\n~6 TB across shards")]:::cache
+        CStore[("Celeb Recent Posts\nRedis sorted sets\n50 posts per author)"]:::cache
     end
 
     subgraph ReadPath["Read path"]
         TSvc["Timeline Service"]:::app
-        Ranker["Ranking Service<br/>(ML scoring)"]:::app
-        PSvc["Post Service<br/>(batch hydrate)"]:::app
+        Ranker["Ranking Service\n(ML model, ~30ms)"]:::app
+        PSvc["Post Service\n(batch hydrate, ~20ms)"]:::app
     end
 
     C --> GW
-    GW -->|write| PS
-    GW -->|read| TSvc
+    GW -->|"write"| PS
+    GW -->|"read"| TSvc
     PS --> DB
-    DB -->|CDC outbox| K
+    DB -->|"CDC outbox"| K
     K --> D
-    D --> FollowIdx
-    D -->|push| W
-    D -->|celebrity| CStore
-    W --> TStore
-    TSvc --> TStore
-    TSvc --> CStore
-    TSvc --> Ranker
-    TSvc --> PSvc
-    PSvc --> DB
+    D -->|"lookup followers"| FIdx
+    D -->|"push path (~580K writes/sec)"| W
+    D -->|"celebrity path (1 write)"| CStore
+    W -->|"ZADD ~0.3ms each"| TStore
+    TSvc -->|"ZREVRANGE top 200, ~5ms"| TStore
+    TSvc -->|"parallel pulls, ~10ms"| CStore
+    TSvc -->|"score 500 candidates"| Ranker
+    TSvc -->|"batch hydrate 50 posts"| PSvc
+    PSvc -.miss.-> DB
 
     classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
     classDef edge fill:#e2e8f0,stroke:#475569,color:#1e293b
@@ -370,29 +350,29 @@ flowchart TB
     classDef queue fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
 ```
 
-Each box, in one line:
+Each component, in one line:
 
-| Box | What it does |
-|-----|--------------|
-| **API Gateway** | Authenticates callers, rate-limits bots, routes reads vs writes. |
-| **Post Service** | Saves posts; returns full post content given a post_id. |
-| **Posts DB** | Source of truth for post content. Sharded by post_id. |
-| **Kafka** | Async buffer between writes and fan-out. Post creation never waits for fan-out. |
-| **Fan-out Dispatcher** | Reads new post events; decides push vs celebrity-pull based on follower count. |
-| **Follow Index** | Sharded by followee_id so "who follows Alice?" is one shard, not a scatter. |
-| **Fan-out Workers** | Write post_ids into each follower's Redis sorted set. Auto-scale on queue lag. |
-| **Timeline Store** | Pre-built feed per user. Redis sorted sets, trimmed to top 1,000 entries. |
-| **Celeb Recent Posts** | Per-celebrity recent post_ids. Read at feed time by followers. |
-| **Timeline Service** | Reads from both stores, merges, ranks, hydrates, returns. |
-| **Ranking Service** | Stateless ML scoring. Takes ~500 candidates, returns scores. |
+| Component | Purpose |
+|-----------|---------|
+| API Gateway | TLS termination, auth, per-user rate limits |
+| Post Service | Saves posts, batch-fetches post content by post_id |
+| Posts DB | Source of truth for post content. Sharded by post_id |
+| Kafka | Async buffer between post creation and fan-out |
+| Fan-out Dispatcher | Reads post events, decides push vs celebrity path per author |
+| Follow Index | Sharded by followee_id so "who follows Alice?" is one shard |
+| Fan-out Workers | Write post_ids into follower sorted sets. Auto-scale on Kafka lag |
+| Timeline Store | Pre-built feed per user. Redis sorted sets, capped at 1,000 entries |
+| Celeb Recent Posts | Per-celebrity recent post_ids. 50 entries per author |
+| Timeline Service | Reads both stores, merges, sends to Ranking, hydrates, returns |
+| Ranking Service | Stateless ML scoring. Owned by ML team, deployed independently |
 
-> **Take this with you.** Fan-out workers and the ranking service are both stateless. Any pod can die at any time. State lives in Kafka, Redis, and the databases.
+Notice what is not on the read path: the Posts DB is only hit by Post Service for hydration, not for the feed list itself. The timeline list comes entirely from Redis.
 
 ---
 
-## Step 8: One post and one feed read, end to end
+## Walks: posting and reading, end to end
 
-**Posting:**
+**Alice posts (250 followers, push path):**
 
 ```mermaid
 sequenceDiagram
@@ -406,27 +386,27 @@ sequenceDiagram
     participant W as Workers
     participant TS as Timeline Store
 
-    Alice->>GW: POST /posts (content)
+    Alice->>GW: POST /posts { content }
     GW->>PS: validated request
 
     rect rgb(241, 245, 249)
-        Note over PS,DB: synchronous write
+        Note over PS,DB: synchronous write path
         PS->>DB: INSERT post (post_id, content, author_id)
-        DB-->>PS: ok
+        DB-->>PS: ok (~20ms)
     end
 
-    PS-->>GW: 201 + post_id (~80ms)
-    GW-->>Alice: done
+    PS-->>GW: 201 + post_id (~80ms total)
+    GW-->>Alice: done (client prepends post to local feed)
     DB->>K: CDC: posts.created
     K->>D: consume event
-    D->>D: Alice has 250 followers → push
+    D->>D: Alice has 250 followers, under threshold → push
     D->>K: emit timeline.write × 250
-    K->>W: consume
-    W->>TS: ZADD into 250 user sorted sets
-    Note over TS: feeds updated within ~2 seconds
+    K->>W: consume (~parallel across worker pool)
+    W->>TS: ZADD into 250 user sorted sets (~0.3ms each)
+    Note over TS: all 250 follower feeds updated within ~2s
 ```
 
-**Reading:**
+**Bob reads his feed (follows Alice and 2 celebrities):**
 
 ```mermaid
 sequenceDiagram
@@ -441,122 +421,68 @@ sequenceDiagram
 
     Bob->>GW: GET /timeline/home
     GW->>TSvc: forward
-    TSvc->>TStore: ZREVRANGE top 200 post_ids
-    TStore-->>TSvc: 200 post_ids (5ms)
-    TSvc->>TSvc: look up Bob's celebrity follows
-    Note over TSvc: cached, 2ms
 
     rect rgb(241, 245, 249)
-        Note over TSvc,CStore: parallel pull from each celebrity
-        TSvc->>CStore: recent posts, celeb A
-        TSvc->>CStore: recent posts, celeb B
+        Note over TSvc,TStore: read push side
+        TSvc->>TStore: ZREVRANGE timeline:bob 0 199
+        TStore-->>TSvc: 200 post_ids (~5ms)
     end
 
-    CStore-->>TSvc: ~300 post_ids (10ms total)
-    TSvc->>Ranker: score 500 merged candidates
-    Ranker-->>TSvc: scored list (30ms)
-    TSvc->>TSvc: top 50 + diversity rules
+    TSvc->>TSvc: look up Bob's celebrity follows (cached, ~2ms)
+
+    rect rgb(241, 245, 249)
+        Note over TSvc,CStore: parallel celebrity pulls
+        TSvc->>CStore: ZREVRANGE author_recent:celeb_A 0 29
+        TSvc->>CStore: ZREVRANGE author_recent:celeb_B 0 29
+    end
+
+    CStore-->>TSvc: ~60 post_ids (~10ms total, parallel)
+    TSvc->>TSvc: merge 200 + 60, dedupe → ~500 candidates
+    TSvc->>Ranker: score 500 candidates for Bob
+    Ranker-->>TSvc: scored list (~30ms)
+    TSvc->>TSvc: top 50 + diversity rules (no 2 posts in a row from same author)
     TSvc->>PSvc: batch hydrate 50 post_ids
-    PSvc-->>TSvc: 50 full posts (20ms)
-    TSvc-->>GW: 200 + posts
+    PSvc-->>TSvc: 50 full posts (~20ms)
+    TSvc-->>GW: 200
     GW-->>Bob: feed (~90ms total)
 ```
 
-Two things worth pointing at:
+Two things worth noting:
 
-1. The post creation returns a 201 before fan-out starts. Alice sees her own post via a client-side prepend, not by waiting for workers.
-2. The read path always merges both sides. If Bob follows no celebrities, the pull side returns empty cheaply. No conditional logic needed.
+1. Alice's 201 returns before fan-out starts. She sees her own post via a client-side prepend, not by waiting for workers.
+2. The read path always merges both sides. If Bob follows no celebrities, the pull side returns empty cheaply.
 
 ---
 
-## Step 9: Where does ranking live?
+## The deep problem: celebrity posts during peak load
 
-Modern feeds are not in time order. They rank by predicted engagement. Where does scoring happen?
+A celebrity with 100 million followers posts. The fan-out dispatcher correctly skips push and writes to `author_recent`. That part is fine.
 
-<details markdown="1">
-<summary><b>Show: why ranking belongs on the read path</b></summary>
-
-Two choices: rank at write time (score posts when they fan out) or rank at read time (score candidates when the user opens the app).
-
-Ranking lives on the read path. Three reasons.
-
-**The model changes weekly.** The ML team ships a new version every Tuesday. If we ranked at write time, every model update means recomputing 300M pre-built feeds. Impossible.
-
-**Some signals only exist at read time.** What did Bob click this morning? What is trending right now? The model uses these. They do not exist at write time.
-
-**Ranking is cheap on a small set.** We score 500 candidates, not 1B posts. Scoring 500 items at read time takes ~30ms. That fits in a 200ms budget.
+The hard part: the next few seconds after the celebrity posts, 50 million of their followers open the app almost simultaneously. Every one of them hits the Timeline Service. Every one of them hits `author_recent:{celeb}`. Every one of them then hits Ranking Service with 500 candidates.
 
 ```mermaid
-flowchart LR
-    A[200 push candidates] --> M[Merge: ~500 total]
-    B[300 pull candidates from celebrities] --> M
-    M --> F[Fetch features ~20ms]
-    F --> S[ML scoring ~30ms]
-    S --> D[Diversity rules:<br/>no 2 posts in a row<br/>from same author]
-    D --> P[Pick top 50]
-    P --> H[Batch hydrate to full content]
-    H --> Z[Return]
+flowchart TD
+    CP[("Celebrity post\n100M followers")] -->|"~50M opens in next 60s"| TSvc["Timeline Service\n~50,000 req/sec spike"]:::app
+    TSvc -->|"50M × ZREVRANGE\nSame key, same shard"| CStore[("author_recent:{celeb}\nOne Redis shard")]:::cache
+    TSvc -->|"50M × score 500 candidates"| Ranker["Ranking Service\n~50,000 req/sec spike"]:::app
+
+    CStore -->|"~95% hit rate\n~0.5ms per read"| OK1["Most reads served fast"]:::ok
+    CStore -->|"Shard hot at very high\nread throughput"| OV["Possible: shard overload\nif celeb has 100M followers\nand all open app at once"]:::bad
+    Ranker -->|"Stateless, horizontal scale"| OK2["Auto-scale handles\nread burst"]:::ok
 
     classDef app fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef cache fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+    classDef ok fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef bad fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
 ```
 
-The ranking service is owned by the ML team. The timeline service just sends candidates and gets scores. Each team deploys independently.
+Three defenses for the Redis hot key:
 
-</details>
+1. **Read replicas for `author_recent`.** Add 5-10 read replicas for the shard hosting top celebrities. Round-robin reads across them. Multiplies read throughput by N.
+2. **In-process LRU on Timeline Service pods.** Cache the top 20 post_ids from each celebrity in pod memory with a 10-second TTL. At 200 pods, a single celebrity's recent posts need only ~20 Redis reads per 10 seconds total, not 50,000.
+3. **CDN or regional cache for feed responses.** For users whose feeds overlap heavily (same region, same celebrity follows), cache assembled feed responses at the API gateway for 30 seconds. Most users see near-real-time feeds; celebrities get slightly stale.
 
-> **Take this with you.** Pre-ranking sounds efficient but breaks every time the model updates. Score on the read path against a small candidate set.
-
----
-
-## Step 10: Three users, one system
-
-The same architecture handles three wildly different load patterns.
-
-**A. Aisha posts a selfie.** She has 250 followers. Normal user.
-
-**B. Elon posts.** He has 200M followers. Celebrity.
-
-**C. Marcus opens his feed.** He follows 2,000 normal people and 30 celebrities.
-
-<details markdown="1">
-<summary><b>Show: what each case teaches</b></summary>
-
-**A. Aisha posts (push path).**
-
-- Post saved to Posts DB.
-- `posts.created` event hits Kafka.
-- Dispatcher: 250 followers, under threshold. Push.
-- 250 tasks emitted to `timeline.write`.
-- Workers do 250 ZADDs.
-- Total time from Aisha posting to all follower feeds: ~2 seconds.
-
-Common bug: dispatcher uses a cached follower count. Aisha gained 10 followers in the last minute. Those 10 miss this post in their pre-built feed. They see it when she posts next. Tolerable.
-
-**B. Elon posts (celebrity path).**
-
-- Post saved to Posts DB.
-- `posts.created` event hits Kafka.
-- Dispatcher: 200M followers, over threshold. Skip push.
-- Write post_id into `author_recent:{elon}`. One write.
-- Done in under 100ms.
-
-No fan-out. Every Elon follower's next feed load does one extra Redis read for his recent posts. Cost shifts to read time, but it is a tiny Redis operation.
-
-Common bug: threshold set too low. A user with 10,000 followers gets treated as a celebrity. Their followers now do an extra Redis pull per load for someone barely notable. Multiply across many borderline users and the pull side gets expensive.
-
-**C. Marcus opens his feed (read path).**
-
-- Read 200 post_ids from Marcus's Redis sorted set. 5ms.
-- Look up Marcus's 30 celebrity follows. 2ms.
-- Pull recent posts from each celebrity in parallel. 10ms total.
-- Merge: ~500 candidates.
-- Score with Ranking Service. 30ms.
-- Hydrate top 50 post_ids to full content. 20ms.
-- Return. ~90ms total.
-
-Common bug: the hydrate step issues 50 sequential requests instead of one batch. 50 × 5ms = 250ms for hydration alone. Always batch.
-
-</details>
+> **Take this with you.** The celebrity pull path moves the fan-out problem from write time to read time. For the biggest celebrities, you still need to handle hot-key reads. In-process LRU on the read service is the cheapest first defense.
 
 ---
 
@@ -564,11 +490,11 @@ Common bug: the hydrate step issues 50 sequential requests instead of one batch.
 
 Try answering each in 2 or 3 sentences before opening the solution.
 
-1. **User blocks another user.** Old posts from the blocked person might be in the blocker's pre-built feed. Do you scrub the feed, or filter at read time?
+1. **User blocks another user.** Old posts from the blocked person are in the blocker's pre-built feed. Do you scrub the feed, or filter at read time?
 
 2. **User unfollows someone.** Their pre-built feed has that author's posts. Remove them right away, or let them age out?
 
-3. **User deletes a post.** The post might be in 100 million pre-built feeds. How do you handle it? You cannot scrub 100M entries.
+3. **User deletes a post.** The post_id is in 100 million pre-built feeds. How do you handle it? You cannot scrub 100M entries.
 
 4. **New user signs up and follows 50 accounts.** Their feed is empty. How do you bootstrap it?
 
@@ -578,13 +504,13 @@ Try answering each in 2 or 3 sentences before opening the solution.
 
 7. **Live updates.** A new post lands while I am scrolling. Push it over WebSocket, or wait for pull-to-refresh?
 
-8. **Pagination.** I scroll past 50 posts. How does the cursor work? What if one of the posts at the cursor has been deleted?
+8. **Pagination.** I scroll past 50 posts. How does the cursor work? What if one of the posts at the cursor position has been deleted?
 
 9. **One fan-out worker is doing 100x the work of others.** What is wrong? How do you fix it?
 
 10. **CEO wants "you might like" injections.** Put 3 recommended posts at positions 5, 15, 25 of every feed. Where does this live in the pipeline?
 
-11. **Repost (retweet).** A celebrity reposts my normal post. Does my post now have to fan out to the celebrity's 100M followers?
+11. **Repost (retweet).** A celebrity reposts my normal post. Does my post now have to fan out to the celebrity's 100 million followers?
 
 12. **Private account.** Someone's account is private. Their post should only reach approved followers. How does fan-out know?
 
@@ -599,9 +525,9 @@ Try answering each in 2 or 3 sentences before opening the solution.
 ## Related problems
 
 - **[Chat System (003)](../003-chat-system/question.md).** Same fan-out and delivery problem. DMs are 1-to-1 fan-out instead of 1-to-many, but the patterns rhyme.
-- **[Notification System (010)](../010-notification-system/question.md).** Same fan-out worker pattern, same celebrity problem when a popular account triggers notifications to millions.
-- **[Distributed Cache (009)](../009-distributed-cache/question.md).** The timeline store leans hard on Redis. Know its limits.
-- **[Typeahead (005)](../005-typeahead-autocomplete/question.md).** Both this problem and search use the "two-stage: candidate generation + ranking" pattern.
+- **[Notification System (010)](../010-notification-system/question.md).** Same fan-out worker pattern. Same celebrity problem when a popular account triggers notifications to millions.
+- **[Distributed Cache (009)](../009-distributed-cache/question.md).** The timeline store leans hard on Redis. Know its eviction, replication, and hot-key limits.
+- **[Typeahead (005)](../005-typeahead-autocomplete/question.md).** Both use the same two-stage pattern: candidate generation followed by scoring.
 {% endraw %}
 
 <div class="pr-solution-divider"></div>
@@ -611,25 +537,25 @@ Try answering each in 2 or 3 sentences before opening the solution.
 
 ### The short version
 
-A news feed is a fan-out problem dressed as a read problem. When Alice posts, the system has to decide: write her post_id into every follower's pre-built feed list right now (push), or let each follower fetch her recent posts when they open the app (pull)?
+A news feed is a fan-out problem dressed as a read problem. When Alice posts, the system must decide: write her post_id into every follower's pre-built feed list right now (push), or let each follower fetch her recent posts when they open the app (pull)?
 
-Push is fast to read but explodes when someone has 100 million followers. Pull is cheap to write but chokes when someone follows 5,000 accounts. The answer is both: push for normal users, pull for celebrities. This is hybrid fan-out.
+Push is fast to read but explodes when someone has 100 million followers. Pull is cheap to write but chokes when a user follows 5,000 accounts. The answer is both: push for normal users, pull for celebrities. This is hybrid fan-out.
 
-Around that core decision, three things matter most:
+Around that core, three things matter most:
 
-- Ranking lives on the read path, never pre-computed at write time.
+- Ranking lives on the read path. Never pre-compute it at write time.
 - Deletes, blocks, and unfollows are handled by filtering at hydration time, not by scrubbing millions of feed lists.
-- Stateless services, Kafka as the write-path buffer, Redis for hot feeds, Cassandra for cold.
+- Feed lists store post_ids only. Hydrate to full content at read. This is what makes lazy delete and lazy filter possible.
 
-The throughput numbers are not the hard part. 5,800 posts per second is medium load. The hard part is the six-orders-of-magnitude gap between an average user (100 followers) and a celebrity (100M followers).
+The throughput numbers are not the hard part. 5,800 posts per second is medium load. The hard part is the six-orders-of-magnitude gap between an average user (100 followers) and a celebrity (100 million followers).
 
 ---
 
 ### 1. The two questions that matter most
 
-**What is the biggest user's follower count?** If the answer is 10,000, push everywhere and go home. If the answer is 100 million, you need hybrid fan-out and most of this design.
+**What is the biggest user's follower count?** If the answer is 10,000, push everywhere and stop here. If the answer is 100 million, you need hybrid fan-out and most of this design. This number decides the architecture more than any other.
 
-**Is the feed time-ordered or ranked?** If ranked, the read path has an extra ML scoring step. That step cannot live at write time because the model changes weekly and uses signals that only exist at the moment of reading.
+**Is the feed time-ordered or ranked?** If ranked, the read path has an extra ML scoring step that cannot live at write time because the model changes weekly and uses signals that only exist at the moment of reading.
 
 Everything else (deletes, blocks, cold users, media, ads) follows from those two answers.
 
@@ -639,18 +565,18 @@ Everything else (deletes, blocks, cold users, media, ads) follows from those two
 
 | Metric | Number |
 |--------|--------|
-| Daily active users | 300M |
+| Daily active users | 300 million |
 | Posts/sec (steady) | ~5,800 |
 | Posts/sec (peak) | ~17,000 |
 | Feed loads/sec (steady) | ~35,000 |
 | Feed loads/sec (peak) | ~100,000 |
-| Naive push: timeline writes/sec | ~580,000 |
-| One celebrity post (100M followers) | 100M writes |
+| Timeline writes/sec (naive push) | ~580,000 |
+| One celebrity post (100M followers) | 100 million writes |
 | Storage for pre-built feeds (post_ids only) | ~6 TB |
 
-The hard number is not any single one of these. It is the ratio between an average post (100 writes) and a celebrity post (100M writes): six orders of magnitude. No single fan-out strategy handles both.
+The hard number is not any single one of these. It is the ratio between an average post (100 writes) and a celebrity post (100 million writes): six orders of magnitude from the same event type. No single fan-out strategy handles both.
 
-Reads beat writes roughly 100 to 1. Most users scroll for an hour and post nothing. That ratio is what justifies pre-building feeds even at this scale.
+Reads beat writes roughly 100 to 1. Most users scroll for an hour and post nothing. That ratio justifies pre-building feeds even at the cost of write amplification.
 
 ---
 
@@ -678,7 +604,7 @@ Response 200:
 }
 ```
 
-The cursor is opaque on purpose. Inside it encodes `(last_seen_score, last_seen_post_id)`. We can change pagination scheme without breaking clients.
+The cursor is opaque on purpose. Inside it encodes `(last_seen_score, last_seen_post_id)`. We can change the pagination scheme without breaking clients.
 
 ```
 POST /api/v1/posts
@@ -693,23 +619,23 @@ Response 201:
 
 Three small but load-bearing choices:
 
-- Return 201 as soon as the post is durably saved. Fan-out happens after. Alice sees her own post via a client-side prepend, not by waiting for workers.
-- Snowflake-style post_id: globally unique without coordination, sortable by time, 64 bits.
-- Cursor encodes a score, not an offset. Offset pagination breaks when posts are inserted or deleted between requests.
+| Choice | Reason |
+|--------|--------|
+| Return 201 before fan-out | Fan-out is async. Alice sees her own post via client-side prepend, not by waiting for workers. |
+| Snowflake post_id | Globally unique without coordination, sortable by time, 64 bits. |
+| Cursor encodes a score, not an offset | Offset pagination breaks when posts are inserted or deleted between requests. |
 
-Status codes: **410 Gone** when a hydrated post was deleted (filter client-side). **429** if a user is posting too fast.
+Status codes: **410 Gone** when a hydrated post was deleted (filter client-side). **429** when a user is posting too fast.
 
 ---
 
 ### 4. The data model
 
-Five things to store. Two big, three small.
-
 ```mermaid
 erDiagram
     posts ||--o{ follows : "author has followers"
     posts {
-        bigint post_id
+        bigint post_id PK
         bigint author_id
         text content
         jsonb media_ids
@@ -719,16 +645,16 @@ erDiagram
         smallint visibility
     }
     follows {
-        bigint follower_id
-        bigint followee_id
+        bigint follower_id PK
+        bigint followee_id PK
         timestamptz created_at
     }
 ```
 
-Plus two Redis shapes (not relational):
+Plus two Redis structures (not relational):
 
-- `timeline:{user_id}` - ZSET, score = created_at ms, member = post_id, capped at 1,000.
-- `author_recent:{author_id}` - ZSET, score = created_at ms, member = post_id, capped at 50.
+- `timeline:{user_id}` - ZSET, score = created_at ms, member = post_id, capped at 1,000 entries
+- `author_recent:{author_id}` - ZSET, score = created_at ms, member = post_id, capped at 50 entries
 
 <details markdown="1">
 <summary><b>Show: the full SQL</b></summary>
@@ -762,26 +688,24 @@ CREATE INDEX idx_followee ON follows (followee_id);
 
 </details>
 
-Three small things doing real work:
+Three things doing real work:
 
-**Soft delete on posts.** When Alice deletes a post, we set `deleted_at`. We do not scrub the post_id from millions of feed lists. The hydration step skips posts with `deleted_at IS NOT NULL`. Cache entries fade away as new posts push them out.
+**Soft delete on posts.** When Alice deletes a post, we set `deleted_at`. We do not scrub the post_id from millions of feed lists. The hydration step skips posts where `deleted_at IS NOT NULL`. Cache entries fade naturally as new posts push them out.
 
-**Snowflake post_id.** Sortable by time but not centrally coordinated. Different shards mint IDs in parallel.
+**Snowflake post_id.** Sortable by time but not centrally coordinated. Different shards mint IDs in parallel with no coordinator needed.
 
 **Reverse follow index.** Without it, "who follows Elon?" is a scatter across all shards. With it, one shard answers. Cost: one extra async write per follow action.
 
-> **Why Cassandra (or sharded Postgres) for posts.** Posts are append-only. Hot reads are by post_id. Write throughput matters. Cassandra wins on raw write throughput. Postgres wins on tooling. Either works; choose based on team familiarity.
+Why not store post content in the timeline cache? Posts are ~500 bytes. Timeline entries are 20 bytes (just post_id). Storing content in 300 million feed lists bloats memory by 25x and makes lazy delete impossible. Store post_ids; hydrate at read.
 
-> **Why Redis sorted sets for timelines.** ZADD is O(log N). ZREMRANGEBYRANK trims to top 1,000. ZREVRANGE returns top N. Three operations, three Redis commands. The shape is exact.
+Why Redis sorted sets and not lists? Sorted sets give ranked insertion by timestamp, efficient top-N reads, and O(log N) trim-to-cap. All in three Redis commands. Lists would need manual ordered insertion.
 
 ---
 
 ### 5. The engine: hybrid fan-out
 
-Two functions. Write path and read path.
-
 <details markdown="1">
-<summary><b>Show: the fan-out logic</b></summary>
+<summary><b>Show: the fan-out and read logic</b></summary>
 
 ```python
 CELEBRITY_THRESHOLD = 1_000_000   # tunable per author by background job
@@ -794,27 +718,23 @@ def on_post(post):
         for batch in follow_index.stream_followers(post.author_id, batch_size=10_000):
             timeline_writer.enqueue_batch(batch, post.id, score=post.created_at)
     else:
-        # Celebrity path. Write to author's own recent list. One write.
+        # Celebrity path. One write.
         author_recent.zadd(post.author_id, post.id, score=post.created_at)
         author_recent.trim(post.author_id, keep=50)
 
 
 def get_timeline(user_id, cursor=None, limit=50):
-    # Push side: pre-built feed
-    pushed = timeline_store.zrevrange(user_id, 0, 199)   # 200 candidates
+    pushed = timeline_store.zrevrange(user_id, 0, 199)       # 200 candidates
 
-    # Pull side: celebrity authors this user follows
     celeb_authors = follow_index.get_celebrities_followed(user_id)  # cached
     pulled = []
-    for author in celeb_authors:
-        pulled.extend(author_recent.zrevrange(author, 0, 19))  # parallel in prod
+    for author in celeb_authors:                             # parallel in prod
+        pulled.extend(author_recent.zrevrange(author, 0, 19))
 
-    # Merge, dedupe, score
-    candidates = dedupe(pushed + pulled)
+    candidates = dedupe(pushed + pulled)                     # ~500 candidates
     features = feature_store.batch_get(user_id, candidates)
     scores = ranker.score(user_id, candidates, features)
 
-    # Pick top 50, apply diversity rules, hydrate
     ranked = pick_top_with_diversity(candidates, scores, limit)
     posts = post_service.batch_get(ranked, filter_deleted=True)
     return posts, next_cursor(posts)
@@ -824,13 +744,13 @@ def get_timeline(user_id, cursor=None, limit=50):
 
 Three things make this safe at scale:
 
-The write path streams followers in batches of 10,000. Loading 1M follower IDs into memory at once would OOM the dispatcher. Streaming keeps memory flat.
+The write path streams followers in batches of 10,000. Loading 1 million follower IDs into memory at once would OOM the dispatcher. Streaming keeps memory flat.
 
 Fan-out workers are idempotent. `ZADD` with the same `(member, score)` twice is a no-op. If a worker crashes mid-batch and replays, no duplicates land in feeds.
 
-The read path always merges both sides. If Bob follows zero celebrities, the pull side returns an empty list cheaply. No branching needed.
+The read path always merges both sides. If Bob follows zero celebrities, the pull side returns an empty list cheaply. No conditional branching in the Timeline Service.
 
-> **Why the threshold is per-author, not global.** A user with 800k followers who posts 100 times a day creates more fan-out than a user with 5M followers who posts once a week. A background job tunes the threshold per author based on `followers × daily_post_rate`.
+The threshold is per-author, not global. A user with 800k followers who posts 100 times per day creates more fan-out than a celebrity with 5M followers who posts once a week. A background job computes `followers × daily_post_rate` per author hourly and writes the celebrity flag to Redis. The dispatcher reads that flag, not a hard-coded number.
 
 ---
 
@@ -840,44 +760,44 @@ The read path always merges both sides. If Bob follows zero celebrities, the pul
 flowchart TB
     subgraph Edge["Client edge"]
         C([Web / Mobile]):::user
-        GW["API Gateway<br/>(auth · rate limit)"]:::edge
+        GW["API Gateway\n(auth · rate limit)"]:::edge
     end
 
     subgraph WritePath["Write path"]
         PS["Post Service"]:::app
-        DB[("Posts DB<br/>Cassandra / sharded PG")]:::db
-        K{{"Kafka<br/>posts.created"}}:::queue
+        DB[("Posts DB\nCassandra / sharded PG")]:::db
+        K{{"Kafka\nposts.created"}}:::queue
         D["Fan-out Dispatcher"]:::app
-        W["Fan-out Workers<br/>(stateless pool)"]:::app
-        FIdx[("Follow Index<br/>sharded by followee_id")]:::db
+        W["Fan-out Workers\n(stateless pool)"]:::app
+        FIdx[("Follow Index\nsharded by followee_id")]:::db
     end
 
     subgraph Stores["Data stores"]
-        TStore[("Timeline Store<br/>Redis: push feeds")]:::cache
-        CStore[("Celeb Recent Posts<br/>Redis: pull feeds")]:::cache
+        TStore[("Timeline Store\nRedis sorted sets\n~6 TB across shards")]:::cache
+        CStore[("Celeb Recent Posts\nRedis sorted sets")]:::cache
     end
 
     subgraph ReadPath["Read path"]
         TSvc["Timeline Service"]:::app
-        Ranker["Ranking Service<br/>(ML model)"]:::app
-        PSvc["Post Service<br/>(batch hydrate)"]:::app
+        Ranker["Ranking Service\n(ML model, ~30ms)"]:::app
+        PSvc["Post Service\n(batch hydrate, ~20ms)"]:::app
     end
 
     C --> GW
-    GW -->|write| PS
-    GW -->|read| TSvc
+    GW -->|"write"| PS
+    GW -->|"read"| TSvc
     PS --> DB
-    DB -->|CDC outbox| K
+    DB -->|"CDC outbox"| K
     K --> D
-    D --> FIdx
-    D -->|push| W
-    D -->|celebrity| CStore
-    W --> TStore
-    TSvc --> TStore
-    TSvc --> CStore
-    TSvc --> Ranker
-    TSvc --> PSvc
-    PSvc --> DB
+    D -->|"lookup followers"| FIdx
+    D -->|"push path"| W
+    D -->|"celebrity path (1 write)"| CStore
+    W -->|"ZADD ~0.3ms each"| TStore
+    TSvc -->|"ZREVRANGE top 200, ~5ms"| TStore
+    TSvc -->|"parallel pulls, ~10ms"| CStore
+    TSvc -->|"score 500 candidates"| Ranker
+    TSvc -->|"batch hydrate 50 posts"| PSvc
+    PSvc -.miss.-> DB
 
     classDef user fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
     classDef edge fill:#e2e8f0,stroke:#475569,color:#1e293b
@@ -889,16 +809,17 @@ flowchart TB
 
 Five things to notice:
 
-- The write path is async after Kafka. Alice gets a 201 in ~80ms. Fan-out happens behind the scenes. If workers fall behind, posts still get created; feeds just take longer to update.
-- The read path never touches Posts DB for the feed list. It reads post_ids from Redis, then hydrates from Post Service. Posts DB sees one batch call per feed load, not 50.
-- Ranking is its own service. The ML team deploys it on their own cadence. The Timeline Service sends candidates and gets scores back.
-- Engine pods are stateless. Roll them any time. State lives in Kafka, Redis, and the databases.
+- The write path is fully async after Kafka. Alice gets a 201 in ~80ms. Fan-out happens behind the scenes. If workers fall behind, posts still get created; feeds just update slower.
+- The read path never touches Posts DB for the feed list. It reads post_ids from Redis, then hydrates from Post Service. Posts DB sees one batch call per feed load, not 50 individual calls.
+- Ranking is its own service. The ML team deploys it on their own cadence. The Timeline Service sends candidates and gets scores. Each team deploys independently.
+- Fan-out workers are stateless. Roll any pod at any time. State lives in Kafka (unconsumed offsets), Redis (feed lists), and the databases.
+- The Follow Index is sharded by followee_id specifically so "who follows Alice?" lands on one shard, not dozens.
 
 ---
 
 ### 7. A request, end to end
 
-**Posting:**
+**Alice posts (250 followers):**
 
 ```mermaid
 sequenceDiagram
@@ -918,21 +839,21 @@ sequenceDiagram
     rect rgb(241, 245, 249)
         Note over PS,DB: synchronous write
         PS->>DB: INSERT post
-        DB-->>PS: ok
+        DB-->>PS: ok (~20ms)
     end
 
-    PS-->>GW: 201 + post_id (~80ms)
+    PS-->>GW: 201 + post_id (~80ms total)
     GW-->>Alice: done
     DB->>K: CDC: posts.created
     K->>D: consume
     D->>D: 250 followers → push
     D->>K: emit timeline.write × 250
     K->>W: consume
-    W->>TS: ZADD × 250
+    W->>TS: ZADD × 250 (~0.3ms each)
     Note over TS: feeds updated ~2s after post
 ```
 
-**Reading:**
+**Bob reads his feed:**
 
 ```mermaid
 sequenceDiagram
@@ -948,21 +869,21 @@ sequenceDiagram
     Bob->>GW: GET /timeline/home
     GW->>TSvc: forward
     TSvc->>TStore: ZREVRANGE top 200
-    TStore-->>TSvc: 200 post_ids (5ms)
-    Note over TSvc: look up Bob's celeb follows (cached, 2ms)
+    TStore-->>TSvc: 200 post_ids (~5ms)
+    Note over TSvc: look up Bob's celeb follows (cached, ~2ms)
 
     rect rgb(241, 245, 249)
-        Note over TSvc,CStore: parallel pulls
+        Note over TSvc,CStore: parallel celebrity pulls
         TSvc->>CStore: recent posts, celeb A
         TSvc->>CStore: recent posts, celeb B
     end
 
-    CStore-->>TSvc: ~300 post_ids (10ms)
-    TSvc->>Ranker: score 500 candidates
-    Ranker-->>TSvc: scored (30ms)
+    CStore-->>TSvc: ~60 post_ids (~10ms total)
+    TSvc->>Ranker: score ~500 merged candidates
+    Ranker-->>TSvc: scored list (~30ms)
     TSvc->>TSvc: top 50 + diversity rules
     TSvc->>PSvc: batch hydrate 50 post_ids
-    PSvc-->>TSvc: 50 full posts (20ms)
+    PSvc-->>TSvc: 50 full posts (~20ms)
     TSvc-->>GW: 200
     GW-->>Bob: feed (~90ms P50)
 ```
@@ -972,18 +893,18 @@ Target latencies:
 | Operation | P50 | P99 |
 |-----------|-----|-----|
 | Create post | ~80ms | ~150ms |
-| Read feed | ~90ms | ~200ms |
-| Post to all follower feeds | ~2s | ~10s (for normal user) |
+| Read feed (all caches warm) | ~90ms | ~200ms |
+| Post fans out to all followers | ~2s | ~10s (normal user) |
 
 ---
 
-### 8. The scaling journey: 1,000 users to 300M
+### 8. The scaling journey: 1,000 users to 300 million
 
 ```mermaid
 flowchart LR
     S1["Stage 1\n1k users\nPostgres join\n~$80/mo"]:::s1
     S2["Stage 2\n100k users\n+ Redis pre-build\n~$400/mo"]:::s2
-    S3["Stage 3\n1M–50M users\n+ Kafka + hybrid\n~$2.5k–20k/mo"]:::s3
+    S3["Stage 3\n1M to 50M users\n+ Kafka + hybrid fan-out\n~$2,500 to $20k/mo"]:::s3
     S4["Stage 4\n300M users\n+ multi-region\n+ dynamic threshold\n~$1M/mo"]:::s4
 
     S1 --> S2 --> S3 --> S4
@@ -996,49 +917,47 @@ flowchart LR
 
 #### Stage 1: 1,000 users
 
-One Postgres. One app instance. Feed is a `SELECT posts JOIN follows ORDER BY created_at LIMIT 50`. No cache, no queue, time-order only. ~$80/month.
+One Postgres, one app instance. Feed is a `SELECT posts JOIN follows ORDER BY created_at LIMIT 50`. No cache, no queue, time-order only. About $80/month. Ships in a weekend.
 
-Fine because feed loads run in ~50ms when followed sets are small. Adding more is over-engineering.
+Fine because feed loads run in ~50ms when followed sets are small. Adding anything more is overbuilt.
 
 #### Stage 2: 100,000 users
 
-Something breaks: Carol follows 400 accounts. Her feed query now consistently hits 800ms. Postgres sorts by time across 400 author IDs.
+What breaks: Carol follows 400 accounts. Her feed query consistently hits 800ms. Postgres sorts by time across 400 author IDs.
 
-Add Redis pre-built feeds. When Alice posts, write post_id into each follower's sorted set. Feed reads become a ZREVRANGE. Down to ~20ms. Posts appear in follower feeds within ~1 second. Still one Postgres. No Kafka yet. Fan-out is synchronous on the post write path. ~$400/month.
+What we add: Redis pre-built feeds. When Alice posts, write post_id into each follower's sorted set. Feed reads become a ZREVRANGE, down to ~20ms. Fan-out is still synchronous on the post write path. No Kafka yet. About $400/month.
 
-#### Stage 3: 1M to 50M users
+#### Stage 3: 1 million to 50 million users
 
-Several things break at once: a popular user with 500k followers makes post creation block for 30 seconds (synchronous fan-out). Postgres write throughput is a bottleneck. The first celebrity user with 2M followers arrives.
+What breaks: a popular user with 500k followers makes post creation block for 30 seconds (synchronous fan-out). Postgres write throughput is a ceiling. The first celebrity user with 2M followers arrives.
 
-Fixes: move fan-out async behind Kafka. Shard Posts DB by post_id (4 shards). Bring in the hybrid fan-out dispatcher. The celebrity path goes live. About $2,500-$20,000/month depending on scale within this range.
+What we add: async fan-out via Kafka. Shard Posts DB by post_id. Bring in the hybrid fan-out dispatcher. The celebrity path goes live. The ML team adds a Ranking Service. About $2,500 to $20,000/month depending on scale within this range.
 
-Ranking also launches here. The ML team adds a Ranking Service. Timeline Service sends 500 candidates, gets scores. ~30ms added to feed reads.
+#### Stage 4: 300 million users
 
-#### Stage 4: 300M users
+New problems: top celebrity has 100M followers. EU operations open. One influencer gains 50M followers in a week, temporarily overwhelming a static threshold. 35,000 feed reads per second at peak.
 
-New problems: top celebrity has 100M followers. EU operations open and EU user data must stay in EU. One influencer gains 50M followers in a week, temporarily overwhelming the static threshold. 35,000 feed reads per second at peak.
+What we add: dynamic threshold per author, tuned hourly. 64 Redis shards for timelines. 200 fan-out worker pods at peak. Full multi-region stack per region. Cold users (inactive over 7 days) evicted from Redis; feeds rebuild on return. About $1M/month, ~30 engineers.
 
-Fixes: dynamic threshold per author, tuned hourly by a background job. 64 Redis shards for timelines. 200 fan-out worker pods at peak. Full multi-region stack per region. Cold users (inactive over 7 days) evicted from Redis; feeds rebuild on return. ~$1M/month, ~30 engineers.
+#### What changes at 10x this scale
 
-#### What you would do at 10x scale
-
-Federated timeline stores per region. Streaming ranking (continuously updating candidate sets rather than rebuilding per read). Edge-cached feeds for global sub-50ms P99. These are optimizations on the same shape, not new architecture.
+Federated timeline stores per region. Streaming ranking (continuously updating candidate sets rather than rebuilding per read). Edge-cached feed responses for global sub-50ms P99. These are optimizations on the same architecture shape, not a new design.
 
 ---
 
 ### 9. Reliability
 
-**Posts DB shard failure.** Posts for that shard are unavailable. The Kafka consumer for that shard pauses at its current offset. When the shard recovers, the consumer resumes. No data loss.
+**Posts DB shard failure.** Posts for that shard are unavailable. The Kafka consumer for that shard pauses at its offset. When the shard recovers, the consumer resumes. No data loss.
 
-**Timeline cache shard failure.** Reads for users in that shard fall through to Cassandra (cold path). Slower (~200ms) but correct.
+**Timeline cache shard failure.** Reads for users hashed to that shard fall through to a slower cold path. Slower (~200ms) but correct.
 
-**Fan-out worker crash.** Another worker picks up the Kafka message. ZADD is idempotent, so replay is safe.
+**Fan-out worker crash.** Another worker picks up the Kafka message. ZADD is idempotent, so replay is safe. No duplicates.
 
 **Ranking service failure.** Timeline Service falls back to time-order on the candidate set. Quality drops; the feed still works.
 
 **Kafka fully down.** Post creation continues (posts saved to DB). Fan-out pauses. Feeds go stale. When Kafka recovers, consumers resume from stored offsets.
 
-**Regional failure.** Global LB routes to another region. Users see a feed stale by a few minutes (last replicated state). Most won't notice.
+**Regional failure.** Global load balancer routes to another region. Users see a feed stale by a few minutes (last replicated state). Most will not notice.
 
 ---
 
@@ -1047,10 +966,9 @@ Federated timeline stores per region. Streaming ranking (continuously updating c
 | Metric | Why it matters |
 |--------|----------------|
 | `timeline.read.p99` by region | Headline SLO. Should stay under 200ms. |
-| `timeline.candidate_count.p50` | If under 100, ranking quality drops. Cold users or sparse graph. |
-| `fanout.queue_depth` | Leading sign of stale feeds. Page if above 1M. |
-| `fanout.write_lag_p99` | Time from post event to feed ZADD. Target under 5s. |
-| `fanout.celebrity_threshold` | Auto-tuned per author. Alert if it swings hard. |
+| `timeline.candidate_count.p50` | Under 100 candidates means ranking quality drops. Cold users or sparse follow graph. |
+| `fanout.queue_depth` | Leading sign of stale feeds. Page if above 1 million. |
+| `fanout.write_lag_p99` | Time from post event to feed ZADD. Target under 5 seconds. |
 | `ranking.latency_p99` | Should stay under 50ms. |
 | `cache.hit_rate` (timeline, post, feature) | A cascade of misses means a bad day. |
 | `post.creation_rate` | Sudden drop signals auth or DB broken. |
@@ -1058,7 +976,7 @@ Federated timeline stores per region. Streaming ranking (continuously updating c
 
 **Page on:** timeline P99 above 500ms for 5 minutes. Fan-out lag above 30 seconds. Ranking error rate above 1%.
 
-**Ticket on:** celebrity threshold large change. Cache hit rate dropping more than 5 points.
+**Ticket on:** celebrity threshold large change. Cache hit rate dropping more than 5 percentage points.
 
 ---
 
@@ -1066,23 +984,23 @@ Federated timeline stores per region. Streaming ranking (continuously updating c
 
 **1. User blocks another user.**
 
-Filter at read time, not write time. Keep a `blocked:{user_id}` Redis set. On every feed read, filter candidate post_ids against this set before ranking.
+Filter at read time, not write time. Keep a `blocked:{user_id}` Redis set. On every feed read, filter candidate post_ids against this set before ranking. Cost is ~0.5ms for 500 candidates.
 
-Cost: ~0.5ms for 500 candidates. Eager scrubbing of the pre-built feed sounds thorough but does not cover celebrity posts on the pull path. Filter at read covers both push and pull, and avoids the class of bugs where a block partially clears history.
+Eager scrubbing of the pre-built feed sounds thorough but does not cover celebrity posts on the pull path. A read-time filter covers both push and pull with one check, and avoids a class of bugs where a block partially clears history.
 
 Also apply the filter to `reply_to_post` when hydrating. Otherwise quoted replies from the blocked user still leak through.
 
 **2. User unfollows someone.**
 
-Lazy. Let those posts age out as new ones push them down. Active users see the person gone within a day or two.
+Lazy. Let those posts age out as new ones push them down. An active user sees the unfollowed person gone within a day or two.
 
-Eager scrubbing means reading all 1,000 entries in the sorted set, finding ones from that author, and removing them: ~10ms per unfollow, and it does nothing for the celebrity pull path. Not worth it. Same logic applies to mute.
+Eager scrubbing means reading all 1,000 entries in the sorted set, finding ones from that author, and removing them. That is ~10ms per unfollow and does nothing for the celebrity pull path. Not worth it. Same logic applies to mute.
 
-**3. Post deletion when the post is in 100M feeds.**
+**3. Post deletion when the post is in 100 million feeds.**
 
-Do not scrub. 100M ZREMs is not feasible.
+Do not scrub. 100 million ZREMs is not feasible.
 
-Set `deleted_at` in Posts DB. At hydration time, skip any post where `deleted_at IS NOT NULL`. Cache entries fade naturally as new posts push them out. This is why we store post_ids in the feed cache, not content. Lazy filtering at hydration is free. If we stored content, we would have to scrub 100M entries on every delete.
+Set `deleted_at` in Posts DB. At hydration time, skip any post where `deleted_at IS NOT NULL`. Cache entries fade naturally as new posts push them out. This is exactly why we store post_ids in the feed cache and not post content. Lazy filtering at hydration is free. If we stored content, every delete would require scrubbing 100M entries.
 
 **4. New user signs up and follows 50 accounts.**
 
@@ -1094,7 +1012,7 @@ Bootstrap the feed once during signup:
 ```python
 def bootstrap_feed(new_user_id, followee_ids):
     candidates = []
-    for f in followee_ids:            # run in parallel
+    for f in followee_ids:              # run in parallel
         candidates.extend(post_index.recent(f, 20))
     candidates.sort(key=lambda p: p.created_at, reverse=True)
     timeline_store.zadd_bulk(new_user_id, candidates[:200])
@@ -1108,11 +1026,11 @@ Takes ~100ms. By the time onboarding finishes, the feed has content. Celebrities
 
 Stop pushing to users inactive for 30 days. Three steps:
 
-- Dispatcher checks "is this follower warm?" before emitting a task. Cold users skipped.
+- Dispatcher checks "is this follower warm?" before emitting a task. Cold users are skipped.
 - Move their Redis entry to Cassandra after 7 days of inactivity.
 - On return, schedule a rebuild: read recent posts from their followees and repopulate Redis.
 
-This saves roughly half of Redis memory and a large chunk of fan-out work. Most user bases are 40-60% cold at any given time.
+This saves roughly half of Redis memory and a large share of fan-out work. Most user bases are 40-60% cold at any given time.
 
 **6. Backfill on new follow.**
 
@@ -1126,15 +1044,13 @@ If Alice is a celebrity: she is never in Bob's pre-built feed by design. The fir
 
 For most apps: pull-to-refresh. Simple, no extra infrastructure.
 
-For Twitter-style real-time feel: a WebSocket channel pushes lightweight notifications ("3 new posts available"). The user taps to load. The WebSocket carries counts, not full post content. The full feed reload still goes through the normal read path.
-
-Pushing full posts over WebSocket doubles the work. The browser already has a fast feed endpoint.
+For Twitter-style real-time feel: a WebSocket channel pushes lightweight notifications ("3 new posts available"). The user taps to load. The WebSocket carries counts, not full post content. The full feed reload still goes through the normal read path. Pushing full posts over WebSocket doubles the work for no gain since the client already has a fast feed endpoint.
 
 **8. Pagination.**
 
-Cursor on `(score, post_id)`. Score is post creation timestamp. Post_id breaks ties for posts at exactly the same millisecond. The request returns posts strictly older than that cursor.
+Cursor encodes `(score, post_id)`. Score is post creation timestamp. Post_id breaks ties for posts at exactly the same millisecond. Each request returns posts strictly older than the cursor position.
 
-If the post at the cursor was deleted: fine. The cursor is a position, not a reference. Deeper than 500 posts, ranking quality degrades in ways the cursor cannot represent. Accept this; nobody scrolls that deep.
+If the post at the cursor was deleted: fine. The cursor is a position, not a reference. Past position 500, ranking quality degrades in ways the cursor cannot represent. Accept this; nobody scrolls that deep.
 
 **9. One fan-out worker doing 100x the work.**
 
@@ -1142,36 +1058,36 @@ Diagnose in order:
 
 1. **Hot partition.** Workers consume one Kafka partition each. If partitioned by `author_id` and one author lands on the same partition, it gets uneven load. Repartition by `(post_id, follower_id_hash)` to spread hot authors.
 2. **Duplicate consumer.** Two pods accidentally consuming the same partition. Look for duplicate ZADDs in the timeline store. Check Kafka consumer group health.
-3. **Borderline celebrity.** A user with 900k followers, just under the threshold. Their fan-out fills one worker. Lower the threshold or raise them to the celebrity path.
+3. **Borderline celebrity.** A user with 900k followers, just under the threshold. Their fan-out fills one worker. Lower the threshold or move them to the celebrity path.
 4. **Slow task type.** A specific kind of write is taking longer than usual. Look at task latency by author fan-out tier.
 
-The senior answer covers all four. The mid-level answer only says "rebalance the consumer group."
+A senior answer covers all four. A mid-level answer only says "rebalance the consumer group."
 
 **10. "You might like" injections.**
 
-After ranking but before returning, call the recommendation service in parallel with the existing feed fetch:
+After ranking, call the recommendation service in parallel. If it times out, serve the organic feed unchanged:
 
 <details markdown="1">
 <summary><b>Show: injection logic</b></summary>
 
 ```python
 def get_timeline_with_recommendations(user_id):
-    organic = get_timeline(user_id)         # existing 50 posts
-    recs = rec_service.get(user_id, 3)      # parallel call, 30ms budget
+    organic = get_timeline(user_id)          # existing 50 posts
+    recs = rec_service.get(user_id, 3)       # parallel call, 30ms budget
     return inject(organic, recs, positions=[5, 15, 25])
 ```
 
 </details>
 
-Latency cost: ~30ms parallel call. If the rec service times out, serve the organic feed unchanged.
+Latency cost: ~30ms parallel call, absorbed alongside the existing ranking call. If the rec service times out, serve the organic feed unchanged. This is also where ads go: same injection pattern, same timeout rule.
 
-Quality risk: recommended content is usually less relevant than organic. A/B test before rolling out; measure dwell time and scroll depth on injected positions. This is also where ads go: same injection pattern, same timeout rule.
+Quality risk: recommended content is usually less relevant than organic. A/B test before rolling out; measure dwell time and scroll depth on injected positions.
 
-**11. Celebrity reposts my normal post.**
+**11. Celebrity reposts a normal post.**
 
-The repost is the celebrity's content (a pointer to my original post). It goes through the celebrity's normal path: skip push, write to their recent posts list. When the celebrity's followers load their feed, the pull path returns the repost, which hydrates to show my original post with a "reposted by" header.
+The repost is the celebrity's content (a pointer to the original post). It goes through the celebrity's normal path: skip push, write to their `author_recent` list. When the celebrity's followers load their feed, the pull path returns the repost, which hydrates to show the original post with a "reposted by" header.
 
-My post reaches 200M people without a single extra timeline write. The fan-out decision is based on the reposter's follower count, not the original author's.
+The original post reaches 200 million people without a single extra timeline write. The fan-out decision is based on the reposter's follower count, not the original author's.
 
 **12. Private account.**
 
@@ -1179,20 +1095,20 @@ Follow requests to private accounts require approval before being recorded in th
 
 **13. Replication lag on my own post.**
 
-Two fixes, usually both:
+Two fixes, usually both together:
 
 - **Optimistic client prepend.** The client inserts the post locally as soon as the 201 comes back. The user sees it instantly. The server's feed catches up within a second.
 - **Read-your-writes routing.** For the requester's own feed, route reads to the primary for ~5 seconds after a post. Cookie-based stickiness. After 5 seconds, fall back to replicas.
 
 **14. Ad in position 4.**
 
-The Timeline Service calls the Ad Service after ranking, in parallel. If the Ad Service is down or exceeds a 50ms timeout, skip the slot and show the organic post at position 4. Lose revenue for that minute; do not fail the feed load. The ad slot is enhancement, not requirement.
+The Timeline Service calls the Ad Service after ranking, in parallel. If the Ad Service is down or exceeds a 50ms timeout, skip the slot and show the organic post at position 4. Lose revenue for that period; do not fail the feed load. The ad slot is enhancement, not a requirement.
 
 **15. Region failover.**
 
-US-East goes down. Global LB routes affected users to US-West.
+US-East goes down. Global load balancer routes affected users to US-West.
 
-US-West has its own copy of the timeline store but has not received the last few minutes of writes from US-East. Users see a feed stale by 2-5 minutes. They see all posts before the failure, nothing from the failure window. If they post during the failure, the post is stored in US-West and fans out locally. When US-East recovers, cross-region replication catches up.
+US-West has its own copy of the timeline store but has not received the last few minutes of writes from US-East. Users see a feed stale by 2-5 minutes. They see all posts before the failure window, nothing from the failure window itself. If they post during the failure, the post is stored in US-West and fans out locally. When US-East recovers, cross-region replication catches up.
 
 Most users will not notice. Those who do see "the feed isn't updating." Acceptable for a full region failure.
 
@@ -1200,39 +1116,37 @@ Most users will not notice. Those who do see "the feed isn't updating." Acceptab
 
 ### 12. Trade-offs worth saying out loud
 
-**Why not pre-rank.** Pre-ranking means recomputing 300M feeds every time the model updates (weekly). On the read path, ranking touches 500 candidates per request. The math forces ranking to live at read time.
+**Why not pre-rank.** Pre-ranking means recomputing 300 million feeds every time the model updates, which is weekly. On the read path, ranking touches 500 candidates per request. The math forces ranking to live at read time.
 
 **Why not adaptive push/pull per request.** We choose push vs pull per author, not per feed read. Per-request would be marginally more precise but adds complexity for small gain. Static-per-author with a dynamically tuned threshold is the right balance.
 
-**Why separate post content from timeline entries.** Posts are ~500 bytes. Timeline entries are 20 bytes (just post_id). Storing content in 100M feed lists bloats memory by 25x. Store post_ids; hydrate at read.
+**Why separate post content from timeline entries.** Posts are ~500 bytes. Timeline entries are 20 bytes (just post_id). Storing content in 300 million feed lists bloats memory by 25x and makes lazy delete impossible.
 
-**Why Redis sorted sets and not lists.** Sorted sets give ranked insertion by timestamp, efficient top-N reads, and trim-to-N. All three Redis commands. Lists would need manual ordered insertion.
-
-**Why Kafka and not direct calls.** Fan-out is async. If the dispatcher called workers directly, a slow worker would block the post creation path. Kafka decouples them. If workers are slow, the queue grows; posts still get created.
+**Why Kafka and not direct calls to workers.** Fan-out is async. If the dispatcher called workers directly, a slow worker would block the post creation path. Kafka decouples them. If workers fall behind, the queue grows; posts still get created.
 
 ---
 
 ### 13. Common mistakes
 
-**"Just push to every follower."** Fails the celebrity math immediately. 100M writes per post is not feasible.
+**"Just push to every follower."** Fails the celebrity math immediately. 100 million writes per post is not feasible.
 
 **"Just pull at read time."** Fails for users who follow 5,000 accounts. 5,000 reads per feed load will not fit in a 200ms budget.
 
-**No ranking.** Modern feeds score by engagement. Describing a purely chronological feed in 2026 signals you haven't used these products.
+**No ranking.** Modern feeds score by engagement. A purely chronological feed in 2026 signals you have not thought about how these products actually work.
 
 **Storing post content in the feed cache.** Bloats memory by 25x. Also makes deletion impossible to handle cleanly. Store post_ids; hydrate at read.
 
-**Ignoring deletes.** "What happens when a post in 100M feeds is deleted?" Lazy filter at hydration time. If you cannot answer this, you have not thought through the read path.
+**Ignoring deletes.** If you cannot answer "what happens when a post in 100 million feeds is deleted?", you have not thought through the read path. Lazy filter at hydration time is the answer.
 
 **No mention of blocks or mutes.** Filter at read time. Both push and pull paths go through hydration, so one filter covers both.
 
-**Sequential reads in fan-in.** If you describe the celebrity pull as "loop over followees, fetch posts one by one," you get 30-second feeds. Parallel matters.
+**Sequential reads in fan-in.** Describing the celebrity pull as "loop over followees, fetch posts one by one" gives 30-second feeds. Parallel matters.
 
 **Treating notifications as part of the feed.** The feed is the home timeline. Notifications are a different product that consumes the same events.
 
-**Forgetting read-your-writes.** Post, open feed, don't see your own post. Either client-side prepend or sticky reads. Otherwise the app feels broken.
+**Forgetting read-your-writes.** Post, open feed, don't see your own post. Either client-side prepend or sticky reads to the primary. Otherwise the app feels broken.
 
 **"I'll just add a cache."** Which cache? What is the eviction policy? What is the target hit rate? The answer needs to be specific.
 
-If you hit eight of these without prompting, you are interviewing at staff level. The three that separate strong from average: hybrid fan-out (not push or pull alone), ranking on the read path (not precomputed), and lazy delete via post_id hydration. Those are what a senior architect listens for.
+The three that separate strong answers from average ones: hybrid fan-out (not push or pull alone), ranking on the read path (not precomputed), and lazy delete via post_id hydration at read time.
 {% endraw %}
