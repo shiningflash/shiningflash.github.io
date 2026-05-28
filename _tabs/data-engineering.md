@@ -1,10 +1,12 @@
 ---
 layout: practice-index
-title: Data Engineering Practice
+title: Data Engineering
+icon: fas fa-database
+order: 2
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-
-  65 hand-picked scenarios inspired by what actually breaks in data pipelines —
+  65 hand-picked scenarios inspired by what actually breaks in data pipelines,
   late streams, schema drift, silent ETL failures, cost incidents, debugging
   the wrong number. Filter by category, difficulty or topic and start solving.
 track: data-engineering

@@ -1,9 +1,4 @@
 ---
-# Practice tab — landing hub. Lists all tracks; each card links to its own
-# filterable problem index. Tracks are populated by the sync workflow that
-# pulls problems from external repos using the same frontmatter contract.
-icon: fas fa-dumbbell
-order: 3
 title: Practice
 permalink: /practice/
 ---
