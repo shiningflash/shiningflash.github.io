@@ -741,6 +741,36 @@
   color: var(--pr-text-muted);
 }
 .pr-track-meta strong { color: var(--heading-color, inherit); }
+
+.pr-track-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-top: .85rem;
+  padding-top: .85rem;
+  border-top: 1px dashed var(--pr-border);
+}
+.pr-track-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .76rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  background: var(--pr-chip-bg, rgba(120, 120, 120, .1));
+  color: var(--pr-text-muted);
+  border: 1px solid var(--pr-border);
+}
+.pr-track-chip-count {
+  font-weight: 700;
+  font-size: .7rem;
+  color: var(--heading-color, inherit);
+  opacity: .75;
+}
+.pr-track-chip-more {
+  font-style: italic;
+  opacity: .8;
+}
 .pr-track-status {
   display: inline-block;
   font-size: .68rem;
