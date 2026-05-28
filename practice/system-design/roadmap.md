@@ -2,6 +2,7 @@
 layout: page
 title: System Design Roadmap
 permalink: /practice/system-design/roadmap/
+mermaid: true
 ---
 
 <link rel="stylesheet" href="/assets/css/practice.css">
@@ -9,321 +10,407 @@ permalink: /practice/system-design/roadmap/
 <section class="pr-hero">
   <div class="pr-hero-inner">
     <span class="pr-eyebrow">System Design Roadmap</span>
-    <h1 class="pr-title">From "I have no idea where to start" to "I just designed Instagram on a whiteboard"</h1>
+    <h1 class="pr-title">Six months. Seven stages. From basics to designing Instagram on a whiteboard.</h1>
     <p class="pr-subtitle">
-      A staged learning path. Each stage builds on the one before it. Start at the top, work down. Do not try to learn everything at once.
+      A real, ordered learning path. Each stage builds on the last one. You finish each stage by building something small, not by memorising slides.
     </p>
   </div>
 </section>
 
-## How to use this roadmap
+## How to read this page
 
-System design has a real learning order. Most people fail at it not because they are missing some exotic concept, but because they skipped the basics. They study Paxos before they understand replication. They argue about CRDTs without knowing what a cache stampede looks like.
+Read top to bottom. Do the stages in order. The order matters more than people think. If you try to learn Kafka before you understand what TCP is, you will get stuck and quit. Most people who fail at system design fail because they skipped the boring basics.
 
-This roadmap fixes that. Seven stages, ordered so that every concept rests on the previous ones. By the end you can sit down for any senior-level system design interview, draw the architecture in twenty minutes, and answer the follow-ups without panic.
+Two paces:
 
-A few rules:
+- If you already write code at work, plan on **four months**.
+- If you are still learning to code, plan on **eight months**.
 
-- **Do not skip stages.** If you do not know what TCP is, do not start with Kafka. The roadmap is sequenced for a reason.
-- **Build something at each stage.** Reading is not enough. Pick one tiny project per stage. Two hundred lines of code beats two hundred pages of theory.
-- **You will revisit early stages.** That is the point. Each new stage gives you a better mental model for the basics. Re-read Stage 1 after Stage 4. It will read differently.
+Either way, the structure is the same.
 
-## The journey, at a glance
+---
+
+## The journey, in one picture
 
 ```mermaid
 flowchart LR
-    S1["Stage 1<br/>Foundations<br/>(2-3 weeks)"]:::s1
-    S2["Stage 2<br/>Storage<br/>(3-4 weeks)"]:::s2
-    S3["Stage 3<br/>Caching, queues, async<br/>(2-3 weeks)"]:::s3
-    S4["Stage 4<br/>Scaling and reliability<br/>(3-4 weeks)"]:::s4
-    S5["Stage 5<br/>Distributed systems<br/>(4-6 weeks)"]:::s5
-    S6["Stage 6<br/>Real architectures<br/>(ongoing)"]:::s6
-    S7["Stage 7<br/>Interview craft<br/>(parallel from week 1)"]:::s7
+    S1[1. Foundations<br/>Month 1]:::a
+    S2[2. Storage<br/>Month 2]:::a
+    S3[3. Caching and queues<br/>Month 3]:::b
+    S4[4. Scaling and reliability<br/>Month 4]:::b
+    S5[5. Distributed systems<br/>Month 5]:::c
+    S6[6. Real architectures<br/>Month 6]:::c
+    S7[7. Interview craft<br/>parallel from week 1]:::d
 
     S1 --> S2 --> S3 --> S4 --> S5 --> S6
-    S7 -.-> S1
-    S7 -.-> S6
+    S7 -.- S6
 
-    classDef s1 fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef s2 fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef s3 fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef s4 fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
-    classDef s5 fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
-    classDef s6 fill:#e9d5ff,stroke:#7e22ce,color:#581c87
-    classDef s7 fill:#fef3c7,stroke:#a16207,color:#713f12
+    classDef a fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef b fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef c fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+    classDef d fill:#fef3c7,stroke:#a16207,color:#713f12
 ```
 
-Total: roughly four to six months of focused study, two to four hours per day. Faster if you already write production code. Slower if this is your first time thinking about distributed systems.
+Stages 1 to 6 are sequential. Stage 7 runs alongside the whole thing.
+
+---
+
+## What you can do at each level
+
+A quick honesty check. Where are you now, where do you want to be?
+
+| Level | What you can do | What people pay you for |
+|-------|-----------------|-------------------------|
+| **Junior** | Build a CRUD app. Add a database. Deploy it. | Writing features against an existing design. |
+| **Mid** | Add a cache. Add a queue. Read a slow query plan. Recover a backup. | Owning a service end to end. |
+| **Senior** | Design a system from scratch. Know when to pick SQL vs NoSQL. Spot the bottleneck before it ships. | Designing systems other engineers will build. |
+| **Staff** | Design across multiple teams. Predict failure modes you have never seen. Have an opinion on every trade-off. | Setting direction. Catching the failure mode nobody else sees. |
+
+By the end of Stage 4 you are mid-level. By the end of Stage 6 you are senior. Staff comes from production scars, not from a roadmap.
 
 ---
 
 ## Stage 1: Foundations
 
-**What this stage is.** The vocabulary. Before you can design anything, you need to know what a network is, what a server actually does, how a request reaches it, and what makes systems slow or unreliable. Most "system design" questions are really questions about these basics, dressed up.
+**Goal.** Learn the vocabulary. You cannot design anything if you do not know what a server, a port, or a DNS record actually is.
 
-**Topics:**
+**The picture in your head.**
 
-- **The client-server model.** What a server is, what a client is, what a port is, why we call it a "service".
-- **HTTP, end to end.** Request methods, status codes, headers, what `Content-Type` actually does, what a redirect is, what `Cache-Control` controls.
-- **TCP vs UDP.** Why one is reliable and slow, why the other is fast and lossy, when to pick each. The three-way handshake.
-- **TLS in one paragraph.** What an HTTPS handshake does, what a certificate is, why TLS termination matters for performance.
-- **DNS.** How a domain name turns into an IP address. What an `A` record is, what a `CNAME` is, what TTL means for DNS.
-- **Latency vs throughput.** A 50ms request and a system that handles 50,000 requests per second are two completely different problems. Understand which you have.
-- **Latency numbers everyone should know.** L1 cache 1ns, memory 100ns, disk 10ms, cross-region network 100ms. These ratios shape every design decision.
-- **The four nines.** What 99%, 99.9%, 99.99% mean in minutes per year of downtime. Why 99% is terrible for anything serious.
-- **Synchronous vs asynchronous.** What it means to "block on a call", what callbacks and event loops are, what happens when one slow downstream service ruins your latency.
-- **API styles.** REST, RPC, gRPC, GraphQL, WebSocket. When each fits.
+```mermaid
+flowchart LR
+    U(["You"]):::u -->|"https://"| D[("DNS")]:::ext
+    D -->|"IP address"| S(["Server"]):::s
+    U -->|"HTTP request"| S
+    S -->|"HTTP response"| U
 
-**By the end of this stage you can:** read a basic architecture diagram (client, load balancer, server, database) and explain what every arrow is doing.
+    classDef u fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef ext fill:#e9d5ff,stroke:#7e22ce,color:#581c87
+```
+
+**Topics.**
+
+| Group | Topics |
+|-------|--------|
+| **Networking basics** | What an IP address is. Ports. TCP vs UDP. Why TCP needs a handshake. |
+| **The web stack** | DNS. HTTP methods. HTTP status codes. Headers. Why HTTPS is different. |
+| **Mental models** | Latency vs throughput. The four nines. Synchronous vs asynchronous. |
+| **Useful numbers to memorise** | Memory access: 100ns. SSD read: 100us. Disk seek: 10ms. Cross-region network: 100ms. |
+| **API styles** | REST. RPC. gRPC. GraphQL. WebSocket. When each one fits. |
+
+**Build this in week 4.** A tiny HTTP server in any language. Two endpoints: `POST /links` and `GET /:id`. Store data in a JSON file. Deploy it on a free tier (Fly, Render, Railway).
+
+**You are done when** you can look at a cloud architecture diagram and explain every box and every arrow out loud.
 
 ---
 
 ## Stage 2: Storage and data
 
-**What this stage is.** Where the data lives. The single biggest decision in any system design is how you store and access data. Most failures and most cost happen here. Spend real time on this stage.
+**Goal.** Decide where data lives. The biggest single decision in any design.
 
-**Topics:**
+**The picture in your head.**
 
-- **SQL databases.** Tables, rows, columns. Primary keys, foreign keys, joins. Why a JOIN can be cheap or catastrophic depending on indexes.
-- **Indexes.** B-tree indexes, hash indexes, composite indexes. What "index covers the query" means. Why every WHERE clause needs to be thought about.
-- **Transactions and ACID.** Atomic, consistent, isolated, durable. What each word actually means in practice. What happens when you do not have ACID (the answer is: weird things, sometimes silently).
-- **Isolation levels.** Read uncommitted, read committed, repeatable read, serializable. What anomalies each one allows. Why most production systems use read committed without realizing it.
-- **NoSQL families.**
-  - Key-value (Redis, DynamoDB)
-  - Document (MongoDB)
-  - Wide-column (Cassandra, ScyllaDB)
-  - Graph (Neo4j)
-  - Search (Elasticsearch, OpenSearch)
-- **When NoSQL is the right answer and when it is not.** It is rarely about scale. It is usually about access patterns.
-- **Normalization vs denormalization.** Why textbook normalization breaks down at scale. Why most real systems store the same data in three places.
-- **Replication.**
-  - Leader-follower (the common case)
-  - Multi-leader (rare, painful)
-  - Replication lag, and why it matters
-- **Sharding.**
-  - Range sharding, hash sharding, geographic sharding
-  - The hot shard problem
-  - Re-sharding (the operational nightmare)
-- **CAP and the truth about it.** What it actually says (and what most blog posts get wrong).
-- **Consistency models.**
-  - Strong consistency
-  - Eventual consistency
-  - Read-your-writes
-  - Monotonic reads
-  - Causal consistency
-- **Storage engines, briefly.** B-trees vs LSM trees. Why your database choice changes write performance by 10x.
-- **Backups, snapshots, point-in-time recovery.** What "data loss" means in different failure modes.
+```mermaid
+flowchart LR
+    S(["Server"]):::s -->|"reads + writes"| DB[("Primary DB")]:::db
+    DB -->|"replication"| R1[("Replica 1<br/>read-only")]:::db
+    DB -->|"replication"| R2[("Replica 2<br/>read-only")]:::db
+    S -.->|"heavy reads"| R1
 
-**By the end of this stage you can:** pick a database for a given product and defend the choice. Read a `EXPLAIN` plan and explain what is slow. Sketch a sharded schema for a 100M-row table.
+    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+```
+
+**Topics.**
+
+| Group | Topics |
+|-------|--------|
+| **Relational basics** | Tables, rows, columns. Primary keys. Foreign keys. JOINs. |
+| **Indexes** | B-tree indexes. Composite indexes. Reading an EXPLAIN plan. |
+| **Transactions** | ACID. Isolation levels. What a deadlock is. Long-running transactions. |
+| **NoSQL families** | Key-value (Redis, DynamoDB). Document (MongoDB). Wide-column (Cassandra). Search (Elasticsearch). |
+| **Replication** | Leader-follower. Replication lag. Read-your-writes. |
+| **Sharding** | Range vs hash sharding. Hot shards. Re-sharding pain. |
+| **Consistency models** | Strong. Eventual. Causal. Read-your-writes. |
+| **Storage engines** | B-trees vs LSM trees. Why your DB choice changes write speed by 10x. |
+
+**Build this in week 8.** Take your Stage 1 service. Move the JSON file to Postgres. Add one index. Run EXPLAIN on a query and read the plan. Add one slow query that scans the whole table. Watch the latency.
+
+**You are done when** someone asks "should this be SQL or NoSQL?" and your answer is a list of follow-up questions, not a guess.
 
 ---
 
 ## Stage 3: Caching, queues, and async work
 
-**What this stage is.** Making things fast and decoupled. A direct read from a database is sometimes the right answer, but often it is not. This stage covers the layers and the in-between components that hold a real system together.
+**Goal.** Make things fast. Decouple the slow parts.
 
-**Topics:**
+**The picture in your head.**
 
-- **What a cache is, really.** A faster, smaller, less authoritative copy of some data. Every level of the stack has caches: CPU, OS, disk, application, CDN, browser.
-- **Where caches live.**
-  - Browser
-  - CDN
-  - In-process (a hashmap in your app)
-  - Distributed (Redis, Memcached)
-  - Database query cache
-- **Cache strategies.** Read-through, write-through, write-behind, write-around, cache-aside. When each fits.
-- **Eviction policies.** LRU, LFU, FIFO. Why your cache hit rate depends on this more than on size.
-- **Cache invalidation.** "There are only two hard things in computer science." Patterns: TTL, explicit invalidation, write-through, pub/sub invalidation.
-- **The thundering herd / cache stampede problem.** What happens when a popular key expires and 10,000 requests all miss at once. Defenses: jittered TTLs, request coalescing, stale-while-revalidate.
-- **Hot keys.** When one key takes 100,000 reads per second and the rest of the cache is bored. Layered defense: CDN, in-process, replica fan-out.
-- **CDNs.** What gets cached at the edge, what does not. Why HTTP caching headers exist. What "cache key" means.
-- **Message queues vs streams.**
-  - Queue: each message goes to one consumer (SQS, RabbitMQ).
-  - Stream: each message can be read by many consumers (Kafka, Kinesis).
-- **Delivery guarantees.** At-most-once, at-least-once, exactly-once. The last one is harder than it sounds. Most "exactly-once" systems are actually "at-least-once with idempotent consumers".
-- **Idempotency.** What it means, how to design idempotent endpoints, what an idempotency key buys you.
-- **The outbox pattern.** How to publish an event reliably when your database write succeeds. The single most useful pattern in event-driven systems.
-- **CDC (change data capture).** How tools like Debezium turn database changes into streams.
-- **Backpressure.** What happens when producers are faster than consumers. Strategies: drop, slow down, buffer to disk.
-- **Dead letter queues.** What to do with messages that just refuse to process.
+```mermaid
+flowchart LR
+    U(["User"]):::u --> S(["Service"]):::s
+    S -->|"check first"| C[("Cache<br/>~90% hit")]:::cache
+    S -.->|"cache miss"| DB[("Database")]:::db
+    S -->|"event"| Q{{"Queue"}}:::q
+    Q --> W(["Async Worker"]):::s
 
-**By the end of this stage you can:** draw a system where a write goes to a database, an event is published to Kafka, and three downstream services react to it without the original write knowing or caring.
+    classDef u fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+    classDef cache fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+    classDef q fill:#ddd6fe,stroke:#6d28d9,color:#4c1d95
+```
+
+**Topics.**
+
+| Group | Topics |
+|-------|--------|
+| **Where caches live** | Browser. CDN. In-process. Distributed (Redis, Memcached). |
+| **Cache strategies** | Read-through, write-through, write-behind, cache-aside. |
+| **Eviction** | LRU, LFU, TTL. Why hit rate depends on this more than size. |
+| **The hard part** | Cache invalidation. Hot keys. Thundering herd. Request coalescing. |
+| **Queues vs streams** | SQS-style queue (one consumer). Kafka-style stream (many). |
+| **Delivery guarantees** | At-most-once, at-least-once, exactly-once. Why exactly-once is a lie. |
+| **Idempotency** | Idempotency keys. Dedup. Why every retry-safe endpoint needs them. |
+| **Patterns** | Outbox pattern. CDC (change data capture). Dead letter queue. Backpressure. |
+
+**Build this in week 12.** Add Redis in front of Postgres. Measure the hit rate. Add Kafka or NATS. Move click-counting out of the request path into a background consumer.
+
+**You are done when** you can draw a system where a write happens, an event is published, and three downstream services react without the original write caring.
 
 ---
 
 ## Stage 4: Scaling and reliability
 
-**What this stage is.** How a system survives growth and survives failure. Scaling and reliability are the same conversation: a system that cannot scale will fall over under load, and a system that cannot handle failure will fall over for unrelated reasons.
+**Goal.** Survive growth and survive failure. These are the same conversation.
 
-**Topics:**
+**The picture in your head.**
 
-- **Vertical vs horizontal scaling.** Bigger box vs more boxes. When each is right. Why "just buy a bigger server" is a real option for a surprising number of products.
-- **Stateless vs stateful services.** Why stateless services are easy to scale. Why the database is the hard part.
-- **Load balancers.**
-  - L4 (TCP-level) vs L7 (HTTP-level)
-  - Algorithms: round-robin, least-connections, IP-hash, consistent-hash
-  - Health checks: passive, active, hybrid
-  - TLS termination at the LB
-- **Auto-scaling.** When to add a box. When to remove one. The scale-up vs scale-down asymmetry. Why scaling down is harder than scaling up.
-- **Connection pooling.** Why every service that talks to a database needs one. What happens without it (you will see).
-- **Rate limiting.**
-  - Token bucket, leaky bucket, sliding window
-  - Where to enforce (gateway, service, both)
-  - Per-user, per-IP, per-endpoint
-- **Throttling vs rate limiting.** Throttle to slow down. Rate limit to reject. Two different responses to the same input.
-- **Timeouts, retries, and backoff.** The three settings that prevent the most outages. Retry budgets. Exponential backoff with jitter.
-- **Circuit breakers.** When to stop retrying entirely. Half-open state. How to drain traffic from a sick downstream.
-- **Bulkheads.** Isolating failures so one bad request type cannot eat all your threads.
-- **Graceful degradation.** What you serve when the database is down. What you serve when the recommendations engine is down. What you never compromise.
-- **Health checks.** What "healthy" means at different levels: process, app-ready, dependency-ready.
-- **Graceful shutdown.** What a service should do between "you have 30 seconds" and "the process dies".
-- **Blast radius.** What fails when one component fails. How to keep it small.
-- **Disaster recovery.**
-  - RTO (recovery time objective) and RPO (recovery point objective)
-  - Backups vs replicas vs both
-  - Multi-region failover
+```mermaid
+flowchart TB
+    U(["Users"]):::u --> LB[/"Load Balancer"/]:::edge
+    LB --> S1(["Service A"]):::s
+    LB --> S2(["Service B"]):::s
+    LB --> S3(["Service C"]):::s
+    S1 --> DB[("DB primary")]:::db
+    S2 --> DB
+    S3 --> DB
+    DB -.->|"if primary dies"| DB2[("DB standby")]:::db
 
-**By the end of this stage you can:** design a system that survives a database failure, a region failure, a botted traffic spike, and one downstream service going down at the same time.
+    classDef u fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef edge fill:#e2e8f0,stroke:#475569,color:#1e293b
+    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+```
+
+**Topics.**
+
+| Group | Topics |
+|-------|--------|
+| **Scaling shapes** | Vertical vs horizontal. Stateless vs stateful. Why the database is the hard part. |
+| **Load balancers** | L4 vs L7. Round-robin, least-connections, IP-hash, consistent-hash. Health checks. |
+| **Rate limiting** | Token bucket. Sliding window. Per-user, per-IP, per-endpoint. |
+| **Failure handling** | Timeouts. Retries with backoff. Jitter. Circuit breakers. Bulkheads. |
+| **Graceful degradation** | What you serve when the recommendations engine is down. What you never compromise on. |
+| **Capacity planning** | Auto-scaling. Connection pools. Headroom. |
+| **Disaster recovery** | RTO, RPO. Backups vs replicas. Region failover. Blast radius. |
+
+**Build this in week 16.** Put your service behind a load balancer. Run two copies. Kill one mid-request and watch what happens. Add a rate limiter on `POST /links`. Add a timeout and a retry on the cache call.
+
+**You are done when** you can take any system and answer "what happens if X dies?" for every box in the diagram.
 
 ---
 
-## Stage 5: Distributed systems, the hard parts
+## Stage 5: Distributed systems hard parts
 
-**What this stage is.** The genuinely subtle problems. You have a distributed system the moment you have more than one machine. This stage is what separates someone who can deploy a service from someone who can design one.
+**Goal.** Understand the genuinely subtle problems. This is where senior separates from mid.
 
-**Topics:**
+**The picture in your head.**
 
-- **The two-generals problem.** Why guaranteed delivery does not exist over an unreliable network.
-- **Clocks are lies.**
-  - Why machines disagree about time, even with NTP
-  - Logical clocks: Lamport timestamps, vector clocks
-  - Hybrid logical clocks (HLC)
-- **Consensus.**
-  - What "consensus" actually means (everyone agrees on one value)
-  - Paxos at a high level (do not start with the paper)
-  - Raft (which is Paxos for humans)
-  - Why most systems use a managed service (etcd, ZooKeeper, Consul) instead of rolling their own
-- **Leader election.** How a cluster picks a leader. What happens during the brief period when there is no leader. Split-brain.
-- **Distributed locks.** What they cost. Why most "use a distributed lock for this" answers are wrong. When they are actually right.
-- **Two-phase commit (2PC).** Why it works. Why it does not scale. Why nobody uses it for the path it was designed for.
-- **Saga pattern.** The realistic alternative to 2PC. Compensating transactions. How to design forward-only workflows.
-- **Eventual consistency in practice.** What "anti-entropy" means. Read repair, hinted handoff, Merkle trees.
-- **Quorum reads and writes.** N, R, W. Why R + W > N gives you strong consistency. The trade-off with availability.
-- **CRDTs (briefly).** Conflict-free replicated data types. What they buy you. Why you probably do not need them.
-- **Distributed transactions and isolation.** Why "snapshot isolation across regions" is hard. What Spanner does that Postgres cannot.
-- **Linearizability vs serializability.** The two strongest models. Why most databases offer one but not the other.
-- **Idempotency at scale.** Idempotency keys, deduplication windows, what to do when the same key arrives a year later.
-- **Geo-distribution.**
-  - Data residency (GDPR forces this)
-  - Cross-region latency budgets
-  - The "follow the sun" pattern
-  - When and how to do active-active
+```mermaid
+flowchart LR
+    subgraph US["US region"]
+        SU(["Service"]):::s
+        DU[("DB")]:::db
+    end
+    subgraph EU["EU region"]
+        SE(["Service"]):::s
+        DE[("DB")]:::db
+    end
+    DU <-.->|"replication + conflicts"| DE
+    SU <-->|"cross-region call<br/>~100ms"| SE
 
-**By the end of this stage you can:** explain why the eventual answer to most distributed systems questions is "it depends, and here are the four trade-offs."
+    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef db fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+```
+
+**Topics.**
+
+| Group | Topics |
+|-------|--------|
+| **Clocks lie** | Why machines disagree about time. Lamport timestamps. Vector clocks. Hybrid logical clocks. |
+| **Consensus** | What consensus actually means. Paxos (the idea). Raft (the readable version). Why most teams use etcd or ZooKeeper. |
+| **Leader election** | How a cluster picks a leader. Split-brain. The brief window without one. |
+| **Coordination** | Distributed locks. Why most "use a distributed lock" answers are wrong. When they are right. |
+| **Transactions across services** | Two-phase commit (and why nobody uses it). Saga pattern. Compensating actions. |
+| **Quorum** | N, R, W. Why R + W > N gives strong consistency. The availability cost. |
+| **Strong models** | Linearizability. Serializability. Why they are not the same. |
+| **Geo** | Data residency (GDPR forces this). Active-active vs active-passive. Follow-the-sun. |
+
+**Build this in week 20.** Set up Postgres replication with one primary and one replica. Force a failover. Time it. Read the Raft paper (the short one). Implement a tiny leader-election with three nodes using Redis (then realise why this is a bad idea, and remember that).
+
+**You are done when** every system design answer you give ends with "and here is the trade-off I am accepting."
 
 ---
 
 ## Stage 6: Real architectures
 
-**What this stage is.** Patterns that show up across many products. Once you know the components and the trade-offs, the same shapes appear over and over.
+**Goal.** Patterns that show up across many real products. Once you know the parts, the same shapes appear over and over.
 
-**Architectural patterns:**
+**Architectures to study.**
 
-- **News feed / activity stream.** Push fan-out, pull fan-out, hybrid. Why celebrities break naive designs.
-- **Real-time chat.** WebSockets, presence, ordering, receipts, mobile reconnect.
-- **Search.** Inverted index, ranking, relevance, autocomplete, typo tolerance.
-- **Recommendations.** Collaborative filtering, content-based, deep models. How they are served (not how they are trained).
-- **Video streaming.** Upload pipeline, transcoding ladder, adaptive bitrate (ABR), CDN, DRM.
-- **Ride sharing / geo-real-time.** Location ingest, matching, state machines, surge pricing.
-- **Payments.**
-  - Idempotency for double-charge prevention
-  - Eventual consistency between order, payment, fulfillment
-  - PCI scope
-  - Reconciliation
-- **Approval / workflow systems.** State machines, role resolution, audit trails, parallel approval, escalation.
-- **Notification systems.** Fan-out, channel routing, quiet hours, retries, exactly-one delivery per channel.
-- **Analytics pipelines.** Batch vs streaming, lambda architecture, ClickHouse vs Druid vs BigQuery, when to roll your own.
-- **Multi-tenant systems.** Pooled vs siloed, noisy-neighbor isolation, per-tenant scaling.
-- **Sandboxes and limits.** Per-tenant rate limits, per-tenant database quotas, per-tenant cost attribution.
+| Architecture | What stresses the design | Where it lives in the real world |
+|--------------|--------------------------|----------------------------------|
+| **News feed** | Push vs pull fan-out. Celebrity problem. | Twitter, Instagram, LinkedIn. |
+| **Real-time chat** | WebSockets. Presence. Ordering. Mobile reconnect. | WhatsApp, Slack, Discord. |
+| **Search** | Inverted index. Ranking. Typo tolerance. | Google, Algolia, Elasticsearch. |
+| **Recommendations** | Online serving (not training). Cold-start. | Spotify, Netflix, TikTok. |
+| **Video streaming** | Transcoding ladder. Adaptive bitrate. CDN. | YouTube, Netflix, Twitch. |
+| **Ride sharing** | Real-time location. Matching. State machine. | Uber, Lyft, Bolt. |
+| **Payments** | Idempotency. Reconciliation. PCI scope. | Stripe, Adyen, every bank. |
+| **Notifications** | Fan-out. Channel routing. Quiet hours. Retries. | Push notifications, email blasts. |
+| **Approval workflows** | State machine. Role resolution. Audit. | Workday, ServiceNow, Jira. |
 
-**Cross-cutting patterns:**
+**Cross-cutting patterns.**
 
-- **API gateways.** AuthN, rate limit, idempotency dedupe, request fan-out, response merging.
-- **Service mesh.** What Istio and Linkerd actually do. When you need one (rarely, but the case is real).
-- **Event-driven architecture.** Domain events vs integration events. Choreography vs orchestration.
-- **CQRS.** When it earns its complexity. When it does not.
-- **Event sourcing.** What you can do with it that you cannot with normal CRUD. The operational cost.
-- **Strangler fig pattern.** How to replace a legacy system without a big-bang migration.
+| Pattern | When it earns its complexity |
+|---------|------------------------------|
+| **API gateway** | Always, once you have more than two services. |
+| **Service mesh (Istio, Linkerd)** | Rarely. Only if you have 50+ services and a platform team. |
+| **CQRS** | When read and write paths look completely different. |
+| **Event sourcing** | When you need to replay history. Audit, finance, debugging. |
+| **Strangler fig** | When you are replacing a legacy system. The only safe way to do it. |
 
-**By the end of this stage you can:** look at any product (Spotify, Tinder, Robinhood, Notion) and sketch the high-level architecture from memory.
+**Build this in month 5-6.** Pick three products you use every day. Sketch their architecture before you research. Then research. Then compare. The gap between your guess and reality is the lesson.
+
+**You are done when** you can look at any product and sketch the high-level architecture from memory.
 
 ---
 
-## Stage 7: The interview craft (parallel from day one)
+## Stage 7: Interview craft (running in parallel from week 1)
 
-**What this stage is.** Doing well in the actual interview. Knowing system design is necessary but not sufficient. The interview has its own moves, and skipping them costs offers.
+**Goal.** Win the interview, not just know the material.
 
-**Topics:**
+**The five moves of a system design interview.**
 
-- **The opening five minutes.** What to do (clarify, list constraints) and what not to do (start drawing).
-- **The five questions that change the design.** Traffic, latency target, consistency needs, write vs read ratio, what is out of scope. Always these five, in some form.
-- **Back-of-envelope math.** Requests per second, storage per year, bandwidth per peak minute. Practice these until they take 90 seconds.
-- **The minimum viable architecture first.** Three boxes. Then add. Never start at the final architecture.
-- **The "decision" framing.** Each design decision has options, trade-offs, and your pick. Say all three out loud.
-- **Going deep when asked.** "Tell me more about how X works" means: "I want to see if you can defend X under pressure." Pick the part you know best.
-- **The follow-up scenarios.** A typical interview ends with 5-10 "what if" questions. These are scored heavier than the initial design.
-- **Drawing well on a whiteboard or shared doc.** Label every arrow. Number the steps. Use rectangles for services, cylinders for data stores, hexagons for queues.
-- **Handling not knowing.** "I do not know X for sure, but my best guess is Y because Z." This scores better than guessing confidently.
-- **Common traps.**
-  - Over-engineering from minute one
-  - Hash-of-URL shortcodes without acknowledging collisions
-  - 301 redirects when you needed 302
-  - "Just use Redis"
-  - Forgetting authentication
-  - Forgetting rate limiting
-  - Forgetting analytics
-  - Forgetting GDPR or data residency
-- **The bar at staff level.** What you have to add to a senior-level answer to be promoted by the interview panel.
+```mermaid
+flowchart LR
+    A[1. Clarify<br/>~5 min]:::a --> B[2. Capacity math<br/>~5 min]:::b
+    B --> C[3. Minimum architecture<br/>~10 min]:::c
+    C --> D[4. Deepen one part<br/>~15 min]:::d
+    D --> E[5. Follow-up scenarios<br/>~10 min]:::e
 
-**By the end of this stage you can:** walk into any system design interview, control the pace, and finish with the interviewer convinced you have done this for years.
+    classDef a fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef b fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef c fill:#fef3c7,stroke:#a16207,color:#713f12
+    classDef d fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+    classDef e fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+```
 
----
+**Topics.**
 
-## What "expert" actually looks like
+| Group | Topics |
+|-------|--------|
+| **Opening moves** | The five clarifying questions that change every design. Naming the constraints out loud. |
+| **Capacity math** | Requests per second. Storage per year. Bandwidth at peak. Practice until 90 seconds. |
+| **Drawing** | Rectangle = service. Cylinder = data store. Hexagon = queue. Label every arrow. |
+| **Decisions out loud** | Options, trade-offs, your pick. Say all three. |
+| **Going deep** | Pick the part you know best when asked. Never the part the interviewer just asked about. |
+| **Common traps** | Over-engineering from minute one. Forgetting auth. Forgetting rate limiting. Forgetting GDPR. |
+| **Handling "I do not know"** | "I am not certain, but my best guess is X because Y." Better than confident bluffing. |
 
-The roadmap above gets you to senior. Expert is a different thing. Expert is not knowing more concepts. It is having lived through enough production incidents that your intuition is right before your reasoning catches up.
+**Practice every day.** Pick one of the [practice problems on this track](/practice/system-design/). Read the question. Write your answer in a doc. Then read the solution. Compare. Repeat.
 
-Three traits separate experts from senior engineers:
-
-1. **They name the failure mode first, then the design.** A senior says "we add a cache". An expert says "we add a cache, and the cache stampede will hit when the popular key expires, so we need request coalescing".
-
-2. **They give numbers, not adjectives.** Not "fast", but "under 50ms P99". Not "scalable", but "linearly scalable to 10x current load on the same database tier". Not "reliable", but "99.95% available, with a 60-second failover window".
-
-3. **They explicitly state the trade-off.** Every choice has a cost. The expert says the cost out loud, names what they accept, and moves on. The senior tries to give an answer that has no cost.
-
-You become an expert by writing production code, breaking things, fixing them at 3 a.m., and reading post-mortems. There is no shortcut. The roadmap above is the foundation. Production experience is the rest.
+**You are done when** you can walk into any senior-level interview and finish with the interviewer convinced you have been doing this for years.
 
 ---
 
-## A suggested 6-month plan
+## The full topic matrix
 
-| Month | Focus | Output |
-|-------|-------|--------|
-| 1 | Stage 1 + start Stage 2 | Build a basic web service with a database. Add an index. Read your `EXPLAIN`. |
-| 2 | Finish Stage 2 + Stage 3 | Add Redis. Add a queue. Measure your cache hit rate. |
-| 3 | Stage 4 | Load-test the service. Add rate limiting. Introduce a failure and see what breaks. |
-| 4 | Stage 5 | Set up replication. Force a failover. Read the Raft paper. |
-| 5 | Stage 6 | Pick 3 real products. Sketch their architecture. Compare to your guess after research. |
-| 6 | Stage 7 + practice problems | Do one practice problem per day on this site. Write out the answer. Compare to the solution. |
+If you want a single page to scan and check off, this is it.
 
-Block one hour, every morning, for six months. That is enough.
+| Area | Stage 1 | Stage 2 | Stage 3 | Stage 4 | Stage 5 | Stage 6 |
+|------|---------|---------|---------|---------|---------|---------|
+| **Networking** | HTTP, TCP, DNS, TLS | | | TLS termination | Cross-region latency | |
+| **Data** | | SQL, NoSQL, indexes, ACID, replication, sharding | | | Quorum, consistency models | |
+| **Caching** | | | Redis, CDN, eviction, hot keys | | | |
+| **Messaging** | | | Kafka, SQS, outbox, CDC, dedup | | | |
+| **Scale** | Latency vs throughput | | | LB, auto-scale, rate limit | | |
+| **Reliability** | | | | Retries, circuit breakers, DR | Leader election, failover | |
+| **Distributed** | | | | | Clocks, consensus, Raft, Saga | Geo, multi-region |
+| **Patterns** | | | | | | API gateway, CQRS, ES |
+| **Architectures** | | | | | | Feed, chat, search, video |
+| **Interview** | Clarifying questions | Math | Drawing | Going deep | Follow-ups | Trade-offs |
+
+Every cell that is empty is intentional. Those topics belong to a later stage. Do not jump.
 
 ---
 
-## Where the practice problems fit
+## The 6-month plan, week by week
 
-The [problems on this track](/practice/system-design/) are the exam, not the textbook. Each problem assumes you already know the concepts from the relevant stage of this roadmap. The follow-up questions on each problem test the depth you built during Stage 5.
+```mermaid
+gantt
+    title 6-month learning plan
+    dateFormat YYYY-MM-DD
+    axisFormat %b
 
-Start by reading the roadmap stages that apply. Then attempt the problems. Then come back here when something does not make sense.
+    section Foundations
+    HTTP, TCP, DNS, TLS                :a1, 2026-01-01, 14d
+    Latency numbers, async basics      :a2, after a1, 14d
 
-> **One last note.** Nobody learns system design by reading. You learn it by designing, breaking, and fixing. Treat the roadmap as a map of the territory, not the territory itself. The territory is everything that lives in production. Go build something.
+    section Storage
+    SQL, indexes, EXPLAIN              :b1, after a2, 14d
+    NoSQL, replication, sharding       :b2, after b1, 14d
+
+    section Caching and queues
+    Redis, hot keys, stampede          :c1, after b2, 14d
+    Kafka, outbox, idempotency         :c2, after c1, 14d
+
+    section Scaling and reliability
+    Load balancers, rate limits        :d1, after c2, 14d
+    Retries, circuit breakers, DR      :d2, after d1, 14d
+
+    section Distributed systems
+    Clocks, consensus, Raft            :e1, after d2, 14d
+    Saga, geo, quorum                  :e2, after e1, 14d
+
+    section Real architectures
+    Feed, chat, search                 :f1, after e2, 14d
+    Video, ride share, payments        :f2, after f1, 14d
+
+    section Interview craft
+    One problem per day                :g1, 2026-01-01, 180d
+```
+
+Same plan as a table.
+
+| Month | Stage | Focus | Build by the end |
+|-------|-------|-------|------------------|
+| **1** | Foundations | HTTP, TCP, DNS, TLS, latency numbers, API styles. | A tiny HTTP server with two endpoints, deployed to a free tier. |
+| **2** | Storage | SQL, indexes, transactions, replication, sharding. | Move your data to Postgres. Read an EXPLAIN plan. |
+| **3** | Caching and async | Redis, eviction, hot keys, Kafka, idempotency. | Add Redis and Kafka. Measure cache hit rate. |
+| **4** | Scaling and reliability | Load balancers, retries, circuit breakers, DR. | Run two copies behind a LB. Kill one and watch. |
+| **5** | Distributed systems | Consensus, leader election, Saga, geo. | Force a Postgres failover. Time it. |
+| **6** | Real architectures + interview practice | Feed, chat, search, video, payments. | One practice problem per day. Compare to the solution. |
+
+Block one hour every morning. That is enough. Two hours is better. Three hours and you burn out.
+
+---
+
+## A short note before you start
+
+Nobody learns system design by reading. You learn it by drawing, building, breaking, and fixing. The roadmap is the map of the territory, not the territory.
+
+The territory is everything that lives in production. Go build something small. Break it on purpose. Then fix it.
+
+When you come back here, the [practice problems](/practice/system-design/) are the exam. Use them.
