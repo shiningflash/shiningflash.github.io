@@ -89,6 +89,22 @@ permalink: /practice/
     </div>
   </a>
 
+  <a class="pr-track-card" href="/practice/data-engineering/roadmap/">
+    <div class="pr-track-emoji">🗺️</div>
+    <h2 class="pr-track-name">
+      Data Engineering Roadmap
+      <span class="pr-track-status pr-track-status-live">Live</span>
+    </h2>
+    <p class="pr-track-desc">
+      A staged learning path from SQL fluency to running data systems at scale. SQL, modeling, batch, streaming, storage, reliability, and the interview craft.
+    </p>
+    <div class="pr-track-meta">
+      <span><strong>7</strong> stages</span>
+      <span>Beginner to Expert</span>
+      <span>No prerequisites</span>
+    </div>
+  </a>
+
 </section>
 
 > **Tip:** Each problem hides its solution by default. Try the problem first; the solution unlocks with one click and stays unlocked for your next visit.
