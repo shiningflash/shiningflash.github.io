@@ -17,30 +17,83 @@ Synchronous means the caller waits for the answer before doing anything else. As
 
 If you make everything sync, slow downstreams take you down with them. If you make everything async, you spend the rest of your career debugging "I clicked the button but nothing happened."
 
-## The picture in your head
+## Sync: the caller waits, blocked
+
+The activation bar on the server is the time it is busy. The activation bar on the client is the time it is **stuck**, holding a thread or a user staring at a spinner, unable to do anything else.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
+
+    C->>+S: submit work
+    Note right of S: doing the work...<br/>(4 seconds)
+    S->>-C: final result
+    Note over C: Client was blocked the whole time
+```
+
+If the server takes 4 seconds, the caller waits 4 seconds. If the server is down, the caller errors. The simplicity is the appeal; the coupling is the cost.
+
+## Async: the caller hands off, comes back for the result
+
+The same work, but the API accepts the job, returns immediately, and a worker handles the real work in the background. The caller learns the outcome through a separate channel: a webhook, a polled status endpoint, or a streaming connection.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant API as API
+    participant Q as Queue
+    participant W as Worker
+
+    C->>+API: submit work
+    API->>Q: enqueue job (id=42)
+    API->>-C: accepted, id=42
+    Note over C: Client is free again
+
+    W->>+Q: pull job 42
+    Q->>-W: job 42
+    Note right of W: doing the work...<br/>(4 seconds)
+
+    W-->>C: webhook OR<br/>C polls status endpoint
+    Note over C: Client learns the outcome later,<br/>without holding a thread
+```
+
+The work still takes 4 seconds. Async did not make it faster. What it changed is **who waits**: not the user-facing thread, and not the upstream service. The cost of async is the extra moving parts: a queue, a worker, and a way to deliver the result.
+
+## The four common ways to do async
+
+Async is a shape, not one technology. Here are the four patterns you will encounter:
 
 ```mermaid
 flowchart TB
-    subgraph SYNC["Synchronous — caller blocks until the answer comes back"]
+    subgraph QUEUE["1. Queue + worker (most common)"]
         direction LR
-        SC(["Client"]):::client
-        SS[("Server")]:::server
-        SC -->|"request"| SS
-        SS -.->|"...4 seconds of work..."| SS
-        SS -->|"response"| SC
+        QC(["Caller"]):::client -->|"submit"| QA[("API")]:::server
+        QA ==> QQ[("Queue")]:::queue
+        QQ ==> QW[("Worker")]:::server
+        QW -.->|"status"| QC
     end
 
-    subgraph ASYNC["Asynchronous — caller hands off, comes back for the result"]
+    subgraph WEBHOOK["2. Webhook callback"]
         direction LR
-        AC(["Client"]):::client
-        AS[("API")]:::server
-        Q[("Queue")]:::queue
-        W[("Worker")]:::server
-        AC -->|"submit job"| AS
-        AS -->|"accepted, id=42"| AC
-        AS ==>|"enqueue"| Q
-        Q ==> W
-        W -.->|"webhook or polled result"| AC
+        WC(["Caller"]):::client -->|"submit, register URL"| WA[("API")]:::server
+        WA -.->|"later: HTTP POST result"| WC
+    end
+
+    subgraph POLL["3. Polling"]
+        direction LR
+        PC(["Caller"]):::client -->|"submit"| PA[("API")]:::server
+        PA -->|"id=42"| PC
+        PC -->|"GET /jobs/42"| PA
+        PC -->|"GET /jobs/42 ..."| PA
+    end
+
+    subgraph STREAM["4. Streaming connection"]
+        direction LR
+        SC(["Caller"]):::client ==>|"open WebSocket / gRPC stream"| SA[("API")]:::server
+        SA ==>|"events as they happen"| SC
     end
 
     classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
@@ -48,14 +101,7 @@ flowchart TB
     classDef queue fill:#fed7aa,stroke:#c2410c,color:#7c2d12,stroke-width:1.5px
 ```
 
-In the sync case, the client's thread sits idle for the full duration of the request. In the async case, the server returns immediately with a handle, processes the work in the background, and the client either polls for the result, gets a webhook, or watches a subscription.
-
-## The four common ways to do async
-
-- **Background worker with a queue.** The web layer pushes a job onto a queue (SQS, RabbitMQ, Redis, Postgres-as-a-queue). A pool of workers picks them up and runs them. The caller gets a job ID and checks status later.
-- **Webhook.** The caller registers a URL. When the work is done, the server makes an HTTP call to that URL with the result. Common for B2B integrations.
-- **Polling.** The caller asks "are we there yet?" every few seconds. Crude, but it works through every proxy and firewall, and you only need HTTP.
-- **Streaming connection.** WebSocket or gRPC server-streaming. The server pushes updates over an open connection. Best feel for the user, more state for you to manage.
+Queue + worker is the default for "real" background work (long-running, retryable, may fail). Webhook is the right choice for B2B integrations where the caller has its own server. Polling is the lowest-tech option and works through every firewall and proxy. Streaming gives the best user feel for live updates, at the cost of holding a connection open.
 
 ## When to pick each
 

@@ -18,7 +18,9 @@ Four ways to ask a server to do something. They look like alternatives, but they
 
 Each one is the right answer in some situation. None is the right answer everywhere.
 
-## The picture in your head
+## The shape of a request, four ways
+
+Same goal: fetch user 123 from the server. Four different request shapes, four different opinions on how the client and server should agree on a contract.
 
 ```mermaid
 flowchart TB
@@ -26,39 +28,68 @@ flowchart TB
         direction LR
         RC(["Client"]):::client
         RS[("Server")]:::server
-        RC -->|"GET /users/123"| RS
-        RS -->|"full user JSON"| RC
+        RC -->|"GET /users/123<br/>Accept: application/json"| RS
+        RS -->|"HTTP 200<br/>{ id, name, email, ... full user }"| RC
     end
 
-    subgraph RPC["RPC — call a function by name"]
+    subgraph RPC["RPC — call a named function over HTTP"]
         direction LR
         PC(["Client"]):::client
         PS[("Server")]:::server
-        PC -->|"POST /api<br/>{method: getUser, id: 123}"| PS
-        PS -->|"user JSON"| PC
+        PC -->|"POST /api<br/>{ method: getUser, args: { id: 123 } }"| PS
+        PS -->|"HTTP 200<br/>{ result: { id, name, email, ... } }"| PC
     end
 
     subgraph GRPC["gRPC — typed Protobuf over HTTP/2"]
         direction LR
         GC(["Client"]):::client
         GS[("Server")]:::server
-        GC -->|"UserService.GetUser(id=123)"| GS
-        GS -->|"UserReply  (binary, schema-checked)"| GC
+        GC -->|"UserService.GetUser<br/>GetUserRequest { id = 123 }"| GS
+        GS -->|"UserReply  (binary, schema-checked)<br/>{ id, name, email, ... }"| GC
     end
 
-    subgraph GQL["GraphQL — client names the fields it needs"]
+    subgraph GQL["GraphQL — client names exactly the fields it wants"]
         direction LR
         QC(["Client"]):::client
         QS[("Server")]:::server
-        QC -->|"{ user(id:123) { name, email } }"| QS
-        QS -->|"just name + email"| QC
+        QC -->|"POST /graphql<br/>{ user(id:123) { name, email } }"| QS
+        QS -->|"{ user: { name, email } }<br/>only the requested fields"| QC
     end
 
     classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
     classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
 ```
 
-Same goal, four different request shapes. The differences in shape come from different opinions about how clients and servers should agree on a contract.
+## Where they really diverge: roundtrips
+
+The four shapes look similar for a trivial fetch. Real apps want more than one thing at a time, and that is where REST and GraphQL diverge. Picture a mobile screen that needs a user's name, avatar, and their last five post titles:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant M as Mobile app
+    participant API as Server
+
+    rect rgba(220, 38, 38, 0.06)
+    Note over M,API: REST — one endpoint per resource
+    M->>+API: GET /users/123
+    API->>-M: full user object (40 fields)
+    M->>+API: GET /users/123/posts?limit=5
+    API->>-M: 5 full post objects (20 fields each)
+    Note over M,API: 2 round trips, lots of unused fields delivered
+    end
+
+    rect rgba(22, 163, 74, 0.06)
+    Note over M,API: GraphQL — one request, client-picked fields
+    M->>+API: POST /graphql<br/>{ user(id:123) { name, avatar, lastPosts(n:5) { title } } }
+    API->>-M: name + avatar + 5 post titles, nothing else
+    Note over M,API: 1 round trip, exact payload
+    end
+```
+
+On a fast wired connection, the difference is small. On a phone at 200 ms round-trip time, REST spends 400 ms on network alone before any rendering; GraphQL spends 200 ms, with a fraction of the payload. This is the cellular-era story that drove GraphQL out of Facebook and into everyone else's mobile stack.
+
+The catch is on the server. That one GraphQL query can hide an **N+1 query problem**: the resolver for `lastPosts` fires one database round trip per user. Without batching (DataLoader and friends), the backend pays for the convenience. Plan for it on day one.
 
 ## What each one really is
 

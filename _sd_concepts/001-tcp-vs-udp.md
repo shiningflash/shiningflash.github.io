@@ -17,34 +17,67 @@ Most applications cannot deal with this directly. You want to write `send("hello
 
 TCP gives you that plumbing for free. UDP says "no thanks, I will handle it myself."
 
-## The picture in your head
+## TCP: a connection with a handshake
+
+Before any data flows, the two sides agree to talk. This is the **three-way handshake**: one round trip of pure setup before the first byte of payload.
 
 ```mermaid
-flowchart TB
-    subgraph TCP["TCP — connection-oriented, ordered, reliable"]
-        direction LR
-        TC(["Client"]):::client
-        TS[("Server")]:::server
-        TC -->|"1 . SYN"| TS
-        TS -->|"2 . SYN-ACK"| TC
-        TC -->|"3 . ACK"| TS
-        TC ==>|"ordered byte stream<br/>auto-retransmits on loss"| TS
-    end
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
 
-    subgraph UDP["UDP — connectionless, unordered, lossy"]
-        direction LR
-        UC(["Client"]):::client
-        US[("Server")]:::server
-        UC -.->|"datagram 1"| US
-        UC -.->|"datagram 2  (lost)"| US
-        UC -.->|"datagram 3"| US
-    end
-
-    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
-    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    C->>S: SYN  (let's talk)
+    S->>C: SYN-ACK  (I hear you, let's talk)
+    C->>S: ACK  (confirmed)
+    Note over C,S: Connection established
+    C->>+S: HTTP request
+    S->>-C: HTTP response
 ```
 
-TCP opens a connection with a handshake, then guarantees that whatever you send arrives in order. Lost packets get retransmitted automatically. UDP just throws datagrams over the wall. Some arrive. Some do not. Some arrive in the wrong order. The application gets to deal with it (or not).
+That handshake costs one round trip. On a 100 ms link, that is 100 ms of latency before you have sent anything useful. TCP charges this cost once per connection, which is why HTTP/2 reuses one TCP connection for many requests.
+
+## TCP: what happens when a packet is lost
+
+This is where TCP earns its keep. The protocol notices loss, retransmits, and delivers everything in order. The application sees a clean ordered stream, no matter what the network did underneath.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
+
+    C->>S: segment 1
+    C->>S: segment 2
+    C-xS: segment 3  (lost in transit)
+    C->>S: segment 4
+    S->>C: ACK 1, ACK 2
+    Note over S: Segment 4 received but buffered.<br/>Cannot deliver until 3 arrives. (head-of-line)
+    Note over C: ACK 3 never came. Timeout fires.
+    C->>S: re-transmit segment 3
+    S->>C: ACK 3, ACK 4
+    Note over S: Deliver 3, then 4. Application sees ordered stream.
+```
+
+This is also where TCP's cost hides. Segment 4 was available the whole time but had to wait. That is **head-of-line blocking**, and it shows up again in [HTTP/2 over TCP](/practice/system-design/concepts/002-http2-and-http3/).
+
+## UDP: throw it and hope
+
+No handshake. No retransmits. No ordering. The protocol gives you one job: get a datagram from A to B. If it arrives, great. If not, your problem.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as Server
+
+    C-)S: datagram 1
+    C-xS: datagram 2  (lost, nobody notices)
+    C-)S: datagram 3
+    Note over C,S: No retransmit. No ordering. No backoff.<br/>The application decides what (if anything) to do.
+```
+
+The dashed arrow tip means "no acknowledgement expected." The application either does not care (live video, telemetry), or it builds its own reliability on top of UDP (QUIC, custom protocols, game netcode).
 
 ## What TCP gives you, and what it costs
 

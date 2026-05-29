@@ -17,36 +17,84 @@ HTTP/1 was one phone line per request. HTTP/2 lets many requests share one phone
 
 **The HTTP/3 fix.** HTTP/3 throws out TCP and runs on QUIC over UDP. QUIC does its own ordering and retries, but per-stream. A lost packet only stalls its own stream, not the other 50 things downloading in parallel.
 
-## The picture in your head
+## HTTP/1.1: one connection per request, then queue
+
+A page needs 60 assets. Each one is a separate request. HTTP/1.1 cannot reuse a connection for two requests in parallel, so browsers open up to 6 connections per origin. Requests beyond the 6th wait. A slow image blocks every other request on its connection.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant S as Server
+
+    Note over B,S: Open TCP connection 1
+    B->>+S: GET /index.html
+    S->>-B: 200 OK
+    Note over B,S: Open TCP connection 2
+    B->>+S: GET /app.css
+    S->>-B: 200 OK
+    Note over B,S: Open TCP connection 3
+    B->>+S: GET /app.js
+    S->>-B: 200 OK
+    Note over B: 6 connections in parallel max,<br/>then everything queues.
+```
+
+## HTTP/2: many streams share one connection
+
+One TCP connection. Many request/response pairs interleaved on it as independent streams. Headers compressed. Binary framing. No more "6 connection limit" problem.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant S as Server
+
+    Note over B,S: One TCP connection, three streams in flight
+    par stream 1
+        B->>S: GET /index.html
+        S-->>B: 200 OK
+    and stream 3
+        B->>S: GET /app.css
+        S-->>B: 200 OK
+    and stream 5
+        B->>S: GET /app.js
+        S-->>B: 200 OK
+    end
+    Note over B,S: All three responses interleaved over a single TCP stream.
+```
+
+This is the big win, and it is huge. Page-load time often drops by a third just by turning HTTP/2 on at the edge.
+
+## The remaining problem: TCP head-of-line blocking
+
+HTTP/2 has multiple streams, but they share one TCP connection. TCP delivers bytes in order. If one packet is lost, every stream waiting on bytes from that connection stalls until the retransmit catches up, even streams that did not need the lost packet.
+
+HTTP/3 sits on QUIC instead of TCP. QUIC handles ordering per stream, so loss on one stream does not stall the others.
 
 ```mermaid
 flowchart TB
-    subgraph H1["HTTP/1.1 — one TCP connection per request, queued"]
+    subgraph H2BLOCK["HTTP/2 over TCP — one lost packet stalls every stream"]
         direction LR
-        C1(["Browser"]):::client
-        C1 -->|"TCP conn 1"| S1[("Server")]:::server
-        C1 -->|"TCP conn 2"| S1
-        C1 -.->|"conn 3 — queued"| S1
+        T2[["TCP connection"]]:::infra
+        T2 ==> A2[("Stream A: delivered")]:::server
+        T2 -.->|"packet lost"| B2[("Stream B")]:::dead
+        T2 -.->|"waits for B's retransmit"| C2[("Stream C: STALLED")]:::dead
     end
 
-    subgraph H2["HTTP/2 — multiplexed streams over a single TCP connection"]
+    subgraph H3NOBLOCK["HTTP/3 over QUIC — streams are independent"]
         direction LR
-        C2(["Browser"]):::client
-        C2 ==>|"one TCP"| MUX2[["multiplexed<br/>streams"]]:::infra
-        MUX2 ==> S2[("Server")]:::server
+        T3[["QUIC connection"]]:::infra
+        T3 ==> A3[("Stream A: delivered")]:::server
+        T3 -.->|"packet lost"| B3[("Stream B")]:::dead
+        T3 ==> C3[("Stream C: still delivered")]:::server
     end
 
-    subgraph H3["HTTP/3 — independent streams on QUIC over UDP"]
-        direction LR
-        C3(["Browser"]):::client
-        C3 ==>|"QUIC / UDP"| MUX3[["independent streams<br/>no head-of-line block"]]:::infra
-        MUX3 ==> S3[("Server")]:::server
-    end
-
-    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
     classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
     classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
+    classDef dead fill:#fecaca,stroke:#b91c1c,color:#7f1d1d,stroke-width:1.5px
 ```
+
+This is why HTTP/3 wins on mobile and lossy networks. On a perfect wired connection, there is nothing to lose, so HTTP/2 and HTTP/3 perform almost the same.
 
 ## What HTTP/2 actually does
 

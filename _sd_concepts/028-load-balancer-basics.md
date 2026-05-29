@@ -80,7 +80,57 @@ flowchart LR
 
 The user sees no error. Traffic just routes around B. When B recovers and starts passing health checks again, the load balancer puts it back in the pool.
 
-This is also how you do **rolling deploys**. Take server B out of the pool. Upgrade it. Put it back. Repeat with A and C. No downtime, no maintenance window.
+## Rolling deploys: the same trick, on purpose
+
+Once the LB can take a backend out and put it back in safely, you can do zero-downtime deploys. Drain one instance at a time, upgrade it, return it to the pool, repeat. Users see no interruption.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Op as Deploy script
+    participant LB as Load balancer
+    participant A as Server A (v1)
+    participant B as Server B (v1)
+    participant C as Server C (v1)
+
+    Op->>LB: drain A
+    LB-->>A: stop sending new requests
+    Op->>A: upgrade to v2, run readiness check
+    A->>LB: I am healthy on v2
+    LB-->>A: return to pool
+
+    Op->>LB: drain B
+    LB-->>B: stop sending new requests
+    Op->>B: upgrade to v2
+    B->>LB: I am healthy on v2
+    LB-->>B: return to pool
+
+    Note over Op,C: ... same for C ...<br/>At no point is the whole pool down.
+```
+
+## TLS termination: one place, not three
+
+A common second job for the load balancer is **terminating TLS**. Browsers talk HTTPS to the LB; the LB talks plain HTTP (or HTTPS, if you want defence in depth) to backends inside the trusted network. You manage one certificate, not one per backend.
+
+```mermaid
+flowchart LR
+    U(["Browser"]):::client
+    LB[["Load balancer<br/>TLS terminates here"]]:::infra
+    S1[("Server A")]:::server
+    S2[("Server B")]:::server
+    S3[("Server C")]:::server
+
+    U ==>|"HTTPS (encrypted)"| LB
+    LB ==>|"HTTP (private network)"| S1
+    LB ==>|"HTTP (private network)"| S2
+    LB ==>|"HTTP (private network)"| S3
+
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+```
+
+You rotate the certificate on the LB only. Backends do not even know HTTPS is involved. This alone is often the reason small teams put a load balancer in front of a single backend.
 
 ## When you actually need one
 

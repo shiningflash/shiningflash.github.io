@@ -23,42 +23,58 @@ A useful analogy: a highway between two cities.
 
 You can widen the highway (more bandwidth) and not change the trip time at all. You can build a tunnel and cut the trip in half (lower latency). Both make the highway better, but in different ways, for different reasons.
 
-## The picture in your head
+## The highway analogy in one picture
+
+Latency is one car's trip time. Throughput is cars per hour arriving at the destination. Bandwidth is how many lanes the highway has. All three live on the same road; widening or shortening or speeding up changes a different number.
 
 ```mermaid
-flowchart TB
-    subgraph LAT["Latency — time for one request to complete"]
-        direction LR
-        LC(["Client"]):::client
-        LS[("Server")]:::server
-        LC -->|"75 ms"| LS
-        LS -->|"75 ms"| LC
+flowchart LR
+    subgraph A["City A"]
+        direction TB
+        S1([Sender]):::client
+    end
+    subgraph B["City B"]
+        direction TB
+        R1([Receiver]):::server
     end
 
-    subgraph THR["Throughput — requests finished per second"]
-        direction LR
-        TC1(["Client 1"]):::client
-        TC2(["Client 2"]):::client
-        TC3(["Client 3"]):::client
-        TS[("Server pool")]:::server
-        OUT(["completed"]):::done
-        TC1 ==> TS
-        TC2 ==> TS
-        TC3 ==> TS
-        TS ==>|"5,000 req/s"| OUT
-    end
+    A ==>|"4 lanes  =  bandwidth<br/><br/>cars per hour  =  throughput<br/><br/>one car's trip time  =  latency"| B
 
-    subgraph BAN["Bandwidth — bytes per second the link can carry"]
-        direction LR
-        BC(["Sender"]):::client
-        BS[("Receiver")]:::server
-        BC ==>|"1 Gbps pipe"| BS
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:2px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px
+```
+
+You can widen the highway and not change the trip time at all. You can build a tunnel and cut the trip time in half. Both make the road better, in different ways, for different reasons.
+
+## How throughput, concurrency, and latency tie together
+
+There is a small piece of math that explains most "we need more capacity" conversations:
+
+> **throughput  =  concurrency  /  latency**
+
+If each request takes 100 ms and you have 100 things in flight at once, you finish 1,000 per second. To finish more, either each one takes less time, or you allow more in flight.
+
+```mermaid
+flowchart LR
+    IN(["Incoming<br/>5,000 req/s"]):::client
+    subgraph POOL["Concurrency = N workers in flight"]
+        direction TB
+        W1[("Worker 1")]:::server
+        W2[("Worker 2")]:::server
+        W3[("Worker ...")]:::server
+        WN[("Worker N")]:::server
     end
+    OUT(["Completed<br/>5,000 req/s"]):::done
+
+    IN ==> POOL
+    POOL ==>|"each request takes ~latency ms"| OUT
 
     classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
     classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
     classDef done fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
 ```
+
+Adding workers raises throughput **only if latency stays flat**. The trap is that more workers usually contend for the same downstream (database, downstream service), so latency creeps up as concurrency grows. You hit a wall not at the worker count, but at the next bottleneck.
 
 ## Numbers worth knowing
 
