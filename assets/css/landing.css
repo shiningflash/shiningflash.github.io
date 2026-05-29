@@ -2,7 +2,48 @@
  * Landing page — bento grid.
  * Hero band on top, asymmetric tile grid below. Each tile carries an
  * accent color so importance reads at a glance.
+ *
+ * This file is self-contained: it defines the --pr-* variables it
+ * needs in both light and dark modes, so it works without loading
+ * practice.css.
  */
+
+/* ─────────── Theme tokens (light) ─────────── */
+:root {
+  --pr-c-blue:   #3b82f6;
+  --pr-c-violet: #8b5cf6;
+  --pr-c-green:  #10b981;
+  --pr-c-amber:  #f59e0b;
+  --pr-c-teal:   #14b8a6;
+  --pr-c-pink:   #ec4899;
+
+  --pr-card-bg:    #ffffff;
+  --pr-card-shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 0 rgba(0,0,0,.02);
+  --pr-card-shadow-hover: 0 8px 24px rgba(0,0,0,.08), 0 2px 0 rgba(0,0,0,.02);
+  --pr-border: rgba(0,0,0,.08);
+  --pr-text-muted: #6b7280;
+  --pr-chip-bg: rgba(99,102,241,.07);
+}
+
+/* ─────────── Theme tokens (dark) ─────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    --pr-card-bg: #1f2630;
+    --pr-card-shadow: 0 1px 0 rgba(255,255,255,.02), 0 1px 2px rgba(0,0,0,.4);
+    --pr-card-shadow-hover: 0 8px 24px rgba(0,0,0,.5), 0 2px 0 rgba(255,255,255,.02);
+    --pr-border: rgba(255,255,255,.08);
+    --pr-text-muted: #9ca3af;
+    --pr-chip-bg: rgba(139,92,246,.10);
+  }
+}
+[data-mode="dark"] {
+  --pr-card-bg: #1f2630;
+  --pr-card-shadow: 0 1px 0 rgba(255,255,255,.02), 0 1px 2px rgba(0,0,0,.4);
+  --pr-card-shadow-hover: 0 8px 24px rgba(0,0,0,.5), 0 2px 0 rgba(255,255,255,.02);
+  --pr-border: rgba(255,255,255,.08);
+  --pr-text-muted: #9ca3af;
+  --pr-chip-bg: rgba(139,92,246,.10);
+}
 
 /* ─────────── Hero ─────────── */
 .lp-hero {
@@ -388,20 +429,49 @@ a.lp-tile-connect:hover .lp-connect-link {
   .lp-hero-meta { gap: .8rem 1.3rem; }
 }
 
-/* ─────────── Dark mode tweaks ─────────── */
-html[data-mode="dark"] .lp-hero,
-html[data-mode="dark"] .lp-tile {
-  background-color: var(--pr-card-bg);
-}
-html[data-mode="dark"] .lp-tile-hero {
+/* ─────────── Dark mode gradient boosts ─────────── */
+/* Cards already pick up --pr-card-bg via the token block; these rules
+   just brighten the radial washes so they still read in dark mode. */
+[data-mode="dark"] .lp-tile-hero {
   background:
-    radial-gradient(600px 200px at 100% 0%, rgba(139,92,246,.18), transparent 60%),
-    radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.18), transparent 60%),
+    radial-gradient(600px 200px at 100% 0%, rgba(139,92,246,.20), transparent 60%),
+    radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.20), transparent 60%),
     var(--pr-card-bg);
 }
-html[data-mode="dark"] .lp-hero {
+[data-mode="dark"] .lp-hero {
   background:
-    radial-gradient(900px 240px at 15% 0%, rgba(59,130,246,.18), transparent 60%),
-    radial-gradient(700px 200px at 90% 100%, rgba(139,92,246,.16), transparent 60%),
+    radial-gradient(900px 240px at 15% 0%, rgba(59,130,246,.20), transparent 60%),
+    radial-gradient(700px 200px at 90% 100%, rgba(139,92,246,.18), transparent 60%),
     var(--pr-card-bg);
+}
+[data-mode="dark"] .lp-eyebrow {
+  background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(139,92,246,.18));
+  border-color: rgba(139,92,246,.35);
+  color: #c4b5fd;
+}
+[data-mode="dark"] .lp-tile-eyebrow { color: #c4b5fd; }
+[data-mode="dark"] .lp-mini-card { background: rgba(139,92,246,.10); }
+[data-mode="dark"] .lp-tile-hero:hover .lp-mini-card { background: rgba(139,92,246,.18); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .lp-tile-hero {
+    background:
+      radial-gradient(600px 200px at 100% 0%, rgba(139,92,246,.20), transparent 60%),
+      radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.20), transparent 60%),
+      var(--pr-card-bg);
+  }
+  :root:not([data-mode="light"]) .lp-hero {
+    background:
+      radial-gradient(900px 240px at 15% 0%, rgba(59,130,246,.20), transparent 60%),
+      radial-gradient(700px 200px at 90% 100%, rgba(139,92,246,.18), transparent 60%),
+      var(--pr-card-bg);
+  }
+  :root:not([data-mode="light"]) .lp-eyebrow {
+    background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(139,92,246,.18));
+    border-color: rgba(139,92,246,.35);
+    color: #c4b5fd;
+  }
+  :root:not([data-mode="light"]) .lp-tile-eyebrow { color: #c4b5fd; }
+  :root:not([data-mode="light"]) .lp-mini-card { background: rgba(139,92,246,.10); }
+  :root:not([data-mode="light"]) .lp-tile-hero:hover .lp-mini-card { background: rgba(139,92,246,.18); }
 }
