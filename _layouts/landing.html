@@ -30,6 +30,82 @@ refactor: true
       <span><strong>16K+</strong> following</span>
     </div>
   </div>
+
+  <!-- Living mini-architecture: request packets flow client → lb → 3 svc → db -->
+  <aside class="lp-hero-visual" aria-hidden="true">
+    <svg class="lp-arch" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="lp-arch-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge>
+            <feMergeNode in="b"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Edges (under nodes so packets appear to enter / exit cleanly) -->
+      <path id="lp-arch-e1" class="lp-arch-edge" d="M 70 110 L 110 110"/>
+      <path id="lp-arch-e2" class="lp-arch-edge" d="M 170 110 L 225 50"/>
+      <path id="lp-arch-e3" class="lp-arch-edge" d="M 170 110 L 225 110"/>
+      <path id="lp-arch-e4" class="lp-arch-edge" d="M 170 110 L 225 170"/>
+      <path id="lp-arch-e5" class="lp-arch-edge" d="M 285 50 L 325 110"/>
+      <path id="lp-arch-e6" class="lp-arch-edge" d="M 285 110 L 325 110"/>
+      <path id="lp-arch-e7" class="lp-arch-edge" d="M 285 170 L 325 110"/>
+
+      <!-- Nodes -->
+      <g class="lp-arch-node">
+        <rect x="10"  y="94"  width="60" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="40"  y="114" class="lp-arch-label">user</text>
+      </g>
+      <g class="lp-arch-node">
+        <rect x="110" y="94"  width="60" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="140" y="114" class="lp-arch-label">lb</text>
+      </g>
+      <g class="lp-arch-node">
+        <rect x="225" y="34"  width="60" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="255" y="54"  class="lp-arch-label">svc</text>
+      </g>
+      <g class="lp-arch-node">
+        <rect x="225" y="94"  width="60" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="255" y="114" class="lp-arch-label">svc</text>
+      </g>
+      <g class="lp-arch-node">
+        <rect x="225" y="154" width="60" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="255" y="174" class="lp-arch-label">svc</text>
+      </g>
+
+      <!-- DB cylinder: body (left side + bottom arc + right side) then top ellipse -->
+      <g class="lp-arch-node lp-arch-db">
+        <path class="lp-arch-shape" d="M 325 92 L 325 128 a 30 6 0 0 0 60 0 L 385 92"/>
+        <ellipse cx="355" cy="92" rx="30" ry="6" class="lp-arch-shape lp-arch-db-top"/>
+        <text x="355" y="116" class="lp-arch-label">db</text>
+      </g>
+
+      <!-- Packets: one per edge, negative begin so they enter pre-distributed -->
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="2.6s" begin="0s"    repeatCount="indefinite"><mpath href="#lp-arch-e1"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="3.0s" begin="-0.4s" repeatCount="indefinite"><mpath href="#lp-arch-e2"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="2.8s" begin="-1.1s" repeatCount="indefinite"><mpath href="#lp-arch-e3"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="3.0s" begin="-1.8s" repeatCount="indefinite"><mpath href="#lp-arch-e4"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="3.2s" begin="-2.5s" repeatCount="indefinite"><mpath href="#lp-arch-e5"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="3.0s" begin="-0.9s" repeatCount="indefinite"><mpath href="#lp-arch-e6"/></animateMotion>
+      </circle>
+      <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
+        <animateMotion dur="3.2s" begin="-2.0s" repeatCount="indefinite"><mpath href="#lp-arch-e7"/></animateMotion>
+      </circle>
+    </svg>
+  </aside>
 </section>
 
 <!-- ─────────── BENTO ─────────── -->

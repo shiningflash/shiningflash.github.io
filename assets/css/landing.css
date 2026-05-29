@@ -23,6 +23,10 @@
   --pr-border: rgba(0,0,0,.08);
   --pr-text-muted: #6b7280;
   --pr-chip-bg: rgba(99,102,241,.07);
+
+  /* architecture visual strokes (more visible than --pr-border) */
+  --lp-arch-stroke: rgba(0,0,0,.22);
+  --lp-arch-edge:   rgba(0,0,0,.16);
 }
 
 /* ─────────── Theme tokens (dark) ─────────── */
@@ -34,6 +38,9 @@
     --pr-border: rgba(255,255,255,.08);
     --pr-text-muted: #9ca3af;
     --pr-chip-bg: rgba(139,92,246,.10);
+
+    --lp-arch-stroke: rgba(255,255,255,.28);
+    --lp-arch-edge:   rgba(255,255,255,.20);
   }
 }
 [data-mode="dark"] {
@@ -43,6 +50,9 @@
   --pr-border: rgba(255,255,255,.08);
   --pr-text-muted: #9ca3af;
   --pr-chip-bg: rgba(139,92,246,.10);
+
+  --lp-arch-stroke: rgba(255,255,255,.28);
+  --lp-arch-edge:   rgba(255,255,255,.20);
 }
 
 /* ─────────── Hero ─────────── */
@@ -57,8 +67,57 @@
   border: 1px solid var(--pr-border);
   position: relative;
   overflow: hidden;
+  /* two columns: text body + live architecture visual */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(280px, 36%, 420px));
+  gap: 2rem;
+  align-items: center;
 }
-.lp-hero-inner { max-width: 64ch; }
+.lp-hero-inner { max-width: 64ch; min-width: 0; }
+
+/* ─────────── Living mini-architecture (right side of hero) ─────────── */
+.lp-hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.lp-arch {
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  max-height: 240px;
+  overflow: visible;
+}
+.lp-arch-edge {
+  fill: none;
+  stroke: var(--lp-arch-edge);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.lp-arch-shape {
+  fill: var(--pr-card-bg);
+  stroke: var(--lp-arch-stroke);
+  stroke-width: 1.5;
+}
+.lp-arch-db-top {
+  stroke: var(--pr-c-blue);
+  stroke-width: 1.6;
+}
+.lp-arch-label {
+  font: 600 11px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: 0.02em;
+  text-anchor: middle;
+  fill: var(--heading-color);
+}
+.lp-arch-packet {
+  fill: var(--pr-c-violet);
+}
+
+/* prefers-reduced-motion: keep the static diagram, drop the packets */
+@media (prefers-reduced-motion: reduce) {
+  .lp-arch-packet { display: none; }
+}
 
 .lp-eyebrow {
   display: inline-block;
@@ -411,10 +470,26 @@ a.lp-tile-connect:hover .lp-connect-link {
   .lp-tile-posts-num { grid-column: span 2; }
   .lp-tile-latest    { grid-column: span 4; }
   .lp-tile-connect   { grid-column: span 4; }
+  /* trim the hero visual a touch on tablets */
+  .lp-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(240px, 32%, 320px));
+    gap: 1.4rem;
+  }
+}
+
+@media (max-width: 767px) {
+  /* stack hero: text first, visual below at full width */
+  .lp-hero {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  .lp-hero-visual { max-width: 380px; margin: 0 auto; }
 }
 
 @media (max-width: 575px) {
   .lp-hero { padding: 1.8rem 1.2rem 1.4rem; border-radius: 14px; }
+  /* hide the architecture visual on phones for a clean text-only hero */
+  .lp-hero-visual { display: none; }
   .lp-bento { grid-template-columns: 1fr; gap: .85rem; }
   .lp-tile,
   .lp-tile-hero,
