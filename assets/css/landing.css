@@ -161,7 +161,18 @@ a.lp-tile:hover {
     radial-gradient(600px 200px at 100% 0%, rgba(139,92,246,.10), transparent 60%),
     radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.10), transparent 60%),
     var(--pr-card-bg, #fff);
+  /* Two columns inside the hero: text body + animated road visual */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(180px, 28%, 260px));
+  gap: 1.4rem;
+  align-items: center;
 }
+.lp-tile-hero-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lp-tile-hero-body > .lp-mini-cards { margin-top: auto; }
 .lp-tile-sd        { --lp-accent: var(--pr-c-blue); }
 .lp-tile-de        { --lp-accent: var(--pr-c-green); }
 .lp-tile-concepts  { --lp-accent: var(--pr-c-violet); }
@@ -401,6 +412,64 @@ a.lp-tile-connect:hover .lp-connect-link {
   text-decoration: underline;
 }
 
+/* ─────────── Animated roadmap (right side of hero tile) ─────────── */
+.lp-tile-hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  align-self: stretch;
+}
+.lp-road {
+  width: 100%;
+  height: auto;
+  max-width: 260px;
+  overflow: visible;
+}
+.lp-road-line {
+  stroke: var(--pr-border);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 7;
+  opacity: 0.9;
+}
+.lp-road-dot {
+  fill: var(--pr-c-blue);
+  opacity: 0.55;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: lp-road-dot-pulse 7s ease-out infinite;
+}
+.lp-road-dot-end {
+  fill: var(--pr-c-violet);
+  opacity: 0.75;
+}
+@keyframes lp-road-dot-pulse {
+  0%   { opacity: 0.55; transform: scale(1); }
+  3%   { opacity: 1;    transform: scale(1.6); }
+  12%  { opacity: 0.85; transform: scale(1.05); }
+  100% { opacity: 0.55; transform: scale(1); }
+}
+.lp-road-token {
+  fill: var(--pr-c-violet);
+}
+
+/* dark-mode brightness boosts */
+[data-mode="dark"] .lp-road-line { opacity: 0.6; }
+[data-mode="dark"] .lp-road-dot { opacity: 0.7; }
+[data-mode="dark"] .lp-road-dot-end { opacity: 0.9; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .lp-road-line { opacity: 0.6; }
+  :root:not([data-mode="light"]) .lp-road-dot { opacity: 0.7; }
+  :root:not([data-mode="light"]) .lp-road-dot-end { opacity: 0.9; }
+}
+
+/* reduced motion: stop the journey, leave a clean static diagram */
+@media (prefers-reduced-motion: reduce) {
+  .lp-road-dot { animation: none; opacity: 0.85; }
+  .lp-road-token { display: none; }
+}
+
 /* ─────────── Responsive ─────────── */
 @media (max-width: 991px) {
   .lp-bento { grid-template-columns: repeat(4, 1fr); }
@@ -411,6 +480,10 @@ a.lp-tile-connect:hover .lp-connect-link {
   .lp-tile-posts-num { grid-column: span 2; }
   .lp-tile-latest    { grid-column: span 4; }
   .lp-tile-connect   { grid-column: span 4; }
+  /* hero still has room for the road visual on tablet */
+  .lp-tile-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, clamp(180px, 30%, 240px));
+  }
 }
 
 @media (max-width: 575px) {
@@ -424,6 +497,9 @@ a.lp-tile-connect:hover .lp-connect-link {
   .lp-tile-posts-num,
   .lp-tile-latest,
   .lp-tile-connect { grid-column: span 1; grid-row: auto; }
+  /* drop the road visual on mobile to keep the tile compact */
+  .lp-tile-hero { grid-template-columns: 1fr; }
+  .lp-tile-hero-visual { display: none; }
   .lp-mini-cards { grid-template-columns: 1fr; }
   .lp-tile-connect { flex-direction: column; align-items: flex-start; }
   .lp-hero-meta { gap: .8rem 1.3rem; }

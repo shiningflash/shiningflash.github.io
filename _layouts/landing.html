@@ -37,30 +37,75 @@ refactor: true
 
   <!-- Big primary tile: Start here -->
   <a class="lp-tile lp-tile-hero" href="/roadmaps/">
-    <div class="lp-tile-eyebrow">
-      <span class="lp-pulse"></span> Start here
+    <div class="lp-tile-hero-body">
+      <div class="lp-tile-eyebrow">
+        <span class="lp-pulse"></span> Start here
+      </div>
+      <h2 class="lp-tile-title">Pick a roadmap.<br>Six months, in order.</h2>
+      <p class="lp-tile-desc">
+        Don't know where to start? The roadmaps are the on-ramp. Each one is seven stages from beginner to senior. You finish each stage by building something small, not by collecting certificates.
+      </p>
+      <div class="lp-mini-cards">
+        <div class="lp-mini-card">
+          <span class="lp-mini-emoji">🧭</span>
+          <div>
+            <div class="lp-mini-name">System Design</div>
+            <div class="lp-mini-meta">7 stages · 60+ topics</div>
+          </div>
+          <span class="lp-mini-arrow">→</span>
+        </div>
+        <div class="lp-mini-card">
+          <span class="lp-mini-emoji">🗺️</span>
+          <div>
+            <div class="lp-mini-name">Data Engineering</div>
+            <div class="lp-mini-meta">7 stages · 60+ topics</div>
+          </div>
+          <span class="lp-mini-arrow">→</span>
+        </div>
+      </div>
     </div>
-    <h2 class="lp-tile-title">Pick a roadmap.<br>Six months, in order.</h2>
-    <p class="lp-tile-desc">
-      Don't know where to start? The roadmaps are the on-ramp. Each one is seven stages from beginner to senior. You finish each stage by building something small, not by collecting certificates.
-    </p>
-    <div class="lp-mini-cards">
-      <div class="lp-mini-card">
-        <span class="lp-mini-emoji">🧭</span>
-        <div>
-          <div class="lp-mini-name">System Design</div>
-          <div class="lp-mini-meta">7 stages · 60+ topics</div>
-        </div>
-        <span class="lp-mini-arrow">→</span>
-      </div>
-      <div class="lp-mini-card">
-        <span class="lp-mini-emoji">🗺️</span>
-        <div>
-          <div class="lp-mini-name">Data Engineering</div>
-          <div class="lp-mini-meta">7 stages · 60+ topics</div>
-        </div>
-        <span class="lp-mini-arrow">→</span>
-      </div>
+
+    <!-- Animated roadmap visual: 7 milestones + traveling token -->
+    <div class="lp-tile-hero-visual" aria-hidden="true">
+      <svg class="lp-road" viewBox="0 0 280 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="lp-road-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge>
+              <feMergeNode in="b"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- The road: dashed background path through 7 milestones -->
+        <path id="lp-road-path"
+              class="lp-road-line"
+              fill="none"
+              d="M 50 30
+                 C 130 30, 240 60, 200 105
+                 C 160 145, 60 130, 70 170
+                 C 80 210, 220 195, 215 230
+                 C 210 270, 90 260, 140 305"/>
+
+        <!-- 7 milestone dots, each tagged with the stage number -->
+        <g class="lp-road-dots">
+          <circle cx="50"  cy="30"  r="7" class="lp-road-dot" style="animation-delay: 0s"/>
+          <circle cx="195" cy="55"  r="7" class="lp-road-dot" style="animation-delay: 1.0s"/>
+          <circle cx="205" cy="105" r="7" class="lp-road-dot" style="animation-delay: 2.0s"/>
+          <circle cx="70"  cy="170" r="7" class="lp-road-dot" style="animation-delay: 3.0s"/>
+          <circle cx="215" cy="230" r="7" class="lp-road-dot" style="animation-delay: 4.0s"/>
+          <circle cx="100" cy="265" r="7" class="lp-road-dot" style="animation-delay: 5.0s"/>
+          <circle cx="140" cy="305" r="9" class="lp-road-dot lp-road-dot-end" style="animation-delay: 6.0s"/>
+        </g>
+
+        <!-- Traveling token: glowing circle following the path -->
+        <circle r="6" class="lp-road-token" filter="url(#lp-road-glow)">
+          <animateMotion dur="7s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#lp-road-path"/>
+          </animateMotion>
+        </circle>
+      </svg>
     </div>
   </a>
 
