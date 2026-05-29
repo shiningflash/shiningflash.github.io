@@ -1,0 +1,81 @@
+---
+layout: page
+refactor: true
+---
+
+<link rel="stylesheet" href="/assets/css/practice.css">
+
+{%- assign all = site.sd_concepts | sort: "concept_id" -%}
+{%- assign idx = 0 -%}
+{%- for c in all -%}
+  {%- if c.concept_id == page.concept_id -%}
+    {%- assign idx = forloop.index0 -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign prev_idx = idx | minus: 1 -%}
+{%- assign next_idx = idx | plus: 1 -%}
+{%- assign prev = nil -%}
+{%- assign nxt = nil -%}
+{%- if prev_idx >= 0 -%}{%- assign prev = all[prev_idx] -%}{%- endif -%}
+{%- if next_idx < all.size -%}{%- assign nxt = all[next_idx] -%}{%- endif -%}
+
+<nav class="concept-breadcrumb" aria-label="Breadcrumb">
+  <a href="/practice/system-design/">System Design</a>
+  <span aria-hidden="true">›</span>
+  <a href="/practice/system-design/concepts/">Concepts</a>
+  <span aria-hidden="true">›</span>
+  <span class="concept-breadcrumb-current">{{ page.section }}</span>
+</nav>
+
+<section class="concept-hero">
+  <span class="concept-section-pill">{{ page.section }}</span>
+  <h1 class="concept-title">{{ page.title }}</h1>
+  {% if page.tease %}
+    <p class="concept-tease">{{ page.tease }}</p>
+  {% endif %}
+</section>
+
+{% if page.status == "draft" or content == "" or content == nil %}
+  <section class="concept-placeholder">
+    <div class="concept-placeholder-icon">✍️</div>
+    <h2 class="concept-placeholder-title">This concept is being written.</h2>
+    <p class="concept-placeholder-body">
+      The detailed explanation, examples, and diagrams for this topic are not published yet. In the meantime, here is what you can do:
+    </p>
+    <ul class="concept-placeholder-list">
+      <li>Browse the rest of the <a href="/practice/system-design/concepts/">System Design Concepts</a> library.</li>
+      <li>Follow the <a href="/practice/system-design/roadmap/">System Design Roadmap</a> for a structured path through these topics.</li>
+      <li>Try a <a href="/practice/system-design/">practice problem</a> that uses this concept in context.</li>
+    </ul>
+  </section>
+{% else %}
+  <article class="concept-body">
+    {{ content }}
+  </article>
+{% endif %}
+
+<nav class="concept-nav" aria-label="Concept navigation">
+  {% if prev %}
+    <a class="concept-nav-link concept-nav-prev" href="{{ prev.url | relative_url }}">
+      <span class="concept-nav-direction">← Previous</span>
+      <span class="concept-nav-title">{{ prev.title }}</span>
+    </a>
+  {% else %}
+    <span class="concept-nav-link concept-nav-empty"></span>
+  {% endif %}
+
+  <a class="concept-nav-link concept-nav-index" href="/practice/system-design/concepts/">
+    <span class="concept-nav-direction">All concepts</span>
+    <span class="concept-nav-title">Index</span>
+  </a>
+
+  {% if nxt %}
+    <a class="concept-nav-link concept-nav-next" href="{{ nxt.url | relative_url }}">
+      <span class="concept-nav-direction">Next →</span>
+      <span class="concept-nav-title">{{ nxt.title }}</span>
+    </a>
+  {% else %}
+    <span class="concept-nav-link concept-nav-empty"></span>
+  {% endif %}
+</nav>

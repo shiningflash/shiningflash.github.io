@@ -41,26 +41,30 @@ layout: page
   </div>
 </section>
 
-{% if page.feature_card %}
-<a class="pr-feature-card" href="{{ page.feature_card.href | relative_url }}">
+{%- assign fcards = "" | split: "," -%}
+{%- if page.feature_card -%}{%- assign fcards = fcards | push: page.feature_card -%}{%- endif -%}
+{%- if page.feature_cards -%}{%- for fc in page.feature_cards -%}{%- assign fcards = fcards | push: fc -%}{%- endfor -%}{%- endif -%}
+
+{% for fc in fcards %}
+<a class="pr-feature-card" href="{{ fc.href | relative_url }}">
   <div class="pr-feature-card-inner">
-    <div class="pr-feature-card-icon">{{ page.feature_card.icon | default: "🧭" }}</div>
+    <div class="pr-feature-card-icon">{{ fc.icon | default: "🧭" }}</div>
     <div class="pr-feature-card-body">
-      <div class="pr-feature-card-eyebrow">{{ page.feature_card.eyebrow | default: "Start here" }}</div>
-      <h2 class="pr-feature-card-title">{{ page.feature_card.title }}</h2>
-      {% if page.feature_card.description %}
-        <p class="pr-feature-card-desc">{{ page.feature_card.description }}</p>
+      <div class="pr-feature-card-eyebrow">{{ fc.eyebrow | default: "Start here" }}</div>
+      <h2 class="pr-feature-card-title">{{ fc.title }}</h2>
+      {% if fc.description %}
+        <p class="pr-feature-card-desc">{{ fc.description }}</p>
       {% endif %}
-      {% if page.feature_card.meta %}
+      {% if fc.meta %}
         <div class="pr-feature-card-meta">
-          {% for item in page.feature_card.meta %}<span>{{ item }}</span>{% endfor %}
+          {% for item in fc.meta %}<span>{{ item }}</span>{% endfor %}
         </div>
       {% endif %}
     </div>
     <div class="pr-feature-card-arrow" aria-hidden="true">→</div>
   </div>
 </a>
-{% endif %}
+{% endfor %}
 
 <section class="pr-toolbar" aria-label="Filter problems">
 

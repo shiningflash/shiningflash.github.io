@@ -1,0 +1,100 @@
+---
+layout: page
+refactor: true
+---
+
+<link rel="stylesheet" href="/assets/css/practice.css">
+
+{%- assign concepts = site.sd_concepts | sort: "concept_id" -%}
+{%- assign total = concepts | size -%}
+{%- assign sections = concepts | group_by: "section" -%}
+{%- assign published = concepts | where: "status", "live" | size -%}
+
+<section class="pr-hero">
+  <div class="pr-hero-inner">
+    <span class="pr-eyebrow">System Design Concepts</span>
+    <h1 class="pr-title">Quick answers to the questions you'll face on every architecture review.</h1>
+    <p class="pr-subtitle">
+      A growing reference library. The hard topics in system design distilled into short, scenario-driven explanations: load balancers, caching, consistency, queueing, cloud trade-offs, and the rest. Use it alongside the roadmap, or as a quick lookup before an interview.
+    </p>
+    <div class="pr-stats">
+      <div class="pr-stat"><strong>{{ total }}</strong><span>Topics</span></div>
+      <div class="pr-stat"><strong>{{ sections | size }}</strong><span>Sections</span></div>
+      <div class="pr-stat"><strong>{{ published }}</strong><span>Live now</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pr-toolbar" aria-label="Filter concepts">
+  <div class="pr-toolbar-row">
+    <div class="pr-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-3.5-3.5"></path>
+      </svg>
+      <input id="cc-search-input" type="search" placeholder="Search a topic..." aria-label="Search concepts">
+      <button type="button" id="cc-clear" class="pr-clear-btn" aria-label="Clear search" hidden>×</button>
+    </div>
+    <button type="button" id="cc-reset" class="pr-reset" hidden>Reset</button>
+  </div>
+
+  <div class="pr-chip-group pr-chip-categories" id="cc-section-chips" role="group" aria-label="Section filter">
+    {% for s in sections %}
+      <button type="button" class="pr-chip pr-chip-cat" data-filter-section="{{ s.name }}">
+        {{ s.name }}<span class="pr-chip-count">{{ s.size }}</span>
+      </button>
+    {% endfor %}
+  </div>
+</section>
+
+<div id="cc-meta-bar" class="pr-meta-bar">
+  <span id="cc-count">{{ total }}</span> of <span class="pr-total">{{ total }}</span> topics
+  <span id="cc-active-filters" class="pr-active-filters"></span>
+</div>
+
+<div class="concept-sections" id="cc-sections">
+  {% for s in sections %}
+    <section class="concept-section" data-section="{{ s.name }}">
+      <header class="concept-section-head">
+        <h2 class="concept-section-name">{{ s.name }}</h2>
+        <span class="concept-section-count">{{ s.size }} topic{% if s.size != 1 %}s{% endif %}</span>
+      </header>
+      <div class="concept-grid">
+        {% assign items = s.items | sort: "concept_id" %}
+        {% for c in items %}
+          <a class="concept-card"
+             href="{{ c.url | relative_url }}"
+             data-title="{{ c.title | downcase }}"
+             data-section="{{ c.section }}"
+             data-tease="{{ c.tease | downcase }}">
+            <div class="concept-card-head">
+              <span class="concept-card-id">#{{ c.concept_id }}</span>
+              {% if c.status == "live" %}
+                <span class="concept-card-status concept-card-status-live">Live</span>
+              {% else %}
+                <span class="concept-card-status concept-card-status-draft">Soon</span>
+              {% endif %}
+            </div>
+            <h3 class="concept-card-title">{{ c.title }}</h3>
+            <p class="concept-card-tease">{{ c.tease }}</p>
+            <span class="concept-card-arrow" aria-hidden="true">→</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
+
+<div id="cc-empty" class="pr-empty" hidden>
+  <div class="pr-empty-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+  </div>
+  <h3>No topics match these filters</h3>
+  <p>Try a different search term or clear the filters.</p>
+  <button type="button" class="pr-btn pr-btn-primary" data-reset>Clear all filters</button>
+</div>
+
+<script src="/assets/js/concepts-filter.js" defer></script>

@@ -22,57 +22,85 @@ refactor: true
   </div>
 </section>
 
-<section class="pr-tracks home-tracks">
+{%- assign concept_count = site.sd_concepts | size -%}
 
-  <a class="pr-track-card" href="/practice/system-design/">
-    <div class="pr-track-emoji">🏗️</div>
-    <h2 class="pr-track-name">System Design</h2>
-    <p class="pr-track-desc">
-      Interview-style design questions with capacity math, partial diagrams you complete, and senior-level follow-ups.
-    </p>
-    <div class="pr-track-meta">
-      <span><strong>{{ sd_count }}</strong> problems</span>
-      <span>Medium to Hard</span>
-    </div>
-  </a>
+<div class="home-section">
+  <h2 class="home-section-title">Practice tracks</h2>
+  <p class="home-section-lede">Real interview-style problems. Solutions hidden by default; try first, then unlock.</p>
+  <section class="pr-tracks home-tracks">
+    <a class="pr-track-card" href="/practice/system-design/">
+      <div class="pr-track-emoji">🏗️</div>
+      <h2 class="pr-track-name">System Design</h2>
+      <p class="pr-track-desc">
+        Interview-style design questions with capacity math, partial diagrams you complete, and senior-level follow-ups.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>{{ sd_count }}</strong> problems</span>
+        <span>Medium to Hard</span>
+      </div>
+    </a>
 
-  <a class="pr-track-card" href="/practice/data-engineering/">
-    <div class="pr-track-emoji">🧩</div>
-    <h2 class="pr-track-name">Data Engineering</h2>
-    <p class="pr-track-desc">
-      Real production scenarios: late streams, schema drift, silent ETL bugs, SQL plan reading, cost incidents.
-    </p>
-    <div class="pr-track-meta">
-      <span><strong>{{ de_count }}</strong> problems</span>
-      <span>Easy to Hard</span>
-    </div>
-  </a>
+    <a class="pr-track-card" href="/practice/data-engineering/">
+      <div class="pr-track-emoji">🧩</div>
+      <h2 class="pr-track-name">Data Engineering</h2>
+      <p class="pr-track-desc">
+        Real production scenarios: late streams, schema drift, silent ETL bugs, SQL plan reading, cost incidents.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>{{ de_count }}</strong> problems</span>
+        <span>Easy to Hard</span>
+      </div>
+    </a>
+  </section>
+</div>
 
-  <a class="pr-track-card" href="/practice/system-design/roadmap/">
-    <div class="pr-track-emoji">🧭</div>
-    <h2 class="pr-track-name">System Design Roadmap</h2>
-    <p class="pr-track-desc">
-      A staged learning path from networking basics to designing Instagram on a whiteboard. Six months, in order.
-    </p>
-    <div class="pr-track-meta">
-      <span><strong>7</strong> stages</span>
-      <span>Beginner to Expert</span>
-    </div>
-  </a>
+<div class="home-section">
+  <h2 class="home-section-title">Roadmaps</h2>
+  <p class="home-section-lede">A staged learning path for each track. Do the stages in order. Build the small thing at the end of each one.</p>
+  <section class="pr-tracks home-tracks">
+    <a class="pr-track-card" href="/practice/system-design/roadmap/">
+      <div class="pr-track-emoji">🧭</div>
+      <h2 class="pr-track-name">System Design Roadmap</h2>
+      <p class="pr-track-desc">
+        From networking basics to designing Instagram on a whiteboard. Six months, in order.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>7</strong> stages</span>
+        <span>Beginner to Expert</span>
+      </div>
+    </a>
 
-  <a class="pr-track-card" href="/practice/data-engineering/roadmap/">
-    <div class="pr-track-emoji">🗺️</div>
-    <h2 class="pr-track-name">Data Engineering Roadmap</h2>
-    <p class="pr-track-desc">
-      A staged learning path from SQL fluency to running data systems at scale. Six months, in order.
-    </p>
-    <div class="pr-track-meta">
-      <span><strong>7</strong> stages</span>
-      <span>Beginner to Expert</span>
-    </div>
-  </a>
+    <a class="pr-track-card" href="/practice/data-engineering/roadmap/">
+      <div class="pr-track-emoji">🗺️</div>
+      <h2 class="pr-track-name">Data Engineering Roadmap</h2>
+      <p class="pr-track-desc">
+        From SQL fluency to running data systems at scale. Six months, in order.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>7</strong> stages</span>
+        <span>Beginner to Expert</span>
+      </div>
+    </a>
+  </section>
+</div>
 
-</section>
+<div class="home-section">
+  <h2 class="home-section-title">Concept library</h2>
+  <p class="home-section-lede">Short, scenario-driven answers to the questions that come up on every architecture review.</p>
+  <section class="pr-tracks home-tracks">
+    <a class="pr-track-card" href="/practice/system-design/concepts/">
+      <div class="pr-track-emoji">📚</div>
+      <h2 class="pr-track-name">System Design Concepts</h2>
+      <p class="pr-track-desc">
+        Quick answers to common design questions: caching, load balancers, consistency, queueing, plus AWS / GCP / Azure trade-offs.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>{{ concept_count }}</strong> topics</span>
+        <span>12 sections</span>
+      </div>
+    </a>
+  </section>
+</div>
 
 <section class="home-latest">
   <div class="home-latest-head">

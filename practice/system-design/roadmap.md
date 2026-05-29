@@ -17,6 +17,8 @@ mermaid: true
   </div>
 </section>
 
+> **Looking for a single concept?** The [System Design Concepts library](/practice/system-design/concepts/) has short, scenario-driven answers to 70 common questions. Use it as a quick lookup when a stage below mentions something unfamiliar.
+
 ## How to read this page
 
 Read top to bottom. Do the stages in order. The order matters more than people think. If you try to learn Kafka before you understand what TCP is, you will get stuck and quit. Most people who fail at system design fail because they skipped the boring basics.

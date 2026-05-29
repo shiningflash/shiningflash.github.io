@@ -10,8 +10,27 @@
   line-height: 1.25;
 }
 
+.home-section {
+  margin-bottom: 2.25rem;
+}
+
+.home-section-title {
+  margin: 0 0 .25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.005em;
+  color: var(--heading-color);
+}
+
+.home-section-lede {
+  margin: 0 0 .9rem;
+  font-size: .92rem;
+  color: var(--text-muted-color);
+  max-width: 60ch;
+}
+
 .home-tracks {
-  margin-bottom: 2.5rem;
+  margin: 0;
 }
 
 .home-latest {
