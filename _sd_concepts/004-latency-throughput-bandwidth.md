@@ -28,20 +28,27 @@ You can widen the highway (more bandwidth) and not change the trip time at all. 
 Latency is one car's trip time. Throughput is cars per hour arriving at the destination. Bandwidth is how many lanes the highway has. All three live on the same road; widening or shortening or speeding up changes a different number.
 
 ```mermaid
-flowchart LR
-    subgraph A["City A"]
-        direction TB
-        S1([Sender]):::client
-    end
-    subgraph B["City B"]
-        direction TB
-        R1([Receiver]):::server
-    end
+flowchart TB
+    A(["City A — sender"]):::client
+    HW[("4-lane highway between the cities")]:::infra
+    B(["City B — receiver"]):::server
 
-    A ==>|"4 lanes  =  bandwidth<br/><br/>cars per hour  =  throughput<br/><br/>one car's trip time  =  latency"| B
+    A ==> HW ==> B
 
-    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:2px
-    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px
+    L1["Latency: how long one car takes from A to B"]:::lat
+    L2["Throughput: how many cars per hour arrive at B"]:::thr
+    L3["Bandwidth: how many lanes the highway has"]:::ban
+
+    HW -.- L1
+    HW -.- L2
+    HW -.- L3
+
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef lat fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef thr fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef ban fill:#fed7aa,stroke:#c2410c,color:#7c2d12,stroke-width:1.5px
 ```
 
 You can widen the highway and not change the trip time at all. You can build a tunnel and cut the trip time in half. Both make the road better, in different ways, for different reasons.

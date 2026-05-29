@@ -87,17 +87,11 @@ flowchart TB
     end
 
     subgraph LREAD["LSM read — check memtable, then each level"]
-        direction TB
-        L1["lookup key=42"]:::client
-        L2[("memtable")]:::infra
-        L3[("SSTable L0")]:::store
-        L4[("SSTable L1")]:::store
-        L5[("SSTable L2")]:::store
-        F(["found"]):::done
-        L1 -->|"1"| L2
-        L2 -->|"miss"| L3
-        L3 -->|"miss"| L4
-        L4 -->|"hit"| F
+        direction LR
+        L1["lookup key=42"]:::client --> L2[("memtable")]:::infra
+        L2 -->|"miss"| L3[("SSTable L0")]:::store
+        L3 -->|"miss"| L4[("SSTable L1")]:::store
+        L4 -->|"hit"| F(["found"]):::done
     end
 
     classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px

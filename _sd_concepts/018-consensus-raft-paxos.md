@@ -138,10 +138,12 @@ flowchart TB
     subgraph PART["Network partition into two groups"]
         direction LR
         subgraph G1["Side A — 2 nodes"]
+            direction TB
             A1[("Node 1")]:::store
             A2[("Node 2")]:::store
         end
         subgraph G2["Side B — 3 nodes (majority)"]
+            direction TB
             B1[("Node 3")]:::store
             B2[("Node 4")]:::store
             B3[("Node 5")]:::store

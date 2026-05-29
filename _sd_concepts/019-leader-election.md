@@ -89,10 +89,12 @@ flowchart TB
     subgraph PART["Network split"]
         direction LR
         subgraph MIN["Minority — 2 nodes, cannot elect"]
+            direction TB
             M1[("Node 4")]:::store
             M2[("Node 5")]:::store
         end
         subgraph MAJ["Majority — 3 nodes, elects a leader"]
+            direction TB
             J1[("Node 1")]:::leader
             J2[("Node 2")]:::store
             J3[("Node 3")]:::store

@@ -57,16 +57,16 @@ Same partition, same write, two products, two different behaviours. Both are leg
 ```mermaid
 flowchart TB
     subgraph CP["CP — refuse to serve stale data during a partition"]
-        direction LR
+        direction TB
         CP1[("Spanner")]:::store
         CP2[("etcd")]:::store
         CP3[("ZooKeeper")]:::store
         CP4[("HBase")]:::store
-        CP5[("MongoDB<br/>(strong reads)")]:::store
+        CP5[("MongoDB (strong reads)")]:::store
     end
 
     subgraph AP["AP — keep serving, accept staleness during a partition"]
-        direction LR
+        direction TB
         AP1[("Cassandra")]:::store
         AP2[("DynamoDB")]:::store
         AP3[("CouchDB")]:::store

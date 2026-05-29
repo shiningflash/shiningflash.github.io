@@ -12,9 +12,9 @@ Vertical scaling makes the box bigger: more CPU, more memory, faster disk. Horiz
 ## The picture
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph V["Vertical scaling — make one box bigger"]
-        direction TB
+        direction LR
         V1[("4 vCPU<br/>16 GB RAM")]:::server
         V2[("16 vCPU<br/>64 GB RAM")]:::server
         V3[("96 vCPU<br/>768 GB RAM")]:::server
@@ -22,21 +22,12 @@ flowchart LR
     end
 
     subgraph H["Horizontal scaling — add more boxes"]
-        direction TB
-        subgraph H1["Stage 1"]
-            HA[("box")]:::server
-        end
-        subgraph H2["Stage 2"]
-            HB[("box")]:::server
-            HC[("box")]:::server
-        end
-        subgraph H3["Stage 3"]
-            HD[("box")]:::server
-            HE[("box")]:::server
-            HF[("box")]:::server
-            HG[("box")]:::server
-        end
-        H1 ==> H2 ==> H3
+        direction LR
+        HA[("1 box")]:::server
+        HB[("2 boxes")]:::server
+        HC[("4 boxes")]:::server
+        HD[("8 boxes")]:::server
+        HA ==> HB ==> HC ==> HD
     end
 
     classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px

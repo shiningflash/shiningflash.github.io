@@ -21,19 +21,19 @@ flowchart TB
     end
 
     subgraph MS["Microservices — each service owns its data"]
-        direction LR
+        direction TB
         O[("orders service")]:::server
-        OD[("orders DB")]:::store
         I[("inventory service")]:::server
-        ID[("inventory DB")]:::store
-        E[("email service")]:::server
-        ED[("email DB")]:::store
         U[("users service")]:::server
+        E[("email service")]:::server
+        OD[("orders DB")]:::store
+        ID[("inventory DB")]:::store
         UD[("users DB")]:::store
+        ED[("email DB")]:::store
         O --- OD
         I --- ID
-        E --- ED
         U --- UD
+        E --- ED
         O -.->|"HTTP / gRPC"| I
         O -.->|"HTTP / gRPC"| U
         O -.->|"event"| E
@@ -71,13 +71,13 @@ If none of these problems are real for you, microservices are buying solutions f
 ```mermaid
 flowchart TB
     subgraph C["The hidden bill of microservices"]
-        direction LR
-        C1["Distributed transactions<br/>become sagas"]:::weak
-        C2["Local calls become network calls<br/>with retries and timeouts"]:::weak
-        C3["Schema migrations<br/>across service boundaries"]:::weak
-        C4["Observability is hard mode<br/>(distributed tracing required)"]:::weak
-        C5["Operational footprint<br/>multiplies per service"]:::weak
-        C6["End-to-end testing<br/>is genuinely hard"]:::weak
+        direction TB
+        C1["Distributed transactions become sagas"]:::weak
+        C2["Local calls become network calls with retries and timeouts"]:::weak
+        C3["Schema migrations across service boundaries"]:::weak
+        C4["Observability is hard mode (distributed tracing required)"]:::weak
+        C5["Operational footprint multiplies per service"]:::weak
+        C6["End-to-end testing is genuinely hard"]:::weak
     end
 
     classDef weak fill:#fed7aa,stroke:#c2410c,color:#7c2d12,stroke-width:1.5px

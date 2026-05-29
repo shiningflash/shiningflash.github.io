@@ -14,9 +14,9 @@ A secret is anything whose unauthorised disclosure is a problem: API keys, datab
 ```mermaid
 flowchart TB
     subgraph BAD["Where secrets should not live"]
-        direction LR
+        direction TB
         B1[("hardcoded in code")]:::dead
-        B2[("committed to git<br/>(even private repos)")]:::dead
+        B2[("committed to git (even private repos)")]:::dead
         B3[("in a .env file shared on Slack")]:::dead
         B4[("plain env var in production with no source")]:::dead
         B5[("in build artifacts or container images")]:::dead

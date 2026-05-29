@@ -64,7 +64,7 @@ Used for: internal Kubernetes service-to-service for simple cases, traditional i
 A central registry (Consul, etcd, Eureka, Kubernetes itself) holds the current set of healthy instances per service. Clients consult the registry directly, or via a server-side load balancer that does.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph CLIENT["Client-side discovery"]
         direction LR
         AC(["Service A"]):::client
@@ -105,23 +105,15 @@ Every pod gets a sidecar proxy (Envoy is the canonical implementation; used by I
 
 ```mermaid
 flowchart LR
-    subgraph PODA["Pod A"]
-        direction TB
-        AAPP(["Service A app code"]):::client
-        AENV[["Envoy sidecar"]]:::infra
-    end
+    AAPP(["Service A<br/>app code"]):::client
+    AENV[["Envoy sidecar<br/>(Pod A)"]]:::infra
+    BENV[["Envoy sidecar<br/>(Pod B)"]]:::infra
+    BAPP[("Service B<br/>app code")]:::server
+    CP[("Control plane<br/>Istio / Linkerd")]:::store
 
-    subgraph PODB["Pod B"]
-        direction TB
-        BENV[["Envoy sidecar"]]:::infra
-        BAPP[("Service B app code")]:::server
-    end
-
-    CP[("Control plane<br/>(Istio, Linkerd)<br/>discovery + routing config")]:::store
-
-    AAPP -->|"localhost: call b"| AENV
+    AAPP -->|"localhost"| AENV
     AENV ==>|"mTLS, retries, LB"| BENV
-    BENV --> BAPP
+    BENV -->|"localhost"| BAPP
 
     CP -.->|"push current endpoints"| AENV
     CP -.->|"push current endpoints"| BENV
