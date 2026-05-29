@@ -7,124 +7,151 @@ refactor: true
 
 {%- assign sd_count = site.practice | where: "track", "system-design" | size -%}
 {%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
+{%- assign concept_count = site.sd_concepts | size -%}
+{%- assign post_count = site.posts | where_exp: "p", "p.hidden != true" | size -%}
 {%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
 
-<link rel="stylesheet" href="/assets/css/practice.css">
 <link rel="stylesheet" href="/assets/css/landing.css">
 
-<section class="pr-hero home-hero">
-  <div class="pr-hero-inner">
-    <span class="pr-eyebrow">Welcome</span>
-    <h1 class="pr-title">Notes and practice problems for working engineers.</h1>
-    <p class="pr-subtitle">
-      I'm Amirul. I write about data engineering and system design, and I build practice problems for people preparing for senior interviews. Everything here is free, updated often, and written from real experience.
+<!-- ─────────── HERO ─────────── -->
+<section class="lp-hero">
+  <div class="lp-hero-inner">
+    <span class="lp-eyebrow">Hi, I'm Amirul · Data Engineer · Sweden</span>
+    <h1 class="lp-title">
+      Notes and practice problems<br>for engineers who ship.
+    </h1>
+    <p class="lp-subtitle">
+      Six years building backend and data platforms used by a million people. I write what I wish someone had handed me earlier: ordered roadmaps, real interview problems, and short answers to the questions that come up on every architecture review.
     </p>
+    <div class="lp-hero-meta">
+      <span><strong>6+</strong> yrs shipping</span>
+      <span><strong>1M+</strong> users served</span>
+      <span><strong>20+</strong> keynote talks</span>
+      <span><strong>16K+</strong> following</span>
+    </div>
   </div>
 </section>
 
-{%- assign concept_count = site.sd_concepts | size -%}
+<!-- ─────────── BENTO ─────────── -->
+<section class="lp-bento" aria-label="What's here">
 
-<div class="home-section">
-  <h2 class="home-section-title">Practice tracks</h2>
-  <p class="home-section-lede">Real interview-style problems. Solutions hidden by default; try first, then unlock.</p>
-  <section class="pr-tracks home-tracks">
-    <a class="pr-track-card" href="/practice/system-design/">
-      <div class="pr-track-emoji">🏗️</div>
-      <h2 class="pr-track-name">System Design</h2>
-      <p class="pr-track-desc">
-        Interview-style design questions with capacity math, partial diagrams you complete, and senior-level follow-ups.
-      </p>
-      <div class="pr-track-meta">
-        <span><strong>{{ sd_count }}</strong> problems</span>
-        <span>Medium to Hard</span>
+  <!-- Big primary tile: Start here -->
+  <a class="lp-tile lp-tile-hero" href="/roadmaps/">
+    <div class="lp-tile-eyebrow">
+      <span class="lp-pulse"></span> Start here
+    </div>
+    <h2 class="lp-tile-title">Pick a roadmap.<br>Six months, in order.</h2>
+    <p class="lp-tile-desc">
+      Don't know where to start? The roadmaps are the on-ramp. Each one is seven stages from beginner to senior. You finish each stage by building something small, not by collecting certificates.
+    </p>
+    <div class="lp-mini-cards">
+      <div class="lp-mini-card">
+        <span class="lp-mini-emoji">🧭</span>
+        <div>
+          <div class="lp-mini-name">System Design</div>
+          <div class="lp-mini-meta">7 stages · 60+ topics</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
       </div>
-    </a>
-
-    <a class="pr-track-card" href="/practice/data-engineering/">
-      <div class="pr-track-emoji">🧩</div>
-      <h2 class="pr-track-name">Data Engineering</h2>
-      <p class="pr-track-desc">
-        Real production scenarios: late streams, schema drift, silent ETL bugs, SQL plan reading, cost incidents.
-      </p>
-      <div class="pr-track-meta">
-        <span><strong>{{ de_count }}</strong> problems</span>
-        <span>Easy to Hard</span>
+      <div class="lp-mini-card">
+        <span class="lp-mini-emoji">🗺️</span>
+        <div>
+          <div class="lp-mini-name">Data Engineering</div>
+          <div class="lp-mini-meta">7 stages · 60+ topics</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
       </div>
-    </a>
-  </section>
-</div>
+    </div>
+  </a>
 
-<div class="home-section">
-  <h2 class="home-section-title">Roadmaps</h2>
-  <p class="home-section-lede">A staged learning path for each track. Do the stages in order. Build the small thing at the end of each one.</p>
-  <section class="pr-tracks home-tracks">
-    <a class="pr-track-card" href="/practice/system-design/roadmap/">
-      <div class="pr-track-emoji">🧭</div>
-      <h2 class="pr-track-name">System Design Roadmap</h2>
-      <p class="pr-track-desc">
-        From networking basics to designing Instagram on a whiteboard. Six months, in order.
-      </p>
-      <div class="pr-track-meta">
-        <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
-      </div>
-    </a>
+  <!-- System Design track -->
+  <a class="lp-tile lp-tile-sd" href="/practice/system-design/">
+    <div class="lp-tile-head">
+      <span class="lp-tile-emoji">🏗️</span>
+      <span class="lp-tile-badge">Practice</span>
+    </div>
+    <h3 class="lp-tile-name">System Design</h3>
+    <p class="lp-tile-tag">Interview-style design questions with senior-level follow-ups.</p>
+    <div class="lp-tile-foot">
+      <span class="lp-stat-num">{{ sd_count }}</span>
+      <span class="lp-stat-lbl">problems</span>
+      <span class="lp-arrow">→</span>
+    </div>
+  </a>
 
-    <a class="pr-track-card" href="/practice/data-engineering/roadmap/">
-      <div class="pr-track-emoji">🗺️</div>
-      <h2 class="pr-track-name">Data Engineering Roadmap</h2>
-      <p class="pr-track-desc">
-        From SQL fluency to running data systems at scale. Six months, in order.
-      </p>
-      <div class="pr-track-meta">
-        <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
-      </div>
-    </a>
-  </section>
-</div>
+  <!-- Data Engineering track -->
+  <a class="lp-tile lp-tile-de" href="/practice/data-engineering/">
+    <div class="lp-tile-head">
+      <span class="lp-tile-emoji">🧩</span>
+      <span class="lp-tile-badge">Practice</span>
+    </div>
+    <h3 class="lp-tile-name">Data Engineering</h3>
+    <p class="lp-tile-tag">Real production scenarios from pipelines that actually break.</p>
+    <div class="lp-tile-foot">
+      <span class="lp-stat-num">{{ de_count }}</span>
+      <span class="lp-stat-lbl">problems</span>
+      <span class="lp-arrow">→</span>
+    </div>
+  </a>
 
-<div class="home-section">
-  <h2 class="home-section-title">Concept library</h2>
-  <p class="home-section-lede">Short, scenario-driven answers to the questions that come up on every architecture review.</p>
-  <section class="pr-tracks home-tracks">
-    <a class="pr-track-card" href="/practice/system-design/concepts/">
-      <div class="pr-track-emoji">📚</div>
-      <h2 class="pr-track-name">System Design Concepts</h2>
-      <p class="pr-track-desc">
-        Quick answers to common design questions: caching, load balancers, consistency, queueing, plus AWS / GCP / Azure trade-offs.
-      </p>
-      <div class="pr-track-meta">
-        <span><strong>{{ concept_count }}</strong> topics</span>
-        <span>12 sections</span>
-      </div>
-    </a>
-  </section>
-</div>
+  <!-- Concept Library -->
+  <a class="lp-tile lp-tile-concepts" href="/practice/system-design/concepts/">
+    <div class="lp-tile-head">
+      <span class="lp-tile-emoji">📚</span>
+      <span class="lp-tile-badge">Reference</span>
+    </div>
+    <h3 class="lp-tile-name">Concept Library</h3>
+    <p class="lp-tile-tag">Short, plain-English answers to questions that come up on every design review.</p>
+    <div class="lp-tile-foot">
+      <span class="lp-stat-num">{{ concept_count }}</span>
+      <span class="lp-stat-lbl">topics</span>
+      <span class="lp-arrow">→</span>
+    </div>
+  </a>
 
-<section class="home-latest">
-  <div class="home-latest-head">
-    <h2 class="home-latest-title">Latest writing</h2>
-    <a class="home-latest-all" href="/posts/">See all writing &rarr;</a>
+  <!-- Posts count -->
+  <a class="lp-tile lp-tile-posts-num" href="/posts/">
+    <div class="lp-tile-head">
+      <span class="lp-tile-emoji">✍️</span>
+      <span class="lp-tile-badge">Writing</span>
+    </div>
+    <h3 class="lp-tile-name">Posts</h3>
+    <p class="lp-tile-tag">Career notes, mental health in tech, and the engineering lessons that took me years to learn.</p>
+    <div class="lp-tile-foot">
+      <span class="lp-stat-num">{{ post_count }}</span>
+      <span class="lp-stat-lbl">articles</span>
+      <span class="lp-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- Latest writing list -->
+  <div class="lp-tile lp-tile-latest">
+    <div class="lp-tile-head">
+      <h3 class="lp-tile-name">Latest writing</h3>
+      <a class="lp-tile-all" href="/posts/">See all →</a>
+    </div>
+    <ul class="lp-post-list">
+      {% for post in latest_posts limit: 4 %}
+        <li class="lp-post-item">
+          <a class="lp-post-link" href="{{ post.url | relative_url }}">
+            <span class="lp-post-date">{% include datetime.html date=post.date lang=lang %}</span>
+            <span class="lp-post-title">{{ post.title }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
   </div>
 
-  <ul class="home-post-list">
-    {% for post in latest_posts limit: 5 %}
-      <li class="home-post-item">
-        <a class="home-post-link" href="{{ post.url | relative_url }}">
-          <span class="home-post-title">{{ post.title }}</span>
-          <span class="home-post-meta">
-            <i class="far fa-calendar fa-fw"></i>
-            {% include datetime.html date=post.date lang=lang %}
-            {% if post.categories.size > 0 %}
-              <span class="home-post-cats">
-                <i class="far fa-folder-open fa-fw"></i>
-                {{ post.categories | join: ", " }}
-              </span>
-            {% endif %}
-          </span>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+  <!-- Connect strip -->
+  <a class="lp-tile lp-tile-connect" href="/about/">
+    <div class="lp-connect-text">
+      <span class="lp-connect-eyebrow">About me</span>
+      <span class="lp-connect-name">Amirul Islam Al Mamun</span>
+      <span class="lp-connect-tag">ML Data Engineer at Truxel · ex-Supertal · Sweden</span>
+    </div>
+    <div class="lp-connect-links" aria-hidden="true">
+      <span class="lp-connect-link">Read full bio →</span>
+    </div>
+  </a>
+
 </section>
