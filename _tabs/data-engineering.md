@@ -2,7 +2,7 @@
 layout: practice-index
 title: Data Engineering
 icon: fas fa-database
-order: 2
+order: 3
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-

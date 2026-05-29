@@ -1,7 +1,9 @@
 ---
 # the default layout is 'page'
+title: About Me
 icon: fas fa-info-circle
-order: 3
+order: 6
+permalink: /about/
 ---
 
 <link rel="stylesheet" href="/assets/css/about.css">

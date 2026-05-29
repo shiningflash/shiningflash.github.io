@@ -2,7 +2,7 @@
 layout: practice-index
 title: System Design
 icon: fas fa-sitemap
-order: 1
+order: 2
 hero_eyebrow: System Design Track
 hero_title: Interview-style design questions with deep follow-ups
 hero_subtitle: >-
