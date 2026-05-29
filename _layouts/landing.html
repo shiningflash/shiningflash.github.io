@@ -31,7 +31,8 @@ refactor: true
     </div>
   </div>
 
-  <!-- Living mini-architecture: user → cdn → lb → 3 svc → cache / db, with async queue -->
+  <!-- Living mini-architecture: user fans out to cdn AND lb;
+       lb → 3 svc; svc reads cache, writes db, async-enqueues to queue → worker -->
   <aside class="lp-hero-visual" aria-hidden="true">
     <svg class="lp-arch" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -44,93 +45,109 @@ refactor: true
         </filter>
       </defs>
 
-      <!-- Edges (drawn first so nodes overlap their endpoints) -->
-      <path id="lp-arch-e1"  class="lp-arch-edge" d="M 60 140 L 80 140"/>
-      <path id="lp-arch-e2"  class="lp-arch-edge" d="M 130 140 L 150 140"/>
-      <path id="lp-arch-e3"  class="lp-arch-edge" d="M 200 140 L 230 80"/>
-      <path id="lp-arch-e4"  class="lp-arch-edge" d="M 200 140 L 230 140"/>
-      <path id="lp-arch-e5"  class="lp-arch-edge" d="M 200 140 L 230 200"/>
-      <path id="lp-arch-e6"  class="lp-arch-edge" d="M 280 80 L 320 80"/>
-      <path id="lp-arch-e7"  class="lp-arch-edge" d="M 280 80 L 320 140"/>
-      <path id="lp-arch-e8"  class="lp-arch-edge" d="M 280 140 L 320 140"/>
-      <path id="lp-arch-e9"  class="lp-arch-edge" d="M 280 200 L 320 140"/>
-      <path id="lp-arch-e10" class="lp-arch-edge" d="M 255 216 L 255 234"/>
+      <!-- Edges (drawn first so nodes overlap their endpoints cleanly) -->
+      <!-- e1 user → cdn          (static path, parallel to lb)  -->
+      <path id="lp-arch-e1"  class="lp-arch-edge" d="M 60 140 L 105 66"/>
+      <!-- e2 user → lb           (dynamic path)                 -->
+      <path id="lp-arch-e2"  class="lp-arch-edge" d="M 60 140 L 80 140"/>
+      <!-- e3 lb → svc[1]         (fan-out)                      -->
+      <path id="lp-arch-e3"  class="lp-arch-edge" d="M 130 140 L 175 80"/>
+      <!-- e4 lb → svc[2]                                        -->
+      <path id="lp-arch-e4"  class="lp-arch-edge" d="M 130 140 L 175 140"/>
+      <!-- e5 lb → svc[3]                                        -->
+      <path id="lp-arch-e5"  class="lp-arch-edge" d="M 130 140 L 175 200"/>
+      <!-- e6 svc[1] → cache      (read-aside lookup)            -->
+      <path id="lp-arch-e6"  class="lp-arch-edge" d="M 225 80  L 275 50"/>
+      <!-- e7 svc[1] → db         (cache miss / read fallthrough)-->
+      <path id="lp-arch-e7"  class="lp-arch-edge" d="M 225 80  L 275 140"/>
+      <!-- e8 svc[2] → db         (sync write path)              -->
+      <path id="lp-arch-e8"  class="lp-arch-edge" d="M 225 140 L 275 140"/>
+      <!-- e9 svc[3] → queue      (async enqueue)                -->
+      <path id="lp-arch-e9"  class="lp-arch-edge" d="M 200 216 L 200 234"/>
+      <!-- e10 queue → worker     (worker consumes the queue)    -->
+      <path id="lp-arch-e10" class="lp-arch-edge" d="M 225 250 L 275 250"/>
 
-      <!-- Nodes (front row: user → cdn → lb) -->
+      <!-- Nodes -->
+      <!-- left column: user -->
       <g class="lp-arch-node">
         <rect x="10"  y="124" width="50" height="32" rx="6" class="lp-arch-shape"/>
         <text x="35"  y="144" class="lp-arch-label">user</text>
       </g>
+      <!-- column 2: cdn (top) + lb (middle) — parallel destinations from user -->
+      <g class="lp-arch-node">
+        <rect x="80"  y="34"  width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="105" y="54"  class="lp-arch-label">cdn</text>
+      </g>
       <g class="lp-arch-node">
         <rect x="80"  y="124" width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="105" y="144" class="lp-arch-label">cdn</text>
+        <text x="105" y="144" class="lp-arch-label">lb</text>
+      </g>
+      <!-- column 3: svc tier (3 instances) -->
+      <g class="lp-arch-node">
+        <rect x="175" y="64"  width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="200" y="84"  class="lp-arch-label">svc</text>
       </g>
       <g class="lp-arch-node">
-        <rect x="150" y="124" width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="175" y="144" class="lp-arch-label">lb</text>
-      </g>
-
-      <!-- svc tier (3 instances) -->
-      <g class="lp-arch-node">
-        <rect x="230" y="64"  width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="255" y="84"  class="lp-arch-label">svc</text>
+        <rect x="175" y="124" width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="200" y="144" class="lp-arch-label">svc</text>
       </g>
       <g class="lp-arch-node">
-        <rect x="230" y="124" width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="255" y="144" class="lp-arch-label">svc</text>
+        <rect x="175" y="184" width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="200" y="204" class="lp-arch-label">svc</text>
       </g>
+      <!-- column 4: cache (top) + db cylinder (middle) — data layer -->
       <g class="lp-arch-node">
-        <rect x="230" y="184" width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="255" y="204" class="lp-arch-label">svc</text>
-      </g>
-
-      <!-- Data layer: cache (top right), db cylinder (middle right) -->
-      <g class="lp-arch-node">
-        <rect x="320" y="64"  width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="345" y="84"  class="lp-arch-label">cache</text>
+        <rect x="275" y="34"  width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="300" y="54"  class="lp-arch-label">cache</text>
       </g>
       <g class="lp-arch-node lp-arch-db">
-        <path class="lp-arch-shape" d="M 320 122 L 320 158 a 25 6 0 0 0 50 0 L 370 122"/>
-        <ellipse cx="345" cy="122" rx="25" ry="6" class="lp-arch-shape lp-arch-db-top"/>
-        <text x="345" y="146" class="lp-arch-label">db</text>
+        <path class="lp-arch-shape" d="M 275 122 L 275 158 a 25 6 0 0 0 50 0 L 325 122"/>
+        <ellipse cx="300" cy="122" rx="25" ry="6" class="lp-arch-shape lp-arch-db-top"/>
+        <text x="300" y="146" class="lp-arch-label">db</text>
       </g>
-
-      <!-- Async lane: queue below svc tier -->
+      <!-- bottom: async lane — queue (under svc tier) → worker (under db) -->
       <g class="lp-arch-node">
-        <rect x="230" y="234" width="50" height="32" rx="6" class="lp-arch-shape"/>
-        <text x="255" y="254" class="lp-arch-label">queue</text>
+        <rect x="175" y="234" width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="200" y="254" class="lp-arch-label">queue</text>
+      </g>
+      <g class="lp-arch-node">
+        <rect x="275" y="234" width="50" height="32" rx="6" class="lp-arch-shape"/>
+        <text x="300" y="254" class="lp-arch-label">worker</text>
       </g>
 
-      <!-- Packets: one per edge, negative begin so they enter pre-distributed -->
+      <!-- Packets: one per edge.
+           Durations are roughly proportional to edge length so short
+           hops feel snappy and long diagonals feel deliberate.
+           Negative begin offsets so every edge is already in flight at t=0. -->
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.0s" begin="0s"    repeatCount="indefinite"><mpath href="#lp-arch-e1"/></animateMotion>
+        <animateMotion dur="2.4s" begin="0s"    repeatCount="indefinite"><mpath href="#lp-arch-e1"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.0s" begin="-0.7s" repeatCount="indefinite"><mpath href="#lp-arch-e2"/></animateMotion>
+        <animateMotion dur="1.3s" begin="-0.5s" repeatCount="indefinite"><mpath href="#lp-arch-e2"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.8s" begin="-1.0s" repeatCount="indefinite"><mpath href="#lp-arch-e3"/></animateMotion>
+        <animateMotion dur="2.1s" begin="-1.0s" repeatCount="indefinite"><mpath href="#lp-arch-e3"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.5s" begin="-1.5s" repeatCount="indefinite"><mpath href="#lp-arch-e4"/></animateMotion>
+        <animateMotion dur="1.7s" begin="-0.7s" repeatCount="indefinite"><mpath href="#lp-arch-e4"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.8s" begin="-0.5s" repeatCount="indefinite"><mpath href="#lp-arch-e5"/></animateMotion>
+        <animateMotion dur="2.1s" begin="-1.5s" repeatCount="indefinite"><mpath href="#lp-arch-e5"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="1.8s" begin="-1.2s" repeatCount="indefinite"><mpath href="#lp-arch-e6"/></animateMotion>
+        <animateMotion dur="1.6s" begin="-0.8s" repeatCount="indefinite"><mpath href="#lp-arch-e6"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.8s" begin="-2.0s" repeatCount="indefinite"><mpath href="#lp-arch-e7"/></animateMotion>
+        <animateMotion dur="2.0s" begin="-1.4s" repeatCount="indefinite"><mpath href="#lp-arch-e7"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.5s" begin="-1.0s" repeatCount="indefinite"><mpath href="#lp-arch-e8"/></animateMotion>
+        <animateMotion dur="1.6s" begin="-1.0s" repeatCount="indefinite"><mpath href="#lp-arch-e8"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="2.8s" begin="-1.7s" repeatCount="indefinite"><mpath href="#lp-arch-e9"/></animateMotion>
+        <animateMotion dur="0.9s" begin="-0.4s" repeatCount="indefinite"><mpath href="#lp-arch-e9"/></animateMotion>
       </circle>
       <circle r="4" class="lp-arch-packet" filter="url(#lp-arch-glow)">
-        <animateMotion dur="1.8s" begin="-0.4s" repeatCount="indefinite"><mpath href="#lp-arch-e10"/></animateMotion>
+        <animateMotion dur="1.6s" begin="-0.9s" repeatCount="indefinite"><mpath href="#lp-arch-e10"/></animateMotion>
       </circle>
     </svg>
   </aside>
