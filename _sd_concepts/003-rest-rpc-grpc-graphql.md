@@ -21,22 +21,41 @@ Each one is the right answer in some situation. None is the right answer everywh
 ## The picture in your head
 
 ```mermaid
-flowchart LR
-    subgraph REST["REST"]
-        R1["GET /users/123"]:::r --> R2[("user object")]:::data
-    end
-    subgraph RPC["RPC"]
-        P1["POST /api<br/>{method: getUser, id: 123}"]:::r --> P2[("user object")]:::data
-    end
-    subgraph GRPC["gRPC"]
-        G1["UserService.GetUser(id=123)<br/>(typed Protobuf)"]:::r --> G2[("UserReply")]:::data
-    end
-    subgraph GQL["GraphQL"]
-        Q1["POST /graphql<br/>{ user(id:123) { name, email } }"]:::r --> Q2[("just name + email")]:::data
+flowchart TB
+    subgraph REST["REST — resources at stable URLs, HTTP verbs"]
+        direction LR
+        RC(["Client"]):::client
+        RS[("Server")]:::server
+        RC -->|"GET /users/123"| RS
+        RS -->|"full user JSON"| RC
     end
 
-    classDef r fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef data fill:#dcfce7,stroke:#15803d,color:#14532d
+    subgraph RPC["RPC — call a function by name"]
+        direction LR
+        PC(["Client"]):::client
+        PS[("Server")]:::server
+        PC -->|"POST /api<br/>{method: getUser, id: 123}"| PS
+        PS -->|"user JSON"| PC
+    end
+
+    subgraph GRPC["gRPC — typed Protobuf over HTTP/2"]
+        direction LR
+        GC(["Client"]):::client
+        GS[("Server")]:::server
+        GC -->|"UserService.GetUser(id=123)"| GS
+        GS -->|"UserReply  (binary, schema-checked)"| GC
+    end
+
+    subgraph GQL["GraphQL — client names the fields it needs"]
+        direction LR
+        QC(["Client"]):::client
+        QS[("Server")]:::server
+        QC -->|"{ user(id:123) { name, email } }"| QS
+        QS -->|"just name + email"| QC
+    end
+
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
 ```
 
 Same goal, four different request shapes. The differences in shape come from different opinions about how clients and servers should agree on a contract.

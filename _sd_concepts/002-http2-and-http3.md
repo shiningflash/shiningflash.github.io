@@ -21,33 +21,31 @@ HTTP/1 was one phone line per request. HTTP/2 lets many requests share one phone
 
 ```mermaid
 flowchart TB
-    subgraph H1["HTTP/1.1"]
+    subgraph H1["HTTP/1.1 — one TCP connection per request, queued"]
         direction LR
-        C1(["Browser"]):::c
-        C1 -->|"connection 1"| S1A["request → response"]:::r
-        C1 -->|"connection 2"| S1B["request → response"]:::r
-        C1 -->|"connection 3 (queued)"| S1C["..."]:::q
+        C1(["Browser"]):::client
+        C1 -->|"TCP conn 1"| S1[("Server")]:::server
+        C1 -->|"TCP conn 2"| S1
+        C1 -.->|"conn 3 — queued"| S1
     end
 
-    subgraph H2["HTTP/2"]
+    subgraph H2["HTTP/2 — multiplexed streams over a single TCP connection"]
         direction LR
-        C2(["Browser"]):::c
-        C2 ==>|"one TCP connection"| MUX["multiplexed streams"]:::mux
-        MUX --> S2["server"]:::s
+        C2(["Browser"]):::client
+        C2 ==>|"one TCP"| MUX2[["multiplexed<br/>streams"]]:::infra
+        MUX2 ==> S2[("Server")]:::server
     end
 
-    subgraph H3["HTTP/3"]
+    subgraph H3["HTTP/3 — independent streams on QUIC over UDP"]
         direction LR
-        C3(["Browser"]):::c
-        C3 ==>|"QUIC over UDP"| IND["independent streams<br/>no head-of-line block"]:::mux
-        IND --> S3["server"]:::s
+        C3(["Browser"]):::client
+        C3 ==>|"QUIC / UDP"| MUX3[["independent streams<br/>no head-of-line block"]]:::infra
+        MUX3 ==> S3[("Server")]:::server
     end
 
-    classDef c fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef r fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef q fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef mux fill:#fef3c7,stroke:#a16207,color:#713f12
-    classDef s fill:#e9d5ff,stroke:#7e22ce,color:#581c87
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
 ```
 
 ## What HTTP/2 actually does

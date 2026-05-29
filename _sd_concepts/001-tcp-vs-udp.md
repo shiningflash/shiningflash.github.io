@@ -20,26 +20,28 @@ TCP gives you that plumbing for free. UDP says "no thanks, I will handle it myse
 ## The picture in your head
 
 ```mermaid
-flowchart LR
-    subgraph TCP["TCP"]
-        A1(["Client"]):::c
-        B1(["Server"]):::s
-        A1 -->|"1. SYN"| B1
-        B1 -->|"2. SYN-ACK"| A1
-        A1 -->|"3. ACK"| B1
-        A1 ==>|"ordered byte stream<br/>retransmits on loss"| B1
+flowchart TB
+    subgraph TCP["TCP — connection-oriented, ordered, reliable"]
+        direction LR
+        TC(["Client"]):::client
+        TS[("Server")]:::server
+        TC -->|"1 . SYN"| TS
+        TS -->|"2 . SYN-ACK"| TC
+        TC -->|"3 . ACK"| TS
+        TC ==>|"ordered byte stream<br/>auto-retransmits on loss"| TS
     end
 
-    subgraph UDP["UDP"]
-        A2(["Client"]):::c
-        B2(["Server"]):::s
-        A2 -.->|"datagram 1"| B2
-        A2 -.->|"datagram 2 (lost)"| B2
-        A2 -.->|"datagram 3"| B2
+    subgraph UDP["UDP — connectionless, unordered, lossy"]
+        direction LR
+        UC(["Client"]):::client
+        US[("Server")]:::server
+        UC -.->|"datagram 1"| US
+        UC -.->|"datagram 2  (lost)"| US
+        UC -.->|"datagram 3"| US
     end
 
-    classDef c fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
 ```
 
 TCP opens a connection with a handshake, then guarantees that whatever you send arrives in order. Lost packets get retransmitted automatically. UDP just throws datagrams over the wall. Some arrive. Some do not. Some arrive in the wrong order. The application gets to deal with it (or not).

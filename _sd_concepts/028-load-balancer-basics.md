@@ -26,14 +26,19 @@ That thing is a load balancer.
 
 ```mermaid
 flowchart LR
-    U(["Users"]):::u --> LB[("Load balancer<br/>one address")]:::lb
-    LB --> S1[("Server A")]:::s
-    LB --> S2[("Server B")]:::s
-    LB --> S3[("Server C")]:::s
+    U(["Users"]):::client
+    LB[["Load balancer<br/>one public address"]]:::infra
+    S1[("Server A")]:::server
+    S2[("Server B")]:::server
+    S3[("Server C")]:::server
+    U ==> LB
+    LB ==> S1
+    LB ==> S2
+    LB ==> S3
 
-    classDef u fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef lb fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
 ```
 
 The user has no idea there are three servers. They send to one address. The load balancer fans the traffic out.
@@ -57,15 +62,20 @@ Every few seconds, it pings each backend with a health check (often something li
 
 ```mermaid
 flowchart LR
-    U(["Users"]):::u --> LB[("Load balancer")]:::lb
-    LB -->|"healthy"| S1[("Server A")]:::s
-    LB -.->|"removed after<br/>3 failed checks"| S2[("Server B<br/>❌")]:::dead
-    LB -->|"healthy"| S3[("Server C")]:::s
+    U(["Users"]):::client
+    LB[["Load balancer"]]:::infra
+    S1[("Server A")]:::server
+    S2[("Server B<br/>failing checks")]:::dead
+    S3[("Server C")]:::server
+    U ==> LB
+    LB ==>|"healthy"| S1
+    LB -.->|"removed after<br/>3 failed checks"| S2
+    LB ==>|"healthy"| S3
 
-    classDef u fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef lb fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef dead fill:#fecaca,stroke:#b91c1c,color:#7f1d1d
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef infra fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef dead fill:#fecaca,stroke:#b91c1c,color:#7f1d1d,stroke-width:1.5px
 ```
 
 The user sees no error. Traffic just routes around B. When B recovers and starts passing health checks again, the load balancer puts it back in the pool.

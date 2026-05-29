@@ -20,25 +20,32 @@ If you make everything sync, slow downstreams take you down with them. If you ma
 ## The picture in your head
 
 ```mermaid
-flowchart LR
-    subgraph SYNC["Synchronous"]
-        C1(["Client"]):::c -->|"request"| S1[("Server")]:::s
-        S1 -->|"...waits 4s..."| S1
-        S1 -->|"response"| C1
+flowchart TB
+    subgraph SYNC["Synchronous — caller blocks until the answer comes back"]
+        direction LR
+        SC(["Client"]):::client
+        SS[("Server")]:::server
+        SC -->|"request"| SS
+        SS -.->|"...4 seconds of work..."| SS
+        SS -->|"response"| SC
     end
 
-    subgraph ASYNC["Asynchronous"]
-        C2(["Client"]):::c -->|"request"| S2[("Server")]:::s
-        S2 -->|"accepted, id=42"| C2
-        S2 ==>|"enqueue"| Q[("Queue")]:::q
-        Q --> W["Worker"]:::w
-        W ==>|"notify or poll"| C2
+    subgraph ASYNC["Asynchronous — caller hands off, comes back for the result"]
+        direction LR
+        AC(["Client"]):::client
+        AS[("API")]:::server
+        Q[("Queue")]:::queue
+        W[("Worker")]:::server
+        AC -->|"submit job"| AS
+        AS -->|"accepted, id=42"| AC
+        AS ==>|"enqueue"| Q
+        Q ==> W
+        W -.->|"webhook or polled result"| AC
     end
 
-    classDef c fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef q fill:#fed7aa,stroke:#c2410c,color:#7c2d12
-    classDef w fill:#e9d5ff,stroke:#7e22ce,color:#581c87
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef queue fill:#fed7aa,stroke:#c2410c,color:#7c2d12,stroke-width:1.5px
 ```
 
 In the sync case, the client's thread sits idle for the full duration of the request. In the async case, the server returns immediately with a handle, processes the work in the background, and the client either polls for the result, gets a webhook, or watches a subscription.

@@ -26,27 +26,38 @@ You can widen the highway (more bandwidth) and not change the trip time at all. 
 ## The picture in your head
 
 ```mermaid
-flowchart LR
-    subgraph TIME["Latency: time for one request"]
-        L1(["Client"]):::c -->|"75ms"| L2[("Server")]:::s
-        L2 -->|"75ms"| L1
+flowchart TB
+    subgraph LAT["Latency — time for one request to complete"]
+        direction LR
+        LC(["Client"]):::client
+        LS[("Server")]:::server
+        LC -->|"75 ms"| LS
+        LS -->|"75 ms"| LC
     end
 
-    subgraph RATE["Throughput: requests per second"]
-        R1(["Clients"]):::c
-        R1 ==>|"req"| RS[("Server")]:::s
-        R1 ==>|"req"| RS
-        R1 ==>|"req"| RS
-        RS -->|"5,000 req/s"| OUT(["finished"]):::done
+    subgraph THR["Throughput — requests finished per second"]
+        direction LR
+        TC1(["Client 1"]):::client
+        TC2(["Client 2"]):::client
+        TC3(["Client 3"]):::client
+        TS[("Server pool")]:::server
+        OUT(["completed"]):::done
+        TC1 ==> TS
+        TC2 ==> TS
+        TC3 ==> TS
+        TS ==>|"5,000 req/s"| OUT
     end
 
-    subgraph WIDTH["Bandwidth: bytes per second the link can carry"]
-        B1(["Sender"]):::c -->|"1 Gbps pipe"| B2[("Receiver")]:::s
+    subgraph BAN["Bandwidth — bytes per second the link can carry"]
+        direction LR
+        BC(["Sender"]):::client
+        BS[("Receiver")]:::server
+        BC ==>|"1 Gbps pipe"| BS
     end
 
-    classDef c fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef s fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef done fill:#fed7aa,stroke:#c2410c,color:#7c2d12
+    classDef client fill:#dbeafe,stroke:#1e40af,color:#1e3a8a,stroke-width:1.5px
+    classDef server fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:1.5px
+    classDef done fill:#fef3c7,stroke:#a16207,color:#713f12,stroke-width:1.5px
 ```
 
 ## Numbers worth knowing
