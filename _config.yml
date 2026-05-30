@@ -47,7 +47,17 @@ social:
     # - https://www.facebook.com/username
     - https://www.linkedin.com/in/amirulislamalmamun
 
-google_site_verification: # fill in to your verification string
+# Paste the token from Google Search Console (Settings → Ownership
+# verification → HTML tag → copy the value of `content="..."`).
+# Once set, jekyll-seo-tag emits the verification meta tag automatically.
+# Manual steps:
+#   1. Visit https://search.google.com/search-console
+#   2. Add property: https://amirulislamalmamun.com (URL prefix, not domain)
+#   3. Pick "HTML tag" verification method
+#   4. Paste the token between the quotes below
+#   5. Push, wait for Pages to deploy, click "Verify" in Search Console
+#   6. Submit https://amirulislamalmamun.com/sitemap.xml under "Sitemaps"
+google_site_verification: ""
 
 # ↑ --------------------------
 # The end of `jekyll-seo-tag` settings

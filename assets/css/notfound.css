@@ -1,0 +1,115 @@
+/*
+ * 404 page — extends landing.css with a few page-specific bits.
+ * Theme-aware: every color is a CSS variable already defined in landing.css.
+ */
+
+.nf-hero {
+  /* Same bento-hero look, slightly less padding since the content is shorter */
+  padding: 2rem 1.5rem 1.6rem;
+}
+
+.nf-eyebrow {
+  /* Make the 404 label feel like a status badge, not a marketing tag */
+  background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(239,68,68,.12));
+  border-color: rgba(245,158,11,.30);
+  color: var(--pr-c-amber);
+}
+
+[data-mode="dark"] .nf-eyebrow {
+  background: linear-gradient(135deg, rgba(245,158,11,.20), rgba(239,68,68,.20));
+  border-color: rgba(245,158,11,.40);
+  color: #fcd34d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .nf-eyebrow {
+    background: linear-gradient(135deg, rgba(245,158,11,.20), rgba(239,68,68,.20));
+    border-color: rgba(245,158,11,.40);
+    color: #fcd34d;
+  }
+}
+
+.nf-visual { max-width: 240px; }
+
+.nf-visual svg {
+  width: 100%;
+  height: auto;
+  max-width: 240px;
+}
+
+.nf-404 {
+  font: 800 84px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-anchor: middle;
+  letter-spacing: -0.04em;
+  fill: var(--heading-color);
+  opacity: 0.92;
+}
+
+.nf-orbit {
+  stroke: var(--lp-arch-edge, var(--pr-border));
+  stroke-width: 1.5;
+  stroke-dasharray: 3 7;
+  stroke-linecap: round;
+}
+
+.nf-sat {
+  fill: var(--pr-c-violet);
+}
+
+.nf-bento {
+  /* On the 404 we only show 4 tiles, so use a simpler 4-column grid */
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 1.2rem;
+}
+
+.nf-bento .lp-tile { grid-column: span 1; grid-row: auto; }
+
+.nf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.6rem;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  border: 1px solid var(--pr-border);
+}
+
+.nf-btn-primary {
+  background: linear-gradient(135deg, var(--pr-c-blue), var(--pr-c-violet));
+  color: #ffffff;
+  border-color: transparent;
+}
+.nf-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99,102,241,.30);
+}
+
+.nf-btn-ghost {
+  background: var(--pr-card-bg);
+  color: var(--heading-color);
+}
+.nf-btn-ghost:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--pr-card-shadow-hover);
+  border-color: var(--pr-c-violet);
+}
+
+@media (max-width: 991px) {
+  .nf-bento { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 575px) {
+  .nf-bento { grid-template-columns: 1fr; }
+  .nf-visual { display: none; }
+  .nf-actions { flex-direction: column; align-items: stretch; }
+  .nf-btn { justify-content: center; }
+}
