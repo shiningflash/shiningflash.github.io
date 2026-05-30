@@ -607,7 +607,7 @@ permalink: /about/
 
 <div class="ap-vol-card">
   <div class="ap-vol-head">
-    <p class="ap-vol-role">🎤 Keynote Speaker</p>
+    <p class="ap-vol-role">Keynote Speaker</p>
     <span class="ap-vol-date">Apr 2022 – Present</span>
   </div>
   <div class="ap-vol-org">Self-Employed &nbsp;·&nbsp; Science &amp; Technology</div>
@@ -631,7 +631,7 @@ permalink: /about/
 
 <div class="ap-vol-card">
   <div class="ap-vol-head">
-    <p class="ap-vol-role">🧑‍🏫 Programming Mentor</p>
+    <p class="ap-vol-role">Programming Mentor</p>
     <span class="ap-vol-date">Mar 2018 – Jul 2020</span>
   </div>
   <div class="ap-vol-org">BRAC University &nbsp;·&nbsp; Education</div>
@@ -651,7 +651,7 @@ permalink: /about/
 
 <div class="ap-vol-card bc-pink">
   <div class="ap-vol-head">
-    <p class="ap-vol-role">❤️ Head of Human Resources</p>
+    <p class="ap-vol-role">Head of Human Resources</p>
     <span class="ap-vol-date">Feb 2020 – Present</span>
   </div>
   <div class="ap-vol-org">Voice Of Humanity Foundation &nbsp;·&nbsp; Social Services</div>
@@ -670,7 +670,7 @@ permalink: /about/
 
 <div class="ap-vol-card bc-green">
   <div class="ap-vol-head">
-    <p class="ap-vol-role">📚 Founding Member &amp; Advisor</p>
+    <p class="ap-vol-role">Founding Member &amp; Advisor</p>
     <span class="ap-vol-date">Feb 2018 – Present</span>
   </div>
   <div class="ap-vol-org">Alokito Pathshala (আলোকিত পাঠশালা) &nbsp;·&nbsp; Social Services</div>
@@ -718,7 +718,7 @@ permalink: /about/
 ══════════════════════════════════════════ -->
 <div class="ap-connect">
   <p class="ap-connect-quote">
-    💬 I believe good systems are built the same way good teams are —<br>with <strong>clarity</strong>, <strong>consistency</strong>, and <strong>care</strong>.
+    💬 I believe good systems are built the same way good teams are: <br>with <strong>clarity</strong>, <strong>consistency</strong>, and <strong>care</strong>.
   </p>
   <p class="ap-connect-sub">Open to data engineering discussions, speaking invitations, and collaboration opportunities.</p>
   <div class="ap-connect-btns">
