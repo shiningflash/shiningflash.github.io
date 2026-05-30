@@ -181,11 +181,19 @@
 }
 
 .ap-hero-bio {
-  font-size: .96rem; line-height: 1.8;
-  color: var(--text-color); opacity: .88;
   margin-bottom: 1.4rem;
   width: 100%;
   clear: both;
+}
+.ap-hero-bio p {
+  font-size: .96rem;
+  line-height: 1.7;
+  color: var(--text-color);
+  opacity: .88;
+  margin: 0 0 .9rem;
+}
+.ap-hero-bio p:last-child {
+  margin-bottom: 0;
 }
 
 /* Stat cards */
@@ -493,7 +501,11 @@ details .det-body { margin-top: .55rem; }
    11. HONORS & AWARDS
 ══════════════════════════════════════════════ */
 
-.ap-award-list { display: flex; flex-direction: column; gap: .75rem; }
+.ap-award-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: .75rem;
+}
 .ap-award-item {
   --card-accent: var(--c-amber);
   display: flex; align-items: flex-start; gap: .95rem;

@@ -15,16 +15,15 @@ permalink: /about/
 
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
   <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
-  <br>
   <!-- <div class="ap-hero-loc">
     <i class="fas fa-map-marker-alt"></i> Sweden
   </div> -->
 
-  <p class="ap-hero-bio">
-    Data engineer based in Sweden, with around <strong>six years</strong> building backend services and data platforms used by more than a million people.<br><br>
-    Currently at <strong>Truxel</strong> as <strong>Data Platform Owner</strong> and team lead, where I run the real-time data infrastructure powering our renewable energy systems at sub-second latency in production. Before Sweden, I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems to a million users and earning a <strong>double promotion in seven months</strong>.<br><br>
-    I care about reliable systems, real observability, and code the next engineer can read and own.
-  </p>
+  <div class="ap-hero-bio">
+    <p>Data engineer based in Sweden, with around <strong>six years</strong> building backend services and data platforms used by more than a million people.</p>
+    <p>Currently at <strong>Truxel</strong> as <strong>Data Platform Owner</strong> and team lead, where I run the real-time data infrastructure powering our renewable energy systems at sub-second latency in production. Before Sweden, I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems to a million users and earning a <strong>double promotion in seven months</strong>.</p>
+    <p>I care about reliable systems, real observability, and code the next engineer can read and own.</p>
+  </div>
 
   <div class="ap-stats">
     <div class="ap-stat">
