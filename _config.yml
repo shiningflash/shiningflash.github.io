@@ -66,15 +66,8 @@ google_analytics:
   id: # fill in your Google Analytics ID
 
 goatcounter:
-  # GoatCounter ID — privacy-respecting analytics, no cookies, no banner needed.
-  # Once filled in, Chirpy emits the count.js tag automatically (production only).
-  # Manual steps:
-  #   1. Sign up free at https://www.goatcounter.com
-  #   2. Pick a subdomain (e.g. "amirulislam") — this becomes
-  #      amirulislam.goatcounter.com
-  #   3. Paste ONLY the subdomain part below (no quotes, no full URL)
-  #   4. Push, wait for Pages to deploy, watch the dashboard fill in
-  id:
+  # GoatCounter ID — dashboard: https://amirulislamalmamun.goatcounter.com
+  id: amirulislamalmamun
 
 # Prefer color scheme setting.
 #
