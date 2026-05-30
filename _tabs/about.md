@@ -15,9 +15,9 @@ permalink: /about/
 
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
   <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
-  <div class="ap-hero-loc">
+  <!-- <div class="ap-hero-loc">
     <i class="fas fa-map-marker-alt"></i> Sweden
-  </div>
+  </div> -->
 
   <p class="ap-hero-bio">
     I'm a data engineer based in Sweden. Around <strong>six years</strong> of building backend services and data platforms used by more than a million people. Currently at <strong>Truxel</strong>, where I build real-time data pipelines for renewable energy systems: battery packs, PV inverters, grid meters, all reporting at sub-second latency in production. Before Sweden I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems. I got promoted twice in seven months there, which is the kind of compliment I still think about.<br><br>
@@ -264,11 +264,11 @@ permalink: /about/
 <!-- ══════════════════════════════════════════
      OPEN SOURCE & PROJECTS
 ══════════════════════════════════════════ -->
-<div class="ap-section">
+<!-- <div class="ap-section">
   <div class="ap-sec-icon ic-teal"><i class="fas fa-code-branch"></i></div>
   <h2 class="ap-sec-title">Open Source &amp; Projects</h2>
-</div>
-
+</div> -->
+<!-- 
 <div class="ap-proj-grid">
 
   <div class="ap-proj-card">
@@ -313,7 +313,7 @@ permalink: /about/
       <a href="https://github.com/shiningflash/django-reservation-system"><i class="fab fa-github"></i> GitHub</a>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- ══════════════════════════════════════════
      SKILLS & TECH STACK
