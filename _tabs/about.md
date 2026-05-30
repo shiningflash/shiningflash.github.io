@@ -20,8 +20,8 @@ permalink: /about/
   </div>
 
   <p class="ap-hero-bio">
-    I care about how things work — and how they keep working. My job as a data engineer is to make complexity disappear and reliability feel effortless. I started as a backend developer obsessed with clean code and fell in love with data. Today I design systems that move it faster, safer, and with purpose.<br><br>
-    With nearly <strong>6 years</strong> of experience, I've built high-performance, cloud-native data platforms and backends powering products used by <strong>1M+ users</strong> across Europe and Southeast Asia. At <strong>Truxel</strong> I architect real-time IoT pipelines with sub-second latency. At <strong>Supertal</strong> I scaled e-commerce to a million users — and earned a <strong>double promotion in 7 months</strong>. I lead with clarity, build with intention, and ship systems teams can trust.
+    I'm a data engineer based in Sweden. Around <strong>six years</strong> of building backend services and data platforms used by more than a million people. Currently at <strong>Truxel</strong>, where I build real-time data pipelines for renewable energy systems: battery packs, PV inverters, grid meters, all reporting at sub-second latency in production. Before Sweden I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems. I got promoted twice in seven months there, which is the kind of compliment I still think about.<br><br>
+    The work I like best is the kind nobody notices, because nothing broke. That shapes how I write code: small steps over big rewrites, boring over clever, and observability you actually want to look at. When something does break, I want to be able to read the logs at 3 a.m. and figure out what happened without paging anyone else.
   </p>
 
   <div class="ap-stats">

@@ -256,13 +256,17 @@
    4. COLOR UTILITY CLASSES
 ══════════════════════════════════════════════ */
 
-.ic-blue   { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--c-blue); }
-.ic-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green); }
-.ic-amber  { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber); }
-.ic-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--c-violet); }
-.ic-pink   { background: var(--c-pink-bg);   color: var(--c-pink);   border: 1px solid var(--c-pink); }
-.ic-teal   { background: var(--c-teal-bg);   color: var(--c-teal);   border: 1px solid var(--c-teal); }
-.ic-orange { background: var(--c-orange-bg); color: var(--c-orange); border: 1px solid var(--c-orange); }
+/* Coloured icon containers: tinted background and accent glyph, but the
+   border is the same ash tone used everywhere else so the page reads as
+   one coherent system rather than many bright outlines. badge-* below
+   keeps its coloured border because role badges use colour semantically. */
+.ic-blue   { background: var(--c-blue-bg);   color: var(--c-blue);   border: 1px solid var(--main-border-color); }
+.ic-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--main-border-color); }
+.ic-amber  { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--main-border-color); }
+.ic-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--main-border-color); }
+.ic-pink   { background: var(--c-pink-bg);   color: var(--c-pink);   border: 1px solid var(--main-border-color); }
+.ic-teal   { background: var(--c-teal-bg);   color: var(--c-teal);   border: 1px solid var(--main-border-color); }
+.ic-orange { background: var(--c-orange-bg); color: var(--c-orange); border: 1px solid var(--main-border-color); }
 
 /* bc-* classes set the per-card accent picked up on hover.
    The accent shows only via border-color + subtle shadow tint when
@@ -527,14 +531,23 @@ details .det-body { margin-top: .55rem; }
 
 .ap-chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .6rem; }
 .ap-chip {
-  display: inline-flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center; gap: 5px;
   padding: 2px 10px; border-radius: 20px;
   font-size: .75rem; font-weight: 600;
+  background: rgba(0,0,0,.035);
+  color: var(--text-color);
+  border: 1px solid var(--main-border-color);
 }
-.chip-violet { background: var(--c-violet-bg); color: var(--c-violet); border: 1px solid var(--c-violet); }
-.chip-green  { background: var(--c-green-bg);  color: var(--c-green);  border: 1px solid var(--c-green); }
-.chip-pink   { background: var(--c-pink-bg);   color: var(--c-pink);   border: 1px solid var(--c-pink); }
-.chip-amber  { background: var(--c-amber-bg);  color: var(--c-amber);  border: 1px solid var(--c-amber); }
+[data-mode="dark"] .ap-chip { background: rgba(255,255,255,.04); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .ap-chip { background: rgba(255,255,255,.04); }
+}
+/* chip-* now only tints the leading icon, so meaning is preserved at a
+   glance but the chip surface itself stays calm and consistent. */
+.chip-violet i { color: var(--c-violet); opacity: .8; }
+.chip-green  i { color: var(--c-green);  opacity: .8; }
+.chip-pink   i { color: var(--c-pink);   opacity: .8; }
+.chip-amber  i { color: var(--c-amber);  opacity: .8; }
 
 /* ══════════════════════════════════════════════
    13. LANGUAGE CARDS
@@ -542,27 +555,22 @@ details .det-body { margin-top: .55rem; }
 
 .ap-lang-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-  gap: .9rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: .7rem;
 }
 .ap-lang-card {
-  --card-accent: var(--c-green);
   border: 1px solid var(--main-border-color);
-  border-radius: 14px; padding: 1.2rem 1rem;
+  border-radius: 11px; padding: .85rem .75rem;
   background: var(--main-bg); text-align: center;
-  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 .ap-lang-card:hover {
-  border-color: var(--card-accent);
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
 }
-.ap-lang-grid .ap-lang-card:nth-child(1) { --card-accent: var(--c-green); }
-.ap-lang-grid .ap-lang-card:nth-child(2) { --card-accent: var(--c-blue); }
-.ap-lang-grid .ap-lang-card:nth-child(3) { --card-accent: var(--c-amber); }
-.ap-lang-flag  { font-size: 2.2rem; line-height: 1; margin-bottom: .4rem; }
-.ap-lang-name  { font-size: .96rem; font-weight: 700; color: var(--heading-color); letter-spacing: -0.01em; }
-.ap-lang-level { font-size: .75rem; opacity: .6; margin-top: 3px; }
+.ap-lang-flag  { font-size: 1.7rem; line-height: 1; margin-bottom: .3rem; }
+.ap-lang-name  { font-size: .9rem; font-weight: 700; color: var(--heading-color); letter-spacing: -0.01em; }
+.ap-lang-level { font-size: .72rem; opacity: .6; margin-top: 2px; }
 
 /* ══════════════════════════════════════════════
    14. COMPETITIVE PROGRAMMING CARD
