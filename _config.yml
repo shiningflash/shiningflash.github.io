@@ -24,7 +24,9 @@ description: >- # used by seo meta and the atom feed
 
 # Fill in the protocol & hostname for your site.
 # e.g. 'https://username.github.io', note that it does not end with a '/'.
-url: "https://shiningflash.github.io"
+# This is the canonical hostname — must match CNAME so every canonical
+# link, og:url, sitemap entry, and JSON-LD url points to the real domain.
+url: "https://amirulislamalmamun.com"
 
 github:
   username: shiningflash # change to your github username

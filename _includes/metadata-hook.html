@@ -4,3 +4,60 @@
 {% if page.layout == 'home' %}
   <link rel="stylesheet" href="/assets/css/home.css">
 {% endif %}
+
+{% comment %}
+  Person schema for the homepage and the About page.
+  Tells Google who Amirul Islam is and links the personal-name domain
+  to every social profile. Powers the Knowledge Panel for name searches.
+{% endcomment %}
+{% assign show_person = false %}
+{% if page.url == '/' or page.url == '/about/' %}
+  {% assign show_person = true %}
+{% endif %}
+{% if show_person %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Amirul Islam Al Mamun",
+  "alternateName": ["Amirul Islam", "shiningflash"],
+  "url": "{{ site.url }}/",
+  "image": "{{ site.url }}{{ site.social_preview_image }}",
+  "jobTitle": "ML Data Engineer",
+  "description": "Senior backend and data engineer based in Sweden. Writes about system design, data engineering, and real production systems.",
+  "worksFor": {
+    "@type": "Organization",
+    "name": "Truxel",
+    "url": "https://truxel.com"
+  },
+  "alumniOf": {
+    "@type": "CollegeOrUniversity",
+    "name": "BRAC University",
+    "url": "https://www.bracu.ac.bd"
+  },
+  "knowsAbout": [
+    "Data Engineering",
+    "System Design",
+    "Distributed Systems",
+    "Backend Engineering",
+    "Python",
+    "FastAPI",
+    "PostgreSQL",
+    "Kafka",
+    "Apache Airflow",
+    "BigQuery",
+    "Cloud Architecture"
+  ],
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "SE"
+  },
+  "sameAs": [
+    "https://www.linkedin.com/in/amirulislamalmamun",
+    "https://github.com/shiningflash",
+    "https://twitter.com/_shiningflash",
+    "https://medium.com/@amirulislamalmamun"
+  ]
+}
+</script>
+{% endif %}
