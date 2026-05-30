@@ -50,11 +50,22 @@ jobs:
         env:
           JEKYLL_ENV: "production"
 
-      # - name: Test site
-      #   run: |
-      #     bundle exec htmlproofer _site \
-      #       \-\-disable-external=true \
-      #       \-\-ignore-urls "/^http:\/\/127.0.0.1/,/^http:\/\/0.0.0.0/,/^http:\/\/localhost/"
+      - name: Proof internal links and markup
+        run: |
+          bundle exec htmlproofer "_site${{ steps.pages.outputs.base_path }}" \
+            --disable-external=true \
+            --allow-hash-href=true \
+            --enforce-https=false \
+            --check-internal-hash=false \
+            --ignore-urls "/^https?:\/\/localhost/,/^https?:\/\/127\.0\.0\.1/,/^https?:\/\/0\.0\.0\.0/,/question\.md$/"
+        # NOTE: --check-internal-hash is disabled because a few older
+        # Bangla posts have non-ASCII heading anchors whose URL-encoding
+        # doesn't match the link target. Fixing those is a content
+        # cleanup task, not a workflow concern.
+        # NOTE: /question.md$/ is ignored because synced practice problems
+        # carry markdown-relative links to question.md in their "Related
+        # problems" sections; the sync script should rewrite those to
+        # bare slugs but currently doesn't.
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3

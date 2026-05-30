@@ -1,0 +1,54 @@
+name: HTML Proofer
+
+# Runs on pull requests targeting main so a broken internal link
+# (or malformed HTML, or missing image) is caught before merge.
+# The main-branch path is already covered by pages-deploy.yml, which
+# runs the same htmlproofer step before deploying.
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - .gitignore
+      - LICENSE
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proof-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - name: Build site
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+
+      - name: Run html-proofer
+        run: |
+          bundle exec htmlproofer ./_site \
+            --disable-external=true \
+            --allow-hash-href=true \
+            --enforce-https=false \
+            --check-internal-hash=false \
+            --ignore-urls "/^https?:\/\/localhost/,/^https?:\/\/127\.0\.0\.1/,/^https?:\/\/0\.0\.0\.0/,/question\.md$/"
+        # See pages-deploy.yml for why --check-internal-hash and the
+        # question.md pattern are skipped.
