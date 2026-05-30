@@ -85,41 +85,52 @@
 }
 
 .ap-hero {
+  /* Three soft radial blobs (blue / violet / green) layered over the
+     card surface — the same recipe the homepage hero uses, extended to
+     three stops so the wash mirrors the tri-colour gradient on the
+     name above. Static, premium, no animation, no dot grid.
+     Dark-mode brightness boost is in a separate rule below. */
   position: relative;
   overflow: hidden;
   border-radius: 20px;
   padding: 2.8rem 2.4rem 2.4rem;
   margin-bottom: 2.5rem;
   border: 1px solid var(--main-border-color);
-  background-color: var(--sidebar-bg);
+  background:
+    radial-gradient(900px 320px at 0% 0%,    rgba(59,130,246,.13), transparent 60%),
+    radial-gradient(700px 280px at 100% 100%, rgba(139,92,246,.12), transparent 60%),
+    radial-gradient(560px 240px at 100% 0%,   rgba(16,185,129,.08), transparent 60%),
+    var(--sidebar-bg);
   box-shadow:
-    0 8px 40px rgba(0,0,0,.07),
+    0 8px 40px rgba(0,0,0,.06),
     inset 0 1px 0 rgba(255,255,255,.08);
 }
 
-/* animated gradient overlay */
-.ap-hero::before {
-  content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(-45deg,
-    var(--h-g1), var(--h-g2), var(--h-g3), var(--h-g4), var(--h-g1));
-  background-size: 400% 400%;
-  animation: heroGrad 20s ease infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* dot-grid texture */
-.ap-hero::after {
-  content: "";
-  position: absolute; inset: 0;
-  background-image: radial-gradient(var(--h-dot) 1px, transparent 1px);
-  background-size: 22px 22px;
-  pointer-events: none;
-  z-index: 0;
-}
+/* Old animated gradient + dot-grid overlays retired in favour of the
+   static three-blob background above. Keep the rules zeroed-out so the
+   ::before / ::after pseudos don't render any leftover artifacts. */
+.ap-hero::before,
+.ap-hero::after { content: none; }
 
 .ap-hero > * { position: relative; z-index: 1; }
+
+/* Brighter blobs in dark mode so they read against the dark card */
+[data-mode="dark"] .ap-hero {
+  background:
+    radial-gradient(900px 320px at 0% 0%,    rgba(96,165,250,.18), transparent 60%),
+    radial-gradient(700px 280px at 100% 100%, rgba(167,139,250,.16), transparent 60%),
+    radial-gradient(560px 240px at 100% 0%,   rgba(52,211,153,.10), transparent 60%),
+    var(--sidebar-bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .ap-hero {
+    background:
+      radial-gradient(900px 320px at 0% 0%,    rgba(96,165,250,.18), transparent 60%),
+      radial-gradient(700px 280px at 100% 100%, rgba(167,139,250,.16), transparent 60%),
+      radial-gradient(560px 240px at 100% 0%,   rgba(52,211,153,.10), transparent 60%),
+      var(--sidebar-bg);
+  }
+}
 
 /* Avatar — gradient ring, floated right */
 .ap-avatar-wrap {
