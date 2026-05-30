@@ -14,9 +14,11 @@ timezone: Asia/Dhaka
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Amirul Islam Al Mamun # the main title — full name aids name-search SEO
+title: Amirul Islam # the short name for sidebar / browser tab / atom feed.
+# Full name lives in the homepage seo.title override, the About page hero,
+# and the Person JSON-LD, which is where it does the work for name searches.
 
-tagline: Data engineering, system design, and the problems I wish someone had given me.
+tagline: Roadmaps, concepts, and practice for senior engineers.
 
 description: >- # used by seo meta and the atom feed
   Notes on data engineering and system design in plain English, with practice
