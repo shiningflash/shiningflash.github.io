@@ -194,8 +194,11 @@ a.lp-tile:hover {
   box-shadow: var(--pr-card-shadow-hover);
 }
 
-/* accent strip on top of every accented tile */
-.lp-tile::before {
+/* Accent strip only on the hero ("Start Here") tile, so the primary
+   CTA stays visually elevated while every other tile reads as a peer.
+   The other tiles keep their per-colour hover border below, which is
+   accent enough on interaction. */
+.lp-tile-hero::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -220,11 +223,6 @@ a.lp-tile:hover {
     radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.10), transparent 60%),
     var(--pr-card-bg, #fff);
 }
-.lp-tile-sd        { --lp-accent: var(--pr-c-blue); }
-.lp-tile-de        { --lp-accent: var(--pr-c-green); }
-.lp-tile-concepts  { --lp-accent: var(--pr-c-violet); }
-.lp-tile-posts-num { --lp-accent: var(--pr-c-amber); }
-.lp-tile-latest    { --lp-accent: var(--pr-c-teal); }
 
 a.lp-tile-sd:hover        { border-color: rgba(59,130,246,.45); }
 a.lp-tile-de:hover        { border-color: rgba(16,185,129,.45); }
