@@ -6,6 +6,18 @@
 {% endif %}
 
 {% comment %}
+  Declare the og:image dimensions so social platforms render previews
+  without first fetching the image. Matches the resized cover_photo.jpg
+  (1200x749, ~120 KB).
+{% endcomment %}
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="749">
+<meta property="og:image:type" content="image/jpeg">
+
+{% comment %} Better referrer policy for outbound links {% endcomment %}
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+{% comment %}
   Person schema for the homepage and the About page.
   Tells Google who Amirul Islam is and links the personal-name domain
   to every social profile. Powers the Knowledge Panel for name searches.
