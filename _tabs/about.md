@@ -21,8 +21,9 @@ permalink: /about/
   </div> -->
 
   <p class="ap-hero-bio">
-    I'm a data engineer based in Sweden. Around <strong>six years</strong> of building backend services and data platforms used by more than a million people. Currently at <strong>Truxel</strong>, where I build real-time data pipelines for renewable energy systems: battery packs, PV inverters, grid meters, all reporting at sub-second latency in production. Before Sweden I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems. I got promoted twice in seven months there, which is the kind of compliment I still think about.<br><br>
-    The work I like best is the kind nobody notices, because nothing broke. That shapes how I write code: small steps over big rewrites, boring over clever, and observability you actually want to look at. When something does break, I want to be able to read the logs at 3 a.m. and figure out what happened without paging anyone else.
+    Data engineer based in Sweden, with around <strong>six years</strong> building backend services and data platforms used by more than a million people.<br><br>
+    Currently at <strong>Truxel</strong> as <strong>Data Platform Owner</strong> and team lead, where I run the real-time data infrastructure powering our renewable energy systems at sub-second latency in production. Before Sweden, I was at <strong>Supertal</strong> in Singapore, scaling e-commerce and warehouse systems to a million users and earning a <strong>double promotion in seven months</strong>.<br><br>
+    I care about reliable systems, real observability, and code the next engineer can read and own.
   </p>
 
   <div class="ap-stats">
@@ -68,7 +69,7 @@ permalink: /about/
 <div class="ap-exp-card bc-green">
   <div class="ap-exp-head">
     <div>
-      <p class="ap-exp-role">ML Data Engineer <span class="ap-badge badge-green"><i class="fas fa-bolt"></i> Data Platform Owner</span></p>
+      <p class="ap-exp-role">ML Data Engineer <span class="ap-badge badge-green"><i class="fas fa-bolt"></i> Data Platform Owner</span> <span class="ap-badge badge-green"><i class="fas fa-users"></i> Team Lead</span></p>
       <span class="ap-exp-co c-green">Truxel</span> &nbsp;·&nbsp; <span class="ap-exp-loc">Sweden · Hybrid</span>
     </div>
     <span class="ap-exp-date">Jan 2025 – Present</span>
