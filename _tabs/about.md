@@ -15,6 +15,7 @@ permalink: /about/
 
   <h1 class="ap-hero-name">Amirul Islam Al Mamun</h1>
   <div class="ap-hero-title">ML Data Engineer &nbsp;·&nbsp; Senior Backend Engineer</div>
+  <br>
   <!-- <div class="ap-hero-loc">
     <i class="fas fa-map-marker-alt"></i> Sweden
   </div> -->
@@ -94,7 +95,7 @@ permalink: /about/
 </div>
 
 <!-- Upwork -->
-<div class="ap-exp-card bc-orange">
+<!-- <div class="ap-exp-card bc-orange">
   <div class="ap-exp-head">
     <div>
       <p class="ap-exp-role">Backend Engineer <span class="ap-badge badge-amber">Freelance</span></p>
@@ -116,7 +117,7 @@ permalink: /about/
   <div class="ap-tags">
     <span class="ap-tag">Python</span><span class="ap-tag">REST APIs</span><span class="ap-tag">FastAPI</span><span class="ap-tag">Automation</span>
   </div>
-</div>
+</div> -->
 
 <!-- WellDev -->
 <div class="ap-exp-card bc-blue">
