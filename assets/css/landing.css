@@ -194,18 +194,9 @@ a.lp-tile:hover {
   box-shadow: var(--pr-card-shadow-hover);
 }
 
-/* Accent strip only on the hero ("Start Here") tile, so the primary
-   CTA stays visually elevated while every other tile reads as a peer.
-   The other tiles keep their per-colour hover border below, which is
-   accent enough on interaction. */
-.lp-tile-hero::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--lp-accent, transparent);
-  opacity: .85;
-}
+/* (Accent strips removed from every tile — the radial gradient inside
+   the hero, the pulsing 'Start here' eyebrow, and the per-tile hover
+   borders below already do the differentiation work.) */
 
 /* ── Tile placements (6-col desktop) ── */
 .lp-tile-hero       { grid-column: span 4; grid-row: span 2; }
@@ -312,11 +303,8 @@ a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: .6rem;
   margin-bottom: .9rem;
-}
-.lp-tile-emoji {
-  font-size: 1.7rem;
-  line-height: 1;
 }
 .lp-tile-badge {
   font-size: .68rem;
@@ -328,9 +316,10 @@ a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
   background: var(--pr-chip-bg, rgba(120,120,120,.08));
   color: var(--pr-text-muted);
   border: 1px solid var(--pr-border);
+  flex-shrink: 0;
 }
 .lp-tile-name {
-  margin: 0 0 .35rem;
+  margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -.01em;
