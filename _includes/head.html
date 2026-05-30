@@ -63,7 +63,14 @@
   {{ seo_tags }}
 
   <title>
-    {%- unless page.layout == 'home' -%}
+    {%- comment -%}
+      Suppress the "page title | " prefix on the homepage (layout: home
+      OR layout: landing). The full SEO/Open Graph title still goes
+      through jekyll-seo-tag via the page's `title:` front-matter, so
+      og:title gets the long, keyword-rich version while the browser
+      tab stays short.
+    {%- endcomment -%}
+    {%- unless page.layout == 'home' or page.layout == 'landing' -%}
       {{ page.title | append: ' | ' }}
     {%- endunless -%}
     {{ site.title }}

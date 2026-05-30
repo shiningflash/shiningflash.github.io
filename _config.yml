@@ -14,13 +14,13 @@ timezone: Asia/Dhaka
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Amirul Islam # the main title
+title: Amirul Islam Al Mamun # the main title — full name aids name-search SEO
 
 tagline: Data engineering, system design, and the problems I wish someone had given me.
 
 description: >- # used by seo meta and the atom feed
-  Notes on data engineering and system design, plus a growing library of
-  interview-style practice problems with reference solutions.
+  Notes on data engineering and system design in plain English, with practice
+  problems and roadmaps for going senior. By Amirul Islam Al Mamun, in Sweden.
 
 # Fill in the protocol & hostname for your site.
 # e.g. 'https://username.github.io', note that it does not end with a '/'.
