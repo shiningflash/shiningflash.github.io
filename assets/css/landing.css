@@ -314,9 +314,16 @@ a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
   padding: .2rem .55rem;
   border-radius: 999px;
   background: var(--pr-chip-bg, rgba(120,120,120,.08));
-  color: var(--pr-text-muted);
+  /* Slightly darker than --pr-text-muted so the badge clears WCAG AA
+     contrast (~5.8:1 on the card surface) without going as loud as
+     --heading-color. Keeps the badge reading as quiet metadata. */
+  color: #4b5563;
   border: 1px solid var(--pr-border);
   flex-shrink: 0;
+}
+[data-mode="dark"] .lp-tile-badge { color: #d1d5db; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .lp-tile-badge { color: #d1d5db; }
 }
 .lp-tile-name {
   margin: 0;
@@ -365,13 +372,22 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
   border-bottom: 1px solid var(--pr-border);
 }
 .lp-tile-all {
+  /* Neutral heading colour matches the rest of the site language
+     (homepage footer links use the same pattern) instead of dropping
+     a teal accent that doesn't appear anywhere else on the tile.
+     Underline-on-hover keeps interactivity obvious without colour. */
   font-size: .82rem;
   font-weight: 600;
-  color: var(--pr-c-teal);
+  color: var(--heading-color);
   text-decoration: none;
   white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  transition: border-color .15s ease;
 }
-.lp-tile-all:hover { text-decoration: underline; }
+.lp-tile-all:hover {
+  text-decoration: none;
+  border-bottom-color: currentColor;
+}
 .lp-post-list {
   list-style: none;
   margin: 0;
