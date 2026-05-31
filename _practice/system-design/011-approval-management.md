@@ -725,7 +725,7 @@ erDiagram
         text workflow_id
         int workflow_version
         text requester_id
-        text state
+        text current_state
         jsonb inputs
     }
     tasks {
@@ -733,7 +733,7 @@ erDiagram
         uuid request_id
         text assignee_id
         jsonb assigned_via
-        text state
+        text current_state
         timestamptz expires_at
     }
     decisions {

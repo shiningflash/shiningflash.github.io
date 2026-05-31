@@ -671,7 +671,7 @@ erDiagram
         uuid campaign_id FK
         text code
         text intended_user
-        text state
+        text current_state
         timestamptz expires_at
     }
     redemptions {
