@@ -1,19 +1,25 @@
 # CDNs
+# Preconnect list, kept at four origins. Lighthouse warns when this
+# exceeds four, so anything added here should justify a real LCP win.
+# Audit (May 2026): gc.zgo.at saves ~300 ms LCP, avatars.githubusercontent.com
+# ~180 ms. cdnjs (old polyfill path) and the duplicate fonts.googleapis.com
+# were unused on the homepage and pushed the count above four.
 
 cdns:
-  # Google Fonts
+  # Google Fonts (CSS + font binaries)
   - url: https://fonts.googleapis.com
   - url: https://fonts.gstatic.com
     args: crossorigin
-  - url: https://fonts.googleapis.com
-  # jsDelivr CDN
+  # jsDelivr — Bootstrap, FontAwesome, jQuery, search, mermaid, etc.
   - url: https://cdn.jsdelivr.net
-  # polyfill.io for math (cdnjs.cloudflare.com/polyfill)
-  - url: https://cdnjs.cloudflare.com
+  # GoatCounter analytics ping endpoint
+  - url: https://gc.zgo.at
+  # GitHub avatar (sidebar profile image)
+  - url: https://avatars.githubusercontent.com
 
 # fonts — switched to Inter for a modern, highly legible look
 
-webfonts: https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap
+webfonts: https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap
 
 # Libraries
 
