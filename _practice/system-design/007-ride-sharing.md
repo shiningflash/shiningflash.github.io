@@ -656,7 +656,7 @@ erDiagram
         bigint rider_id
         bigint driver_id
         int city_id
-        smallint current_state
+        smallint state
         double pickup_lat
         double pickup_lng
         timestamptz requested_at

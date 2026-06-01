@@ -626,7 +626,7 @@ erDiagram
         bigint author_id
         text body
         int score
-        smallint current_state
+        smallint state
         timestamptz created_at
     }
     votes {
@@ -639,7 +639,7 @@ erDiagram
         bigint comment_id
         bigint reporter_id
         smallint reason
-        smallint current_state
+        smallint state
     }
 ```
 

@@ -665,7 +665,7 @@ erDiagram
         text conversation_id
         bigint message_id
         bigint member_id
-        smallint current_state
+        smallint state
     }
 ```
 
