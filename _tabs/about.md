@@ -2,7 +2,8 @@
 # the default layout is 'page'
 title: About Me
 icon: fas fa-info-circle
-order: 6
+# Pinned high so About stays at the bottom of the sidebar even as new tabs land.
+order: 99
 permalink: /about/
 ---
 
