@@ -6,9 +6,10 @@ order: 3
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-
-  65 hand-picked scenarios inspired by what actually breaks in data pipelines,
-  late streams, schema drift, silent ETL failures, cost incidents, debugging
-  the wrong number. Filter by category, difficulty or topic and start solving.
+  75 hand-picked scenarios across SQL, modeling, databases, streaming, storage,
+  cloud cost, system design, debugging and people work. Each one is short
+  enough to solve in hours but real enough to prepare you for production
+  and for senior-level interviews. Filter by category and difficulty.
 track: data-engineering
 source_repo: https://github.com/shiningflash/data-engineering-practice-problems
 permalink: /practice/data-engineering/
