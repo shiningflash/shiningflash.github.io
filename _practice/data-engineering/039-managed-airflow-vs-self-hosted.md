@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 39
+learn_order: 38
 title: Managed Airflow vs Self Hosted
 slug: 039-managed-airflow-vs-self-hosted
 category: Cloud & Cost
 difficulty: Medium
+interview_value: strong
 topics: [Airflow, MWAA, Composer, Astronomer, Dagster]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/039-managed-airflow-vs-self-hosted"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 58
+learn_order: 45
 title: Streaming Consumer Lag Diagnosis
 slug: 058-streaming-consumer-lag-diagnosis
 category: Streaming
 difficulty: Medium
+interview_value: must-have
 topics: [lag, back-pressure, skew, Flink UI]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/058-streaming-consumer-lag-diagnosis"
 solution_lang: markdown

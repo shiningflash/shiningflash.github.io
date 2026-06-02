@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 16
+learn_order: 4
 title: SELECT DISTINCT Hiding Join Bugs
 slug: 016-select-distinct-hiding-join-bugs
 category: SQL & Querying
 difficulty: Medium
+interview_value: strong
 topics: [DISTINCT, joins, grain, semi-join]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/016-select-distinct-hiding-join-bugs"
 solution_lang: markdown

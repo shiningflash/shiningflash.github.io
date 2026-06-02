@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 44
+learn_order: 18
 title: Explaining Fact Table Grain
 slug: 044-explaining-fact-table-grain
 category: Data Modeling
 difficulty: Easy
+interview_value: must-have
 topics: [grain, facts, dimensions, aggregations]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/044-explaining-fact-table-grain"
 solution_lang: markdown

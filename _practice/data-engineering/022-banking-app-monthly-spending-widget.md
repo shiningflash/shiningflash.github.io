@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 22
+learn_order: 46
 title: Banking App Monthly Spending Widget
 slug: 022-banking-app-monthly-spending-widget
 category: System Design
 difficulty: Hard
+interview_value: must-have
 topics: [streaming, CDC, serving store, low latency]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/022-banking-app-monthly-spending-widget"
 solution_lang: markdown

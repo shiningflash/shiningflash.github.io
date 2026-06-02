@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 60
+learn_order: 69
 title: Metric by Tomorrow vs Doing It Right
 slug: 060-metric-by-tomorrow-vs-doing-it-right
 category: People & Process
 difficulty: Easy
+interview_value: optional
 topics: [comms, prioritization, metrics]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/060-metric-by-tomorrow-vs-doing-it-right"
 solution_lang: markdown

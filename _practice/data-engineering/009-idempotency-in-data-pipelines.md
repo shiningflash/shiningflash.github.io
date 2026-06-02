@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 9
+learn_order: 25
 title: Idempotency in Data Pipelines
 slug: 009-idempotency-in-data-pipelines
 category: Batch Pipelines
 difficulty: Medium
+interview_value: must-have
 topics: [idempotency, retries, MERGE, partitions]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/009-idempotency-in-data-pipelines"
 solution_lang: markdown

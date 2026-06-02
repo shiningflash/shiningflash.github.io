@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 56
+learn_order: 42
 title: Watermarks in Plain Words
 slug: 056-watermarks-in-plain-words
 category: Streaming
 difficulty: Medium
+interview_value: must-have
 topics: [watermarks, event time, allowed lateness]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/056-watermarks-in-plain-words"
 solution_lang: markdown

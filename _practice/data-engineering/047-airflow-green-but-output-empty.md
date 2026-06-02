@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 47
+learn_order: 57
 title: Airflow Green but Output Empty
 slug: 047-airflow-green-but-output-empty
 category: Debugging & Reliability
 difficulty: Medium
+interview_value: must-have
 topics: [silent success, idempotency, anomaly checks]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/047-airflow-green-but-output-empty"
 solution_lang: markdown

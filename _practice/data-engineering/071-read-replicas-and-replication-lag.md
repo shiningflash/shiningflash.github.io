@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 71
+learn_order: 16
 title: Read Replicas and Replication Lag
 slug: 071-read-replicas-and-replication-lag
 category: Databases
 difficulty: Medium
+interview_value: strong
 topics: [replicas, replication lag, read after write]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/071-read-replicas-and-replication-lag"
 solution_lang: markdown

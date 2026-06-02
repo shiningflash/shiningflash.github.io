@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 29
+learn_order: 58
 title: Daily Report Quietly Wrong for Two Weeks
 slug: 029-daily-report-quietly-wrong-for-two-weeks
 category: Debugging & Reliability
 difficulty: Medium
+interview_value: must-have
 topics: [incident, postmortem, comms, data quality]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/029-daily-report-quietly-wrong-for-two-weeks"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 15
+learn_order: 1
 title: Teaching SQL Performance to a Junior
 slug: 015-teaching-sql-performance-to-a-junior
 category: SQL & Querying
 difficulty: Medium
+interview_value: strong
 topics: [EXPLAIN, performance, mentoring, optimization]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/015-teaching-sql-performance-to-a-junior"
 solution_lang: markdown

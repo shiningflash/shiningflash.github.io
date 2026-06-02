@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 5
+learn_order: 29
 title: Merging Messy CSVs from Multiple Partners
 slug: 005-merging-messy-csvs-from-multiple-partners
 category: Batch Pipelines
 difficulty: Medium
+interview_value: optional
 topics: [CSV, column mapping, date parsing, file walk]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/005-merging-messy-csvs-from-multiple-partners"
 solution_lang: python

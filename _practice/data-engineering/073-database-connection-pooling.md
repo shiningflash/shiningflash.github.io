@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 73
+learn_order: 14
 title: Database Connection Pooling
 slug: 073-database-connection-pooling
 category: Databases
 difficulty: Medium
+interview_value: strong
 topics: [connection pool, PgBouncer, sizing, Postgres]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/073-database-connection-pooling"
 solution_lang: markdown

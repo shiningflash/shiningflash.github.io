@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 28
+learn_order: 51
 title: Low Balance Notification Pipeline
 slug: 028-low-balance-notification-pipeline
 category: System Design
 difficulty: Medium
+interview_value: strong
 topics: [batch, idempotency, time zones, notifications]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/028-low-balance-notification-pipeline"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 27
+learn_order: 50
 title: Year in Review Recap
 slug: 027-year-in-review-recap
 category: System Design
 difficulty: Medium
+interview_value: strong
 topics: [batch, KV store, CDN, image render]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/027-year-in-review-recap"
 solution_lang: markdown

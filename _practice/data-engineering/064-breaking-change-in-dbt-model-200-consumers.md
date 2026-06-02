@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 64
+learn_order: 74
 title: Breaking Change in dbt Model 200 Consumers
 slug: 064-breaking-change-in-dbt-model-200-consumers
 category: People & Process
 difficulty: Medium
+interview_value: strong
 topics: [dbt, deprecation, comms, rollout]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/064-breaking-change-in-dbt-model-200-consumers"
 solution_lang: markdown

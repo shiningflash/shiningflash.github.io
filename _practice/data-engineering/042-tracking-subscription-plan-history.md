@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 42
+learn_order: 22
 title: Tracking Subscription Plan History
 slug: 042-tracking-subscription-plan-history
 category: Data Modeling
 difficulty: Medium
+interview_value: strong
 topics: [history, valid_from/to, billing, SCD2]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/042-tracking-subscription-plan-history"
 solution_lang: markdown

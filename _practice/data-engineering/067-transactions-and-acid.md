@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 67
+learn_order: 9
 title: Transactions and ACID
 slug: 067-transactions-and-acid
 category: Databases
 difficulty: Easy
+interview_value: must-have
 topics: [transactions, ACID, durability, atomicity]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/067-transactions-and-acid"
 solution_lang: markdown

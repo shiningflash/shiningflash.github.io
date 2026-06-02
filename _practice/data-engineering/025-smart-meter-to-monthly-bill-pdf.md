@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 25
+learn_order: 52
 title: Smart Meter to Monthly Bill PDF
 slug: 025-smart-meter-to-monthly-bill-pdf
 category: System Design
 difficulty: Hard
+interview_value: optional
 topics: [billing, SCD2, idempotency, audit]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/025-smart-meter-to-monthly-bill-pdf"
 solution_lang: markdown

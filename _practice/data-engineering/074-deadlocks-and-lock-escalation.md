@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 74
+learn_order: 15
 title: Deadlocks and Lock Escalation
 slug: 074-deadlocks-and-lock-escalation
 category: Databases
 difficulty: Medium
+interview_value: strong
 topics: [deadlocks, locks, retries, lock escalation]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/074-deadlocks-and-lock-escalation"
 solution_lang: markdown

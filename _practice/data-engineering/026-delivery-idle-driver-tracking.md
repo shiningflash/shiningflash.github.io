@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 26
+learn_order: 49
 title: Delivery Idle Driver Tracking
 slug: 026-delivery-idle-driver-tracking
 category: System Design
 difficulty: Hard
+interview_value: optional
 topics: [streaming, H3, TTL, geospatial]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/026-delivery-idle-driver-tracking"
 solution_lang: markdown

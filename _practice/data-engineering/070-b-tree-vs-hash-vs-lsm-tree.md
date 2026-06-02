@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 70
+learn_order: 13
 title: B-Tree vs Hash vs LSM Tree
 slug: 070-b-tree-vs-hash-vs-lsm-tree
 category: Databases
 difficulty: Medium
+interview_value: must-have
 topics: [B-tree, hash, LSM, storage engines]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/070-b-tree-vs-hash-vs-lsm-tree"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 38
+learn_order: 34
 title: Store Partner Files in S3 or Warehouse
 slug: 038-store-partner-files-in-s3-or-warehouse
 category: Cloud & Cost
 difficulty: Easy
+interview_value: optional
 topics: [S3, raw layer, audit, schema evolution]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/038-store-partner-files-in-s3-or-warehouse"
 solution_lang: markdown

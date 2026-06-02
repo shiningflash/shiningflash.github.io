@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 61
+learn_order: 71
 title: Two Teams Disagree on Active User
 slug: 061-two-teams-disagree-on-active-user
 category: People & Process
 difficulty: Medium
+interview_value: strong
 topics: [metric ownership, comms, metrics layer]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/061-two-teams-disagree-on-active-user"
 solution_lang: markdown

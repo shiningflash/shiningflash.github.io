@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 20
+learn_order: 3
 title: Window Functions vs GROUP BY
 slug: 020-window-functions-vs-group-by
 category: SQL & Querying
 difficulty: Medium
+interview_value: must-have
 topics: [window functions, GROUP BY, running totals, ranking]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/020-window-functions-vs-group-by"
 solution_lang: markdown

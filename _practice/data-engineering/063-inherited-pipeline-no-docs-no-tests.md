@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 63
+learn_order: 73
 title: Inherited Pipeline No Docs No Tests
 slug: 063-inherited-pipeline-no-docs-no-tests
 category: People & Process
 difficulty: Medium
+interview_value: optional
 topics: [ownership, docs, tests, expectations]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/063-inherited-pipeline-no-docs-no-tests"
 solution_lang: markdown

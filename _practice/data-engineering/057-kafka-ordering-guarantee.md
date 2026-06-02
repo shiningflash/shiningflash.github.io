@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 57
+learn_order: 43
 title: Kafka Ordering Guarantee
 slug: 057-kafka-ordering-guarantee
 category: Streaming
 difficulty: Medium
+interview_value: must-have
 topics: [Kafka, partition key, ordering, idempotent producer]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/057-kafka-ordering-guarantee"
 solution_lang: markdown

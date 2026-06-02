@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 34
+learn_order: 61
 title: Three Days of Data Lost
 slug: 034-three-days-of-data-lost
 category: Debugging & Reliability
 difficulty: Hard
+interview_value: must-have
 topics: [Kafka retention, replay, recovery, postmortem]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/034-three-days-of-data-lost"
 solution_lang: markdown

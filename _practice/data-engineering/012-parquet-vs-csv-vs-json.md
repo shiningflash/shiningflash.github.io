@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 12
+learn_order: 30
 title: Parquet vs CSV vs JSON
 slug: 012-parquet-vs-csv-vs-json
 category: Storage & Formats
 difficulty: Easy
+interview_value: must-have
 topics: [Parquet, CSV, JSON, columnar storage]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/012-parquet-vs-csv-vs-json"
 solution_lang: markdown

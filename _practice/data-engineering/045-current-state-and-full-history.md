@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 45
+learn_order: 23
 title: Current State and Full History
 slug: 045-current-state-and-full-history
 category: Data Modeling
 difficulty: Medium
+interview_value: optional
 topics: [event sourcing, projections, MV, audit]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/045-current-state-and-full-history"
 solution_lang: markdown

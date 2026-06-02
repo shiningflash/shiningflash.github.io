@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 50
+learn_order: 59
 title: Partition Always Ten Percent Smaller
 slug: 050-partition-always-ten-percent-smaller
 category: Debugging & Reliability
 difficulty: Medium
+interview_value: strong
 topics: [anomaly, baselines, patterns, judgement]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/050-partition-always-ten-percent-smaller"
 solution_lang: markdown

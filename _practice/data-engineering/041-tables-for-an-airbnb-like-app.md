@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 41
+learn_order: 21
 title: Tables for an Airbnb Like App
 slug: 041-tables-for-an-airbnb-like-app
 category: Data Modeling
 difficulty: Medium
+interview_value: must-have
 topics: [star schema, SCD2, multi-currency, reviews]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/041-tables-for-an-airbnb-like-app"
 solution_lang: markdown

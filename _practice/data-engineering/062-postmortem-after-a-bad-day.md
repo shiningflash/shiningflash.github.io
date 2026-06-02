@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 62
+learn_order: 75
 title: Postmortem After a Bad Day
 slug: 062-postmortem-after-a-bad-day
 category: People & Process
 difficulty: Medium
+interview_value: must-have
 topics: [postmortem, blameless, action items]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/062-postmortem-after-a-bad-day"
 solution_lang: markdown

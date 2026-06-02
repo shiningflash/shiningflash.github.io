@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 49
+learn_order: 54
 title: User Says Data Is Wrong
 slug: 049-user-says-data-is-wrong
 category: Debugging & Reliability
 difficulty: Easy
+interview_value: optional
 topics: [comms, vague reports, triage]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/049-user-says-data-is-wrong"
 solution_lang: markdown

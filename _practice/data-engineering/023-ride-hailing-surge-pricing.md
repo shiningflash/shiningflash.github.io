@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 23
+learn_order: 48
 title: Ride Hailing Surge Pricing
 slug: 023-ride-hailing-surge-pricing
 category: System Design
 difficulty: Hard
+interview_value: strong
 topics: [streaming, H3, real-time, pricing]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/023-ride-hailing-surge-pricing"
 solution_lang: markdown

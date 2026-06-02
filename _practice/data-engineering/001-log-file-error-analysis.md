@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 1
+learn_order: 27
 title: Log File Error Analysis
 slug: 001-log-file-error-analysis
 category: Batch Pipelines
 difficulty: Easy
+interview_value: strong
 topics: [file streaming, counters, top-N, IoT logs]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/001-log-file-error-analysis"
 solution_lang: python

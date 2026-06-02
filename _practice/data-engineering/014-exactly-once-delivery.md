@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 14
+learn_order: 44
 title: Exactly Once Delivery
 slug: 014-exactly-once-delivery
 category: Streaming
 difficulty: Medium
+interview_value: must-have
 topics: [exactly once, idempotency, Kafka, streaming]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/014-exactly-once-delivery"
 solution_lang: markdown

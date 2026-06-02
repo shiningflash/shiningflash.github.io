@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 43
+learn_order: 19
 title: Mixing Facts and Dimensions
 slug: 043-mixing-facts-and-dimensions
 category: Data Modeling
 difficulty: Medium
+interview_value: strong
 topics: [star schema, SCD2, views, history]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/043-mixing-facts-and-dimensions"
 solution_lang: markdown

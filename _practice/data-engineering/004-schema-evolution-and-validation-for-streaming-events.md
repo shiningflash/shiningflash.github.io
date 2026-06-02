@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 4
+learn_order: 41
 title: Schema Evolution and Validation for Streaming Events
 slug: 004-schema-evolution-and-validation-for-streaming-events
 category: Streaming
 difficulty: Medium
+interview_value: strong
 topics: [JSON, schema evolution, type coercion, pydantic]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/004-schema-evolution-and-validation-for-streaming-events"
 solution_lang: python

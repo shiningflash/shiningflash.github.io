@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 66
+learn_order: 12
 title: Indexes When to Add and When They Hurt
 slug: 066-indexes-when-to-add-and-when-they-hurt
 category: Databases
 difficulty: Easy
+interview_value: must-have
 topics: [indexes, B-tree, write cost, EXPLAIN]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/066-indexes-when-to-add-and-when-they-hurt"
 solution_lang: markdown

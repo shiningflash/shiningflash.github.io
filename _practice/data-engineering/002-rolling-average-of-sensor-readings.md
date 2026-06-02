@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 2
+learn_order: 40
 title: Rolling Average of Sensor Readings
 slug: 002-rolling-average-of-sensor-readings
 category: Streaming
 difficulty: Easy
+interview_value: optional
 topics: [rolling window, deque, IoT sensors, real-time]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/002-rolling-average-of-sensor-readings"
 solution_lang: python

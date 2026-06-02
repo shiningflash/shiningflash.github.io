@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 24
+learn_order: 47
 title: Spotify Minutes Listened This Week
 slug: 024-spotify-minutes-listened-this-week
 category: System Design
 difficulty: Hard
+interview_value: must-have
 topics: [streaming aggregation, KV store, watermarks]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/024-spotify-minutes-listened-this-week"
 solution_lang: markdown

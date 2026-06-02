@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 17
+learn_order: 5
 title: Reading an EXPLAIN Plan
 slug: 017-reading-an-explain-plan
 category: SQL & Querying
 difficulty: Medium
+interview_value: must-have
 topics: [EXPLAIN, query plan, joins, sort spill]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/017-reading-an-explain-plan"
 solution_lang: markdown

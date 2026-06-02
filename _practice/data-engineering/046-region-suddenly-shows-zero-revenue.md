@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 46
+learn_order: 56
 title: Region Suddenly Shows Zero Revenue
 slug: 046-region-suddenly-shows-zero-revenue
 category: Debugging & Reliability
 difficulty: Medium
+interview_value: must-have
 topics: [dashboard, joins, SCD, time zones]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/046-region-suddenly-shows-zero-revenue"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 59
+learn_order: 68
 title: Onboarding a New Analyst
 slug: 059-onboarding-a-new-analyst
 category: People & Process
 difficulty: Easy
+interview_value: optional
 topics: [onboarding, mentoring, pairing]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/059-onboarding-a-new-analyst"
 solution_lang: markdown

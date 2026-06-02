@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 21
+learn_order: 53
 title: Data Platform for an Electricity Retailer
 slug: 021-data-platform-for-an-electricity-retailer
 category: System Design
 difficulty: Hard
+interview_value: optional
 topics: [smart meter, IoT, warehouse, batch]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/021-data-platform-for-an-electricity-retailer"
 solution_lang: markdown

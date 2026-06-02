@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 30
+learn_order: 66
 title: Warehouse Cost Doubled in Two Months
 slug: 030-warehouse-cost-doubled-in-two-months
 category: Cloud & Cost
 difficulty: Medium
+interview_value: must-have
 topics: [cost, governance, comms, INFORMATION_SCHEMA]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/030-warehouse-cost-doubled-in-two-months"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 13
+learn_order: 31
 title: Data Lake vs Warehouse vs Lakehouse
 slug: 013-data-lake-vs-warehouse-vs-lakehouse
 category: Storage & Formats
 difficulty: Medium
+interview_value: must-have
 topics: [lake, warehouse, lakehouse, Iceberg, Delta]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/013-data-lake-vs-warehouse-vs-lakehouse"
 solution_lang: markdown

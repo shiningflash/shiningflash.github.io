@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 72
+learn_order: 17
 title: Sharding and Picking a Shard Key
 slug: 072-sharding-and-picking-a-shard-key
 category: Databases
 difficulty: Hard
+interview_value: must-have
 topics: [sharding, shard key, hot shards, hash]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/072-sharding-and-picking-a-shard-key"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 65
+learn_order: 62
 title: 4000 DAG Airflow at 90 Percent CPU
 slug: 065-4000-dag-airflow-at-90-percent-cpu
 category: Debugging & Reliability
 difficulty: Medium
+interview_value: strong
 topics: [Airflow, scheduler, parsing, scale-out]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/065-4000-dag-airflow-at-90-percent-cpu"
 solution_lang: markdown

@@ -2,10 +2,12 @@
 layout: practice-problem
 track: data-engineering
 problem_id: 54
+learn_order: 63
 title: Just Throw More Memory At It
 slug: 054-just-throw-more-memory-at-it
 category: Cloud & Cost
 difficulty: Medium
+interview_value: strong
 topics: [upsize, plan inspection, optimization]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/054-just-throw-more-memory-at-it"
 solution_lang: markdown
