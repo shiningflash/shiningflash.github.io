@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 31
 title: The Dashboard is Wrong
 slug: 031-the-dashboard-is-wrong
-category: Scenarios
+category: Debugging & Reliability
 difficulty: Easy
 topics: [trust, comms, vague reports]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/031-the-dashboard-is-wrong"

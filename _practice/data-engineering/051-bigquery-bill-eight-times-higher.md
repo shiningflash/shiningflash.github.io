@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 51
 title: BigQuery Bill Eight Times Higher
 slug: 051-bigquery-bill-eight-times-higher
-category: Cost & Performance
+category: Cloud & Cost
 difficulty: Medium
 topics: [INFORMATION_SCHEMA, top queries, slot reservation]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/051-bigquery-bill-eight-times-higher"

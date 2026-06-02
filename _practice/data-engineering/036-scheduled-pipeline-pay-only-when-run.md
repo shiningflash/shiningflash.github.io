@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 36
 title: Scheduled Pipeline Pay Only When Run
 slug: 036-scheduled-pipeline-pay-only-when-run
-category: Cloud Decisions
+category: Cloud & Cost
 difficulty: Easy
 topics: [scheduled jobs, Cloud Run Jobs, AWS Batch]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/036-scheduled-pipeline-pay-only-when-run"

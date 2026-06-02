@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 52
 title: Four Hour Spark Job Under One Hour
 slug: 052-four-hour-spark-job-under-one-hour
-category: Cost & Performance
+category: Cloud & Cost
 difficulty: Medium
 topics: [Spark UI, skew, AQE, broadcast joins]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/052-four-hour-spark-job-under-one-hour"

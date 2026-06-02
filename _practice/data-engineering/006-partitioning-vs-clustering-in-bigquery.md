@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 6
 title: Partitioning vs Clustering in BigQuery
 slug: 006-partitioning-vs-clustering-in-bigquery
-category: Fundamentals
+category: Storage & Formats
 difficulty: Easy
 topics: [BigQuery, partitioning, clustering, cost]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/006-partitioning-vs-clustering-in-bigquery"

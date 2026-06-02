@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 54
 title: Just Throw More Memory At It
 slug: 054-just-throw-more-memory-at-it
-category: Cost & Performance
+category: Cloud & Cost
 difficulty: Medium
 topics: [upsize, plan inspection, optimization]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/054-just-throw-more-memory-at-it"

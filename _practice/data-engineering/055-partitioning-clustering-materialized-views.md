@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 55
 title: Partitioning Clustering Materialized Views
 slug: 055-partitioning-clustering-materialized-views
-category: Cost & Performance
+category: Storage & Formats
 difficulty: Easy
 topics: [partitioning, clustering, MV, BigQuery]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/055-partitioning-clustering-materialized-views"

@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 19
 title: Same Query Different Answers
 slug: 019-same-query-different-answers
-category: SQL Thinking
+category: SQL & Querying
 difficulty: Medium
 topics: [time zones, RLS, session settings, debugging]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/019-same-query-different-answers"

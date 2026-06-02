@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 18
 title: CTE vs Subquery
 slug: 018-cte-vs-subquery
-category: SQL Thinking
+category: SQL & Querying
 difficulty: Medium
 topics: [CTE, subquery, materialization, recursion]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/018-cte-vs-subquery"

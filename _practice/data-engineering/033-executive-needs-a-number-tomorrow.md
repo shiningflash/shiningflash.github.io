@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 33
 title: Executive Needs a Number Tomorrow
 slug: 033-executive-needs-a-number-tomorrow
-category: Scenarios
+category: People & Process
 difficulty: Medium
 topics: [comms, exec, caveats, prioritization]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/033-executive-needs-a-number-tomorrow"

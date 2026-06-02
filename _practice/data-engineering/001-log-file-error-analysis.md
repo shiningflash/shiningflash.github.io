@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 1
 title: Log File Error Analysis
 slug: 001-log-file-error-analysis
-category: Logs and Monitoring
+category: Batch Pipelines
 difficulty: Easy
 topics: [file streaming, counters, top-N, IoT logs]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/001-log-file-error-analysis"

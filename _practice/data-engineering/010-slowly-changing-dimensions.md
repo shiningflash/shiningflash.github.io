@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 10
 title: Slowly Changing Dimensions
 slug: 010-slowly-changing-dimensions
-category: Fundamentals
+category: Data Modeling
 difficulty: Medium
 topics: [SCD, dimensions, history, dbt snapshot]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/010-slowly-changing-dimensions"

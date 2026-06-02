@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 20
 title: Window Functions vs GROUP BY
 slug: 020-window-functions-vs-group-by
-category: SQL Thinking
+category: SQL & Querying
 difficulty: Medium
 topics: [window functions, GROUP BY, running totals, ranking]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/020-window-functions-vs-group-by"

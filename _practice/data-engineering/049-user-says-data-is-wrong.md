@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 49
 title: User Says Data Is Wrong
 slug: 049-user-says-data-is-wrong
-category: Debugging
+category: Debugging & Reliability
 difficulty: Easy
 topics: [comms, vague reports, triage]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/049-user-says-data-is-wrong"

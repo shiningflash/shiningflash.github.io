@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 39
 title: Managed Airflow vs Self Hosted
 slug: 039-managed-airflow-vs-self-hosted
-category: Cloud Decisions
+category: Cloud & Cost
 difficulty: Medium
 topics: [Airflow, MWAA, Composer, Astronomer, Dagster]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/039-managed-airflow-vs-self-hosted"

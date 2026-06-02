@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 29
 title: Daily Report Quietly Wrong for Two Weeks
 slug: 029-daily-report-quietly-wrong-for-two-weeks
-category: Scenarios
+category: Debugging & Reliability
 difficulty: Medium
 topics: [incident, postmortem, comms, data quality]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/029-daily-report-quietly-wrong-for-two-weeks"

@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 32
 title: Inheriting a Pipeline No One Owns
 slug: 032-inheriting-a-pipeline-no-one-owns
-category: Scenarios
+category: People & Process
 difficulty: Medium
 topics: [ownership, judgement, rewrite-or-not]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/032-inheriting-a-pipeline-no-one-owns"

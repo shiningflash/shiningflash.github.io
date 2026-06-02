@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 11
 title: Data Contracts in Plain Words
 slug: 011-data-contracts-in-plain-words
-category: Fundamentals
+category: Batch Pipelines
 difficulty: Medium
 topics: [data contracts, schema registry, ownership]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/011-data-contracts-in-plain-words"

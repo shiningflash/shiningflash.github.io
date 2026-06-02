@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 35
 title: Lambda vs Cloud Function vs Cloud Run
 slug: 035-lambda-vs-cloud-function-vs-cloud-run
-category: Cloud Decisions
+category: Cloud & Cost
 difficulty: Medium
 topics: [serverless, AWS, GCP, runtime limits]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/035-lambda-vs-cloud-function-vs-cloud-run"

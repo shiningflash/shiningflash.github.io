@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 7
 title: ETL vs ELT and Why ELT Won
 slug: 007-etl-vs-elt-and-why-elt-won
-category: Fundamentals
+category: Batch Pipelines
 difficulty: Easy
 topics: [ETL, ELT, dbt, warehouse]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/007-etl-vs-elt-and-why-elt-won"

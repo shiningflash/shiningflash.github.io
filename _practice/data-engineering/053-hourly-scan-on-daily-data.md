@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 53
 title: Hourly Scan on Daily Data
 slug: 053-hourly-scan-on-daily-data
-category: Cost & Performance
+category: Cloud & Cost
 difficulty: Easy
 topics: [summary tables, MV, refresh, BI tool]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/053-hourly-scan-on-daily-data"

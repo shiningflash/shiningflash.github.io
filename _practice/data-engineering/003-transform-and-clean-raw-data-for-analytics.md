@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 3
 title: Transform and Clean Raw Data for Analytics
 slug: 003-transform-and-clean-raw-data-for-analytics
-category: Data Cleaning
+category: Batch Pipelines
 difficulty: Medium
 topics: [CSV, validation, regex, date checks]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/003-transform-and-clean-raw-data-for-analytics"

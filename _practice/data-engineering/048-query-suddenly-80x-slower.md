@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 48
 title: Query Suddenly 80x Slower
 slug: 048-query-suddenly-80x-slower
-category: Debugging
+category: Debugging & Reliability
 difficulty: Medium
 topics: [EXPLAIN, statistics, plan flip, join strategy]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/048-query-suddenly-80x-slower"

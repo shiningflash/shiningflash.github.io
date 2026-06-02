@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 8
 title: OLTP vs OLAP
 slug: 008-oltp-vs-olap
-category: Fundamentals
+category: Databases
 difficulty: Easy
 topics: [OLTP, OLAP, column store, row store]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/008-oltp-vs-olap"

@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 37
 title: BigQuery vs Snowflake for New Team
 slug: 037-bigquery-vs-snowflake-for-new-team
-category: Cloud Decisions
+category: Cloud & Cost
 difficulty: Medium
 topics: [BigQuery, Snowflake, pricing model]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/037-bigquery-vs-snowflake-for-new-team"

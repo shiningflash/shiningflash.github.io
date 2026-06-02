@@ -4,7 +4,7 @@ track: data-engineering
 problem_id: 17
 title: Reading an EXPLAIN Plan
 slug: 017-reading-an-explain-plan
-category: SQL Thinking
+category: SQL & Querying
 difficulty: Medium
 topics: [EXPLAIN, query plan, joins, sort spill]
 source_url: "https://github.com/shiningflash/data-engineering-practice-problems/tree/main/problems/017-reading-an-explain-plan"
