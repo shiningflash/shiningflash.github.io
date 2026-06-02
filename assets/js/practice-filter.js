@@ -17,6 +17,7 @@
   const activeFiltersEl = document.getElementById('pr-active-filters');
   const diffChips = Array.from(document.querySelectorAll('[data-filter-difficulty]'));
   const catChips = Array.from(document.querySelectorAll('[data-filter-category]'));
+  const interviewChip = document.querySelector('[data-filter-interview]');
   const catGroup = document.getElementById('pr-cat-chips');
   const catExpandBtn = document.getElementById('pr-cat-expand');
   const total = cards.length;
@@ -25,6 +26,7 @@
     search: '',
     difficulties: new Set(),
     categories: new Set(),
+    interviewOnly: false,
   };
 
   // ---------- URL hash sync ----------
@@ -38,6 +40,10 @@
     }
     (params.getAll('diff') || []).forEach(d => state.difficulties.add(d));
     (params.getAll('cat') || []).forEach(c => state.categories.add(c));
+    if (params.get('interview') === '1') {
+      state.interviewOnly = true;
+      interviewChip?.classList.add('is-active');
+    }
     diffChips.forEach(c => {
       if (state.difficulties.has(c.dataset.filterDifficulty)) c.classList.add('is-active');
     });
@@ -60,6 +66,7 @@
     if (state.search) params.set('q', state.search);
     state.difficulties.forEach(d => params.append('diff', d));
     state.categories.forEach(c => params.append('cat', c));
+    if (state.interviewOnly) params.set('interview', '1');
     const s = params.toString();
     const newHash = s ? '#' + s : '';
     if (window.location.hash !== newHash) {
@@ -76,13 +83,15 @@
       const title = card.dataset.title || '';
       const cat = card.dataset.category || '';
       const diff = card.dataset.difficulty || '';
+      const interview = card.dataset.interview || '';
       const topics = card.dataset.topics || '';
 
       const matchesSearch = !q || title.includes(q) || topics.includes(q);
       const matchesDiff = state.difficulties.size === 0 || state.difficulties.has(diff);
       const matchesCat = state.categories.size === 0 || state.categories.has(cat);
+      const matchesInterview = !state.interviewOnly || interview === 'must-have';
 
-      const show = matchesSearch && matchesDiff && matchesCat;
+      const show = matchesSearch && matchesDiff && matchesCat && matchesInterview;
       card.style.display = show ? '' : 'none';
       if (show) visible++;
     });
@@ -91,12 +100,13 @@
     empty.hidden = visible !== 0;
     grid.hidden = visible === 0;
 
-    const anyFilter = state.search || state.difficulties.size || state.categories.size;
+    const anyFilter = state.search || state.difficulties.size || state.categories.size || state.interviewOnly;
     resetBtn.hidden = !anyFilter;
     clearBtn.hidden = !state.search;
 
     // Active-filters summary text
     const parts = [];
+    if (state.interviewOnly) parts.push('Interview must-haves');
     if (state.difficulties.size) parts.push([...state.difficulties].join(' · '));
     if (state.categories.size) parts.push([...state.categories].join(' · '));
     if (state.search) parts.push(`"${state.search}"`);
@@ -137,6 +147,12 @@
   diffChips.forEach(c => c.addEventListener('click', () => toggleChip(c, state.difficulties, 'filterDifficulty')));
   catChips.forEach(c => c.addEventListener('click', () => toggleChip(c, state.categories, 'filterCategory')));
 
+  interviewChip?.addEventListener('click', () => {
+    state.interviewOnly = !state.interviewOnly;
+    interviewChip.classList.toggle('is-active', state.interviewOnly);
+    applyFilters();
+  });
+
   catExpandBtn?.addEventListener('click', () => {
     const expanded = catGroup.classList.toggle('is-expanded');
     catExpandBtn.setAttribute('aria-expanded', String(expanded));
@@ -146,9 +162,11 @@
     state.search = '';
     state.difficulties.clear();
     state.categories.clear();
+    state.interviewOnly = false;
     searchInput.value = '';
     diffChips.forEach(c => c.classList.remove('is-active'));
     catChips.forEach(c => c.classList.remove('is-active'));
+    interviewChip?.classList.remove('is-active');
     catGroup?.classList.remove('is-expanded');
     catExpandBtn?.setAttribute('aria-expanded', 'false');
     applyFilters();

@@ -6,8 +6,17 @@ layout: page
 #   title, description, hero_eyebrow
 ---
 
-{%- assign problems = site.practice | where: "track", page.track | sort: "problem_id" -%}
+{%- comment -%}
+  Default sort is learn_order (pedagogical reading sequence). Problems without
+  learn_order fall through to the end, ordered by problem_id, which keeps the
+  page deterministic when a new problem lands before its order is assigned.
+{%- endcomment -%}
+{%- assign all = site.practice | where: "track", page.track -%}
+{%- assign ordered = all | where_exp: "p", "p.learn_order != nil" | sort: "learn_order" -%}
+{%- assign unordered = all | where_exp: "p", "p.learn_order == nil" | sort: "problem_id" -%}
+{%- assign problems = ordered | concat: unordered -%}
 {%- assign total = problems | size -%}
+{%- assign must_have_count = problems | where: "interview_value", "must-have" | size -%}
 
 {%- comment -%}
   Group by category so we can show each chip with a count badge and order
@@ -84,6 +93,16 @@ layout: page
       {% endfor %}
     </div>
 
+    {% if must_have_count > 0 %}
+      <button type="button"
+              class="pr-chip pr-chip-must-have"
+              data-filter-interview="must-have"
+              aria-label="Filter to interview must-haves"
+              title="Show only the problems most likely to appear in a senior interview loop">
+        ⭐ Interview must-haves<span class="pr-chip-count">{{ must_have_count }}</span>
+      </button>
+    {% endif %}
+
     <button type="button" id="pr-reset" class="pr-reset" hidden>Reset</button>
   </div>
 
@@ -115,15 +134,20 @@ layout: page
   {% for p in problems %}
     {%- assign diff = p.difficulty | default: "Medium" -%}
     {%- assign topics_csv = p.topics | join: ", " -%}
-    <a class="pr-card"
+    <a class="pr-card{% if p.interview_value == 'must-have' %} pr-card-must{% endif %}"
        href="{{ p.url | relative_url }}"
        data-id="{{ p.problem_id }}"
+       data-learn-order="{{ p.learn_order }}"
        data-title="{{ p.title | downcase }}"
        data-category="{{ p.category }}"
        data-difficulty="{{ diff }}"
+       data-interview="{{ p.interview_value }}"
        data-topics="{{ topics_csv | downcase }}">
       <div class="pr-card-head">
         <span class="pr-card-id">#{{ p.problem_id }}</span>
+        {% if p.interview_value == 'must-have' %}
+          <span class="pr-card-must-badge" title="Interview must-have">⭐</span>
+        {% endif %}
         <span class="pr-diff pr-diff-{{ diff | downcase }}">{{ diff }}</span>
       </div>
       <h3 class="pr-card-title">{{ p.title }}</h3>

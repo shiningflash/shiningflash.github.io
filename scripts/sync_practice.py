@@ -99,10 +99,10 @@ def yaml_escape(value: str) -> str:
 def emit_frontmatter(meta: dict) -> str:
     """Render a dict as a deterministic YAML frontmatter block."""
     lines = ["---"]
-    # Stable key order — easier to diff
+    # Stable key order, easier to diff
     order = [
-        "layout", "track", "problem_id", "title", "slug",
-        "category", "difficulty", "topics",
+        "layout", "track", "problem_id", "learn_order", "title", "slug",
+        "category", "difficulty", "interview_value", "topics",
         "source_url", "solution_lang",
     ]
     for key in order:
@@ -211,6 +211,14 @@ def sync(source: Path, track: str, *, source_repo_url: str | None = None,
             "topics": meta["topics"],
             "solution_lang": sol_lang,
         }
+        # Optional pedagogical and interview-prep fields, added in wave 1.
+        if "learn_order" in meta and meta["learn_order"]:
+            try:
+                out_meta["learn_order"] = int(meta["learn_order"])
+            except (TypeError, ValueError):
+                pass
+        if meta.get("interview_value"):
+            out_meta["interview_value"] = meta["interview_value"]
         if source_repo_url:
             out_meta["source_url"] = f"{source_repo_url.rstrip('/')}/tree/main/problems/{folder.name}"
 

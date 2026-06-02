@@ -305,6 +305,29 @@
 .pr-chip-diff-medium.is-active,
 .pr-chip-diff-hard.is-active { color: var(--pr-chip-active-fg); }
 
+/* Interview must-have filter chip: gold accent so it stands out from the rest */
+.pr-chip-must-have {
+  color: #92400e;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: #fdba74;
+  font-weight: 600;
+}
+.pr-chip-must-have:hover {
+  background: linear-gradient(180deg, #fff3e0 0%, #ffe4ce 100%);
+}
+.pr-chip-must-have.is-active {
+  color: #ffffff;
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  border-color: #b45309;
+}
+.pr-chip-must-have .pr-chip-count {
+  background: rgba(146, 64, 14, .12);
+  color: inherit;
+}
+.pr-chip-must-have.is-active .pr-chip-count {
+  background: rgba(255,255,255,.25);
+}
+
 /* Hidden categories (collapsed by default; expanded class reveals) */
 .pr-chip-hidden { display: none; }
 .pr-chip-categories.is-expanded .pr-chip-hidden { display: inline-flex; }
@@ -388,6 +411,26 @@
   border-color: rgba(59,130,246,.35);
 }
 .pr-card:hover::before { opacity: 1; }
+
+/* Interview must-have cards: warm tint and small star badge */
+.pr-card-must {
+  border-color: rgba(245, 158, 11, .35);
+  background: linear-gradient(180deg, rgba(255, 247, 237, .6) 0%, rgba(255, 255, 255, 0) 60%), var(--pr-card-bg, #fff);
+}
+.pr-card-must::before {
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  opacity: .85;
+}
+.pr-card-must:hover {
+  border-color: rgba(245, 158, 11, .55);
+}
+.pr-card-must-badge {
+  display: inline-block;
+  font-size: .85rem;
+  line-height: 1;
+  color: #d97706;
+  margin-left: .35rem;
+}
 
 .pr-card-head {
   display: flex;

@@ -55,6 +55,22 @@ Stages 1 to 6 are sequential. Stage 7 runs alongside the whole thing.
 
 ---
 
+## Jump straight to practice problems
+
+Each stage on this roadmap has its own filtered view in the [practice index](/practice/data-engineering/). Click into the one you are working on.
+
+- **Stage 1, SQL fluency.** [SQL & Querying](/practice/data-engineering/#cat=SQL+%26+Querying) and [Databases](/practice/data-engineering/#cat=Databases).
+- **Stage 2, modeling.** [Data Modeling](/practice/data-engineering/#cat=Data+Modeling).
+- **Stage 3, batch.** [Batch Pipelines](/practice/data-engineering/#cat=Batch+Pipelines).
+- **Stage 4, streaming.** [Streaming](/practice/data-engineering/#cat=Streaming).
+- **Stage 5, storage.** [Storage & Formats](/practice/data-engineering/#cat=Storage+%26+Formats).
+- **Stage 6, reliability and cost.** [Debugging & Reliability](/practice/data-engineering/#cat=Debugging+%26+Reliability) and [Cloud & Cost](/practice/data-engineering/#cat=Cloud+%26+Cost).
+- **Stage 7, interview craft.** [System Design](/practice/data-engineering/#cat=System+Design), [People & Process](/practice/data-engineering/#cat=People+%26+Process), or jump straight to [⭐ Interview must-haves](/practice/data-engineering/#interview=1).
+
+The problem index sorts in recommended reading order by default, so reading top to bottom inside any filter walks you through that stage in sequence.
+
+---
+
 ## What you can do at each level
 
 A quick honesty check. Where are you now, where do you want to be?
