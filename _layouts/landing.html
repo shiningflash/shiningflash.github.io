@@ -8,6 +8,7 @@ refactor: true
 {%- assign sd_count = site.practice | where: "track", "system-design" | size -%}
 {%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
 {%- assign concept_count = site.sd_concepts | size -%}
+{%- assign energy_count = site.energy_concepts | size -%}
 {%- assign post_count = site.posts | where_exp: "p", "p.hidden != true" | size -%}
 {%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
 
@@ -223,6 +224,20 @@ refactor: true
     <p class="lp-tile-tag">Short, plain-English answers to questions that come up on every design review.</p>
     <div class="lp-tile-foot">
       <span class="lp-stat-num">{{ concept_count }}</span>
+      <span class="lp-stat-lbl">topics</span>
+      <span class="lp-arrow">→</span>
+    </div>
+  </a>
+
+  <!-- Energy Markets -->
+  <a class="lp-tile lp-tile-energy" href="/energy/concepts/">
+    <div class="lp-tile-head">
+      <h3 class="lp-tile-name">Energy Markets</h3>
+      <span class="lp-tile-badge">Reference</span>
+    </div>
+    <p class="lp-tile-tag">The Swedish power market for engineers crossing in. Plain English, real diagrams.</p>
+    <div class="lp-tile-foot">
+      <span class="lp-stat-num">{{ energy_count }}</span>
       <span class="lp-stat-lbl">topics</span>
       <span class="lp-arrow">→</span>
     </div>

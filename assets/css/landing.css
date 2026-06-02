@@ -203,6 +203,7 @@ a.lp-tile:hover {
 .lp-tile-sd         { grid-column: span 2; }
 .lp-tile-de         { grid-column: span 2; }
 .lp-tile-concepts   { grid-column: span 2; }
+.lp-tile-energy     { grid-column: span 2; }
 .lp-tile-posts-num  { grid-column: span 2; }
 .lp-tile-latest     { grid-column: span 2; }
 
@@ -218,6 +219,7 @@ a.lp-tile:hover {
 a.lp-tile-sd:hover        { border-color: rgba(59,130,246,.45); }
 a.lp-tile-de:hover        { border-color: rgba(16,185,129,.45); }
 a.lp-tile-concepts:hover  { border-color: rgba(139,92,246,.45); }
+a.lp-tile-energy:hover    { border-color: rgba(14,165,233,.45); }
 a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
 
 /* ── Hero tile content ── */
@@ -493,6 +495,7 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
   .lp-tile-sd        { grid-column: span 2; }
   .lp-tile-de        { grid-column: span 2; }
   .lp-tile-concepts  { grid-column: span 2; }
+  .lp-tile-energy    { grid-column: span 2; }
   .lp-tile-posts-num { grid-column: span 2; }
   .lp-tile-latest    { grid-column: span 4; }
   /* stack the footer card on tablets too if it gets cramped */
@@ -524,6 +527,7 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
   .lp-tile-sd,
   .lp-tile-de,
   .lp-tile-concepts,
+  .lp-tile-energy,
   .lp-tile-posts-num,
   .lp-tile-latest { grid-column: span 1; grid-row: auto; }
   .lp-mini-cards { grid-template-columns: 1fr; }
