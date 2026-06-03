@@ -939,6 +939,55 @@
   .hp-prep-cta { margin-left: 0; }
 }
 
+/* --- Senior Interview Scenarios section ---------------------------------- */
+.pr-senior {
+  margin: 1rem 0 2rem;
+  padding: 1.25rem 1.4rem 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--pr-border);
+  background:
+    radial-gradient(800px 240px at 0% 0%, rgba(59,130,246,.07), transparent 60%),
+    radial-gradient(600px 200px at 100% 100%, rgba(29,78,216,.07), transparent 60%),
+    var(--pr-card-bg);
+}
+.pr-senior-head { margin-bottom: 1rem; }
+.pr-senior-title {
+  margin: 0 0 .35rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--heading-color, inherit);
+}
+.pr-senior-desc {
+  margin: 0;
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--pr-text-muted);
+  max-width: 68ch;
+}
+.pr-senior-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: .7rem;
+}
+.pr-senior-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: .85rem .95rem .9rem;
+  background: var(--pr-card-bg);
+  border: 1px solid var(--pr-border);
+  border-radius: 12px;
+  text-decoration: none !important;
+  color: inherit;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.pr-senior-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59,130,246,.4);
+  box-shadow: var(--pr-card-shadow-hover);
+}
+
 /* --- Feature card on practice-index pages -------------------------------- */
 /* A single prominent card rendered above the filter toolbar when the index */
 /* declares page.feature_card. Visually distinct from problem cards.        */

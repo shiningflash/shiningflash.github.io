@@ -102,7 +102,7 @@ def emit_frontmatter(meta: dict) -> str:
     # Stable key order, easier to diff
     order = [
         "layout", "track", "problem_id", "learn_order", "title", "slug",
-        "category", "difficulty", "interview_value", "topics",
+        "category", "difficulty", "interview_value", "series", "topics",
         "source_url", "solution_lang",
     ]
     for key in order:
@@ -219,6 +219,8 @@ def sync(source: Path, track: str, *, source_repo_url: str | None = None,
                 pass
         if meta.get("interview_value"):
             out_meta["interview_value"] = meta["interview_value"]
+        if meta.get("series"):
+            out_meta["series"] = meta["series"]
         if source_repo_url:
             out_meta["source_url"] = f"{source_repo_url.rstrip('/')}/tree/main/problems/{folder.name}"
 

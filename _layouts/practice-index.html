@@ -75,6 +75,33 @@ layout: page
 </a>
 {% endfor %}
 
+{%- assign senior = problems | where: "series", "senior-scenarios" | sort: "problem_id" -%}
+{% if senior.size > 0 %}
+<section class="pr-senior" aria-label="Senior interview scenarios">
+  <div class="pr-senior-head">
+    <h2 class="pr-senior-title">Senior Interview Scenarios</h2>
+    <p class="pr-senior-desc">Open-ended Monday-morning situations. Each one walks through plan, technology choices, and best practices for one real operational theme: schema drift, late data, stale freshness, and breaking-change versioning.</p>
+  </div>
+  <div class="pr-senior-grid">
+    {% for p in senior %}
+      {%- assign diff = p.difficulty | default: "Medium" -%}
+      <a class="pr-senior-card{% if p.interview_value == 'must-have' %} pr-card-must{% endif %}"
+         href="{{ p.url | relative_url }}">
+        <div class="pr-card-head">
+          <span class="pr-card-id">#{{ p.problem_id }}</span>
+          {% if p.interview_value == 'must-have' %}
+            <span class="pr-card-must-badge" title="Interview must-have">⭐</span>
+          {% endif %}
+          <span class="pr-diff pr-diff-{{ diff | downcase }}">{{ diff }}</span>
+        </div>
+        <h3 class="pr-card-title">{{ p.title }}</h3>
+        <div class="pr-card-cat">{{ p.category }}</div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="pr-toolbar" aria-label="Filter problems">
 
   <div class="pr-toolbar-row">
