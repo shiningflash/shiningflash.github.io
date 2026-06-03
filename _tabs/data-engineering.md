@@ -6,9 +6,9 @@ order: 3
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-
-  75 hand-picked scenarios across SQL, modeling, databases, streaming, storage,
-  cloud cost, system design, debugging and people work. Each one is short
-  enough to solve in hours but real enough to prepare you for production
+  75 hand-picked scenarios across SQL, modeling, databases, batch pipelines,
+  streaming, storage, cloud cost, system design and people work. Each one is
+  short enough to solve in hours but real enough to prepare you for production
   and for senior-level interviews. Filter by category and difficulty.
 track: data-engineering
 source_repo: https://github.com/shiningflash/data-engineering-practice-problems
