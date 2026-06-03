@@ -14,10 +14,10 @@ permalink: /roadmaps/
     <span class="pr-eyebrow">Learning Paths</span>
     <h1 class="pr-title">Staged roadmaps from beginner to senior.</h1>
     <p class="pr-subtitle">
-      Two ordered learning paths, one for system design and one for data engineering. Each path is split into seven stages. Read top to bottom and do the stages in order. Every stage ends with something small that you build, not a quiz you take.
+      Three ordered learning paths: system design, data engineering, and AI engineering. Each path is split into seven stages. Read top to bottom and do the stages in order. Every stage ends with something small that you build, not a quiz you take.
     </p>
     <div class="pr-stats">
-      <div class="pr-stat"><strong>2</strong><span>Roadmaps</span></div>
+      <div class="pr-stat"><strong>3</strong><span>Roadmaps</span></div>
       <div class="pr-stat"><strong>7</strong><span>Stages each</span></div>
       <div class="pr-stat"><strong>60+</strong><span>Topics each</span></div>
       <div class="pr-stat"><strong>0</strong><span>Prerequisites</span></div>
@@ -27,7 +27,7 @@ permalink: /roadmaps/
 
 <div class="home-section">
   <h2 class="home-section-title">Pick a track</h2>
-  <p class="home-section-lede">Both roadmaps assume no prior background. Pick the one closest to what you want to be doing in a year.</p>
+  <p class="home-section-lede">All three roadmaps assume no prior background. Pick the one closest to what you want to be doing in a year.</p>
   <section class="pr-tracks">
 
     <a class="pr-track-card" href="/practice/system-design/roadmap/">
@@ -41,7 +41,7 @@ permalink: /roadmaps/
       </p>
       <div class="pr-track-meta">
         <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
+        <span>Beginner to Senior</span>
         <span>~6 months</span>
       </div>
       <div class="pr-track-chips">
@@ -64,7 +64,7 @@ permalink: /roadmaps/
       </p>
       <div class="pr-track-meta">
         <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
+        <span>Beginner to Senior</span>
         <span>~6 months</span>
       </div>
       <div class="pr-track-chips">
@@ -72,6 +72,29 @@ permalink: /roadmaps/
         <span class="pr-track-chip">Modeling</span>
         <span class="pr-track-chip">Batch</span>
         <span class="pr-track-chip">Streaming</span>
+        <span class="pr-track-chip pr-track-chip-more">+3 more</span>
+      </div>
+    </a>
+
+    <a class="pr-track-card" href="/practice/ai-engineering/roadmap/">
+      <div class="pr-track-emoji">🤖</div>
+      <h2 class="pr-track-name">
+        AI Engineering Roadmap
+        <span class="pr-track-status pr-track-status-live">Live</span>
+      </h2>
+      <p class="pr-track-desc">
+        From your first API call to LLM systems that hold up in production. LLM foundations, prompting, RAG, agents, evaluation, production, and the interview craft.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>7</strong> stages</span>
+        <span>Beginner to Senior</span>
+        <span>~6 months</span>
+      </div>
+      <div class="pr-track-chips">
+        <span class="pr-track-chip">Foundations</span>
+        <span class="pr-track-chip">Prompting</span>
+        <span class="pr-track-chip">RAG</span>
+        <span class="pr-track-chip">Agents</span>
         <span class="pr-track-chip pr-track-chip-more">+3 more</span>
       </div>
     </a>

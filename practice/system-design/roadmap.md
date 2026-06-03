@@ -364,7 +364,7 @@ Every cell that is empty is intentional. Those topics belong to a later stage. D
 gantt
     title 6-month learning plan
     dateFormat YYYY-MM-DD
-    axisFormat %b
+    axisFormat W%V
 
     section Foundations
     HTTP, TCP, DNS, TLS                :a1, 2026-01-01, 14d

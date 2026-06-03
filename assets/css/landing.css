@@ -263,8 +263,11 @@ a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
 }
 .lp-mini-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .75rem;
+  /* Three roadmap cards (System Design, Data Engineering, AI
+     Engineering). auto-fit with a min lets the row collapse to 2 then
+     1 column as the hero tile narrows, without an extra media query. */
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: .65rem;
   margin-top: auto;
 }
 .lp-mini-card {
