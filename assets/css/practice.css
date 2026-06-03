@@ -305,27 +305,39 @@
 .pr-chip-diff-medium.is-active,
 .pr-chip-diff-hard.is-active { color: var(--pr-chip-active-fg); }
 
-/* Interview must-have filter chip: gold accent so it stands out from the rest */
+/* Interview must-have filter chip: blue accent, unified with card tint below */
 .pr-chip-must-have {
-  color: #92400e;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-  border-color: #fdba74;
+  color: #1d4ed8;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #93c5fd;
   font-weight: 600;
 }
 .pr-chip-must-have:hover {
-  background: linear-gradient(180deg, #fff3e0 0%, #ffe4ce 100%);
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
 }
 .pr-chip-must-have.is-active {
   color: #ffffff;
-  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
-  border-color: #b45309;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #1e40af;
 }
 .pr-chip-must-have .pr-chip-count {
-  background: rgba(146, 64, 14, .12);
+  background: rgba(29, 78, 216, .12);
   color: inherit;
 }
 .pr-chip-must-have.is-active .pr-chip-count {
   background: rgba(255,255,255,.25);
+}
+[data-mode="dark"] .pr-chip-must-have {
+  color: #93c5fd;
+  background: linear-gradient(180deg, rgba(59,130,246,.10) 0%, rgba(59,130,246,.18) 100%);
+  border-color: rgba(147,197,253,.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .pr-chip-must-have {
+    color: #93c5fd;
+    background: linear-gradient(180deg, rgba(59,130,246,.10) 0%, rgba(59,130,246,.18) 100%);
+    border-color: rgba(147,197,253,.35);
+  }
 }
 
 /* Hidden categories (collapsed by default; expanded class reveals) */
@@ -412,24 +424,34 @@
 }
 .pr-card:hover::before { opacity: 1; }
 
-/* Interview must-have cards: warm tint and small star badge */
+/* Interview must-have cards: blue tint and small star badge */
 .pr-card-must {
-  border-color: rgba(245, 158, 11, .35);
-  background: linear-gradient(180deg, rgba(255, 247, 237, .6) 0%, rgba(255, 255, 255, 0) 60%), var(--pr-card-bg, #fff);
+  border-color: rgba(59, 130, 246, .35);
+  background: linear-gradient(180deg, rgba(239, 246, 255, .75) 0%, rgba(255, 255, 255, 0) 60%), var(--pr-card-bg, #fff);
 }
 .pr-card-must::before {
-  background: linear-gradient(180deg, #f59e0b, #d97706);
-  opacity: .85;
+  background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+  opacity: .9;
 }
 .pr-card-must:hover {
-  border-color: rgba(245, 158, 11, .55);
+  border-color: rgba(59, 130, 246, .55);
 }
 .pr-card-must-badge {
   display: inline-block;
   font-size: .85rem;
   line-height: 1;
-  color: #d97706;
+  color: #1d4ed8;
   margin-left: .35rem;
+}
+[data-mode="dark"] .pr-card-must {
+  background: linear-gradient(180deg, rgba(59, 130, 246, .14) 0%, rgba(31, 38, 48, 0) 60%), var(--pr-card-bg);
+}
+[data-mode="dark"] .pr-card-must-badge { color: #93c5fd; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .pr-card-must {
+    background: linear-gradient(180deg, rgba(59, 130, 246, .14) 0%, rgba(31, 38, 48, 0) 60%), var(--pr-card-bg);
+  }
+  :root:not([data-mode="light"]) .pr-card-must-badge { color: #93c5fd; }
 }
 
 .pr-card-head {
