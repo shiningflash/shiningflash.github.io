@@ -6,7 +6,7 @@ order: 3
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-
-  75 hand-picked scenarios across SQL, modeling, databases, batch pipelines,
+  90 hand-picked scenarios across SQL, modeling, databases, batch pipelines,
   streaming, storage, cloud cost, system design and people work. Each one is
   short enough to solve in hours but real enough to prepare you for production
   and for senior-level interviews. Filter by category and difficulty.
