@@ -5,7 +5,7 @@ problem_id: 35
 learn_order: 35
 title: Lambda vs Cloud Function vs Cloud Run
 slug: 035-lambda-vs-cloud-function-vs-cloud-run
-category: Cloud Services
+category: Cloud & Cost
 difficulty: Medium
 interview_value: strong
 topics: [serverless, AWS, GCP, runtime limits]

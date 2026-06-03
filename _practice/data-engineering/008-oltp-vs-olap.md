@@ -5,7 +5,7 @@ problem_id: 8
 learn_order: 7
 title: OLTP vs OLAP
 slug: 008-oltp-vs-olap
-category: Database Internals
+category: Databases & Operations
 difficulty: Easy
 interview_value: must-have
 topics: [OLTP, OLAP, column store, row store]

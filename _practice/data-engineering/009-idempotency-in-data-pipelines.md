@@ -5,7 +5,7 @@ problem_id: 9
 learn_order: 25
 title: Idempotency in Data Pipelines
 slug: 009-idempotency-in-data-pipelines
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: must-have
 topics: [idempotency, retries, MERGE, partitions]

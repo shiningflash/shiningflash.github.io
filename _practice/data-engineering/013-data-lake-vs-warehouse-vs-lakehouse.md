@@ -5,7 +5,7 @@ problem_id: 13
 learn_order: 31
 title: Data Lake vs Warehouse vs Lakehouse
 slug: 013-data-lake-vs-warehouse-vs-lakehouse
-category: Storage & Formats
+category: Storage & Lakehouse
 difficulty: Medium
 interview_value: must-have
 topics: [lake, warehouse, lakehouse, Iceberg, Delta]

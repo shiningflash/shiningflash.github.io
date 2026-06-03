@@ -5,7 +5,7 @@ problem_id: 31
 learn_order: 55
 title: The Dashboard is Wrong
 slug: 031-the-dashboard-is-wrong
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Easy
 interview_value: strong
 topics: [trust, comms, vague reports]

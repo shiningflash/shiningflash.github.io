@@ -5,7 +5,7 @@ problem_id: 11
 learn_order: 26
 title: Data Contracts in Plain Words
 slug: 011-data-contracts-in-plain-words
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: strong
 topics: [data contracts, schema registry, ownership]

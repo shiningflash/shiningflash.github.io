@@ -5,7 +5,7 @@ problem_id: 34
 learn_order: 61
 title: Three Days of Data Lost
 slug: 034-three-days-of-data-lost
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Hard
 interview_value: must-have
 topics: [Kafka retention, replay, recovery, postmortem]

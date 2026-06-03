@@ -5,7 +5,7 @@ problem_id: 55
 learn_order: 33
 title: Partitioning Clustering Materialized Views
 slug: 055-partitioning-clustering-materialized-views
-category: Storage & Formats
+category: Storage & Lakehouse
 difficulty: Easy
 interview_value: strong
 topics: [partitioning, clustering, MV, BigQuery]

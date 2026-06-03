@@ -5,7 +5,7 @@ problem_id: 65
 learn_order: 62
 title: 4000 DAG Airflow at 90 Percent CPU
 slug: 065-4000-dag-airflow-at-90-percent-cpu
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: strong
 topics: [Airflow, scheduler, parsing, scale-out]

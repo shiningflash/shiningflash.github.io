@@ -5,7 +5,7 @@ problem_id: 3
 learn_order: 28
 title: Transform and Clean Raw Data for Analytics
 slug: 003-transform-and-clean-raw-data-for-analytics
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: optional
 topics: [CSV, validation, regex, date checks]

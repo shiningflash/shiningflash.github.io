@@ -5,7 +5,7 @@ problem_id: 74
 learn_order: 15
 title: Deadlocks and Lock Escalation
 slug: 074-deadlocks-and-lock-escalation
-category: Database Operations
+category: Databases & Operations
 difficulty: Medium
 interview_value: strong
 topics: [deadlocks, locks, retries, lock escalation]

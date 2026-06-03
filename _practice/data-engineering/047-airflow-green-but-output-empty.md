@@ -5,7 +5,7 @@ problem_id: 47
 learn_order: 57
 title: Airflow Green but Output Empty
 slug: 047-airflow-green-but-output-empty
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: must-have
 topics: [silent success, idempotency, anomaly checks]

@@ -5,7 +5,7 @@ problem_id: 29
 learn_order: 58
 title: Daily Report Quietly Wrong for Two Weeks
 slug: 029-daily-report-quietly-wrong-for-two-weeks
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: must-have
 topics: [incident, postmortem, comms, data quality]

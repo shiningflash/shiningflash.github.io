@@ -5,7 +5,7 @@ problem_id: 71
 learn_order: 16
 title: Read Replicas and Replication Lag
 slug: 071-read-replicas-and-replication-lag
-category: Database Operations
+category: Databases & Operations
 difficulty: Medium
 interview_value: strong
 topics: [replicas, replication lag, read after write]

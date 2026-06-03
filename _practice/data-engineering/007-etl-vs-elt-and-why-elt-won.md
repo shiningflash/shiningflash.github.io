@@ -5,7 +5,7 @@ problem_id: 7
 learn_order: 24
 title: ETL vs ELT and Why ELT Won
 slug: 007-etl-vs-elt-and-why-elt-won
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Easy
 interview_value: must-have
 topics: [ETL, ELT, dbt, warehouse]

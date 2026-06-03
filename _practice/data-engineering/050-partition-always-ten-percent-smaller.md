@@ -5,7 +5,7 @@ problem_id: 50
 learn_order: 59
 title: Partition Always Ten Percent Smaller
 slug: 050-partition-always-ten-percent-smaller
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: strong
 topics: [anomaly, baselines, patterns, judgement]

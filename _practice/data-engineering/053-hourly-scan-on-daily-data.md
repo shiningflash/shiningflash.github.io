@@ -5,7 +5,7 @@ problem_id: 53
 learn_order: 64
 title: Hourly Scan on Daily Data
 slug: 053-hourly-scan-on-daily-data
-category: Cost Optimization
+category: Cloud & Cost
 difficulty: Easy
 interview_value: strong
 topics: [summary tables, MV, refresh, BI tool]

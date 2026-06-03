@@ -5,7 +5,7 @@ problem_id: 48
 learn_order: 60
 title: Query Suddenly 80x Slower
 slug: 048-query-suddenly-80x-slower
-category: Debugging & Reliability
+category: Databases & Operations
 difficulty: Medium
 interview_value: must-have
 topics: [EXPLAIN, statistics, plan flip, join strategy]

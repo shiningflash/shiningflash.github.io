@@ -5,7 +5,7 @@ problem_id: 5
 learn_order: 29
 title: Merging Messy CSVs from Multiple Partners
 slug: 005-merging-messy-csvs-from-multiple-partners
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: optional
 topics: [CSV, column mapping, date parsing, file walk]

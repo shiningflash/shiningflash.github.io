@@ -5,7 +5,7 @@ problem_id: 30
 learn_order: 66
 title: Warehouse Cost Doubled in Two Months
 slug: 030-warehouse-cost-doubled-in-two-months
-category: Cost Optimization
+category: Cloud & Cost
 difficulty: Medium
 interview_value: must-have
 topics: [cost, governance, comms, INFORMATION_SCHEMA]

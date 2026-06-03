@@ -5,7 +5,7 @@ problem_id: 12
 learn_order: 30
 title: Parquet vs CSV vs JSON
 slug: 012-parquet-vs-csv-vs-json
-category: Storage & Formats
+category: Storage & Lakehouse
 difficulty: Easy
 interview_value: must-have
 topics: [Parquet, CSV, JSON, columnar storage]

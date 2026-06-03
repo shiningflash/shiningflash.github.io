@@ -5,7 +5,7 @@ problem_id: 73
 learn_order: 14
 title: Database Connection Pooling
 slug: 073-database-connection-pooling
-category: Database Operations
+category: Databases & Operations
 difficulty: Medium
 interview_value: strong
 topics: [connection pool, PgBouncer, sizing, Postgres]

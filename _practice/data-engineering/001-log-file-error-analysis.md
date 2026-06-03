@@ -5,7 +5,7 @@ problem_id: 1
 learn_order: 27
 title: Log File Error Analysis
 slug: 001-log-file-error-analysis
-category: Batch Pipelines
+category: Batch Pipelines & Orchestration
 difficulty: Easy
 interview_value: strong
 topics: [file streaming, counters, top-N, IoT logs]

@@ -5,7 +5,7 @@ problem_id: 75
 learn_order: 8
 title: SQL vs NoSQL
 slug: 075-sql-vs-nosql
-category: Database Internals
+category: Databases & Operations
 difficulty: Medium
 interview_value: strong
 topics: [SQL, NoSQL, KV, document, wide column, graph]

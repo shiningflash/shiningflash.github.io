@@ -5,7 +5,7 @@ problem_id: 49
 learn_order: 54
 title: User Says Data Is Wrong
 slug: 049-user-says-data-is-wrong
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Easy
 interview_value: optional
 topics: [comms, vague reports, triage]

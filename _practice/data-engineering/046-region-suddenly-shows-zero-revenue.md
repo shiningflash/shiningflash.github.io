@@ -5,7 +5,7 @@ problem_id: 46
 learn_order: 56
 title: Region Suddenly Shows Zero Revenue
 slug: 046-region-suddenly-shows-zero-revenue
-category: Debugging & Reliability
+category: Batch Pipelines & Orchestration
 difficulty: Medium
 interview_value: must-have
 topics: [dashboard, joins, SCD, time zones]

@@ -5,7 +5,7 @@ problem_id: 51
 learn_order: 65
 title: BigQuery Bill Eight Times Higher
 slug: 051-bigquery-bill-eight-times-higher
-category: Cost Optimization
+category: Cloud & Cost
 difficulty: Medium
 interview_value: must-have
 topics: [INFORMATION_SCHEMA, top queries, slot reservation]

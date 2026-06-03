@@ -5,7 +5,7 @@ problem_id: 36
 learn_order: 36
 title: Scheduled Pipeline Pay Only When Run
 slug: 036-scheduled-pipeline-pay-only-when-run
-category: Cloud Services
+category: Cloud & Cost
 difficulty: Easy
 interview_value: optional
 topics: [scheduled jobs, Cloud Run Jobs, AWS Batch]
