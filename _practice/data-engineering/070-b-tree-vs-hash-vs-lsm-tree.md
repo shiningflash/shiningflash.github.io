@@ -5,7 +5,7 @@ problem_id: 70
 learn_order: 13
 title: B-Tree vs Hash vs LSM Tree
 slug: 070-b-tree-vs-hash-vs-lsm-tree
-category: Databases
+category: Database Internals
 difficulty: Medium
 interview_value: must-have
 topics: [B-tree, hash, LSM, storage engines]

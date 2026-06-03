@@ -5,7 +5,7 @@ problem_id: 72
 learn_order: 17
 title: Sharding and Picking a Shard Key
 slug: 072-sharding-and-picking-a-shard-key
-category: Databases
+category: Database Operations
 difficulty: Hard
 interview_value: must-have
 topics: [sharding, shard key, hot shards, hash]

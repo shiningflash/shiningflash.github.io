@@ -5,7 +5,7 @@ problem_id: 54
 learn_order: 63
 title: Just Throw More Memory At It
 slug: 054-just-throw-more-memory-at-it
-category: Cloud & Cost
+category: Cost Optimization
 difficulty: Medium
 interview_value: strong
 topics: [upsize, plan inspection, optimization]

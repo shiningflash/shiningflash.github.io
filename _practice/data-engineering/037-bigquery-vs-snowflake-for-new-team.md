@@ -5,7 +5,7 @@ problem_id: 37
 learn_order: 37
 title: BigQuery vs Snowflake for New Team
 slug: 037-bigquery-vs-snowflake-for-new-team
-category: Cloud & Cost
+category: Cloud Services
 difficulty: Medium
 interview_value: strong
 topics: [BigQuery, Snowflake, pricing model]

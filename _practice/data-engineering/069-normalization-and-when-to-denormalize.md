@@ -5,7 +5,7 @@ problem_id: 69
 learn_order: 11
 title: Normalization and When to Denormalize
 slug: 069-normalization-and-when-to-denormalize
-category: Databases
+category: Database Internals
 difficulty: Medium
 interview_value: strong
 topics: [normalization, 3NF, denormalization, star schema]

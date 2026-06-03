@@ -5,7 +5,7 @@ problem_id: 68
 learn_order: 10
 title: Isolation Levels in Plain Words
 slug: 068-isolation-levels-in-plain-words
-category: Databases
+category: Database Internals
 difficulty: Medium
 interview_value: must-have
 topics: [isolation, snapshot, anomalies, MVCC]

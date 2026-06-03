@@ -5,7 +5,7 @@ problem_id: 67
 learn_order: 9
 title: Transactions and ACID
 slug: 067-transactions-and-acid
-category: Databases
+category: Database Internals
 difficulty: Easy
 interview_value: must-have
 topics: [transactions, ACID, durability, atomicity]

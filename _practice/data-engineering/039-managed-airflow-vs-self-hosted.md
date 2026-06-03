@@ -5,7 +5,7 @@ problem_id: 39
 learn_order: 38
 title: Managed Airflow vs Self Hosted
 slug: 039-managed-airflow-vs-self-hosted
-category: Cloud & Cost
+category: Cloud Services
 difficulty: Medium
 interview_value: strong
 topics: [Airflow, MWAA, Composer, Astronomer, Dagster]

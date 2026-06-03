@@ -5,7 +5,7 @@ problem_id: 40
 learn_order: 39
 title: BigQuery Access Control for 50 Person Company
 slug: 040-bigquery-access-control-for-50-person-company
-category: Cloud & Cost
+category: Cloud Services
 difficulty: Medium
 interview_value: optional
 topics: [IAM, datasets, groups, RLS, audit]

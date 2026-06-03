@@ -5,7 +5,7 @@ problem_id: 66
 learn_order: 12
 title: Indexes When to Add and When They Hurt
 slug: 066-indexes-when-to-add-and-when-they-hurt
-category: Databases
+category: Database Internals
 difficulty: Easy
 interview_value: must-have
 topics: [indexes, B-tree, write cost, EXPLAIN]

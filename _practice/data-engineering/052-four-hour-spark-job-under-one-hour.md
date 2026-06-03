@@ -5,7 +5,7 @@ problem_id: 52
 learn_order: 67
 title: Four Hour Spark Job Under One Hour
 slug: 052-four-hour-spark-job-under-one-hour
-category: Cloud & Cost
+category: Cost Optimization
 difficulty: Medium
 interview_value: strong
 topics: [Spark UI, skew, AQE, broadcast joins]
