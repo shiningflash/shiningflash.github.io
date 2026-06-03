@@ -7,7 +7,7 @@ refactor: true
 
 {%- assign sd_count = site.practice | where: "track", "system-design" | size -%}
 {%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
-{%- assign concept_count = site.sd_concepts | size -%}
+{%- assign concept_count = site.sd_concepts | where: "status", "live" | size -%}
 {%- assign energy_count = site.energy_concepts | size -%}
 {%- assign post_count = site.posts | where_exp: "p", "p.hidden != true" | size -%}
 {%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
