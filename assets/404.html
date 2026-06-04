@@ -79,7 +79,7 @@ redirect_from:
     <h3 class="lp-tile-name">Concept Library</h3>
     <p class="lp-tile-tag">Short, plain-English answers to common design-review questions.</p>
     <div class="lp-tile-foot">
-      <span class="lp-stat-num">70</span>
+      <span class="lp-stat-num">{{ site.sd_concepts | where: "status", "live" | size }}</span>
       <span class="lp-stat-lbl">topics</span>
       <span class="lp-arrow">→</span>
     </div>

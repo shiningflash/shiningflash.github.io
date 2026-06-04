@@ -17,7 +17,7 @@ mermaid: true
   </div>
 </section>
 
-> **Looking for a single concept?** The [System Design Concepts library](/practice/system-design/concepts/) has short, scenario-driven answers to 70 common questions. Use it as a quick lookup when a stage below mentions something unfamiliar.
+> **Looking for a single concept?** The [System Design Concepts library](/practice/system-design/concepts/) has short, scenario-driven answers to {{ site.sd_concepts | where: "status", "live" | size }} common questions. Use it as a quick lookup when a stage below mentions something unfamiliar.
 
 ## How to read this page
 
@@ -100,7 +100,9 @@ flowchart LR
 | **Useful numbers to memorise** | Memory access: 100ns. SSD read: 100us. Disk seek: 10ms. Cross-region network: 100ms. |
 | **API styles** | REST. RPC. gRPC. GraphQL. WebSocket. When each one fits. |
 
-**Build this in week 4.** A tiny HTTP server in any language. Two endpoints: `POST /links` and `GET /:id`. Store data in a JSON file. Deploy it on a free tier (Fly, Render, Railway).
+**Related concepts.** [TCP vs UDP](/practice/system-design/concepts/001-tcp-vs-udp/) · [HTTP/2 and HTTP/3](/practice/system-design/concepts/002-http2-and-http3/) · [REST, RPC, gRPC, GraphQL](/practice/system-design/concepts/003-rest-rpc-grpc-graphql/) · [Latency, throughput, bandwidth](/practice/system-design/concepts/004-latency-throughput-bandwidth/) · [Sync vs async](/practice/system-design/concepts/005-sync-vs-async/) · [DNS](/practice/system-design/concepts/071-dns/)
+
+**Build this in week 4.** A tiny HTTP server in any language. Two endpoints: `POST /links` and `GET /:id`. Store data in a JSON file. Deploy it on a free tier (Fly, Render, Railway). The same scope is also problem [#001 URL Shortener](/practice/system-design/001-url-shortener/) with a full reference solution.
 
 **You are done when** you can look at a cloud architecture diagram and explain every box and every arrow out loud.
 
@@ -135,6 +137,8 @@ flowchart LR
 | **Sharding** | Range vs hash sharding. Hot shards. Re-sharding pain. |
 | **Consistency models** | Strong. Eventual. Causal. Read-your-writes. |
 | **Storage engines** | B-trees vs LSM trees. Why your DB choice changes write speed by 10x. |
+
+**Related concepts.** [SQL vs NoSQL](/practice/system-design/concepts/006-sql-vs-nosql/) · [ACID vs BASE](/practice/system-design/concepts/007-acid-vs-base/) · [Normalization vs denormalization](/practice/system-design/concepts/008-normalization-vs-denormalization/) · [B-tree vs LSM tree](/practice/system-design/concepts/009-b-tree-vs-lsm-tree/) · [Indexes that help, indexes that hurt](/practice/system-design/concepts/010-indexes-help-and-hurt/) · [Read replicas](/practice/system-design/concepts/011-read-replicas/) · [Sharding strategies](/practice/system-design/concepts/012-sharding-strategies/) · [Schema migrations with zero downtime](/practice/system-design/concepts/013-zero-downtime-migrations/) · [OLTP vs OLAP](/practice/system-design/concepts/014-oltp-vs-olap/)
 
 **Build this in week 8.** Take your Stage 1 service. Move the JSON file to Postgres. Add one index. Run EXPLAIN on a query and read the plan. Add one slow query that scans the whole table. Watch the latency.
 
@@ -175,6 +179,8 @@ flowchart LR
 | **Delivery guarantees** | At-most-once, at-least-once, exactly-once. Why exactly-once is a lie. |
 | **Idempotency** | Idempotency keys. Dedup. Why every retry-safe endpoint needs them. |
 | **Patterns** | Outbox pattern. CDC (change data capture). Dead letter queue. Backpressure. |
+
+**Related concepts.** [Why cache and what to cache](/practice/system-design/concepts/023-why-cache-what-cache/) · [Cache strategies](/practice/system-design/concepts/024-cache-strategies/) · [Cache eviction](/practice/system-design/concepts/025-cache-eviction/) · [Cache invalidation](/practice/system-design/concepts/026-cache-invalidation/) · [CDN](/practice/system-design/concepts/027-cdn-when-you-need-it/) · [Why use a message queue](/practice/system-design/concepts/032-why-message-queue/) · [Kafka vs RabbitMQ vs SQS](/practice/system-design/concepts/033-kafka-vs-rabbitmq-vs-sqs/) · [Delivery semantics](/practice/system-design/concepts/034-delivery-semantics/) · [Pub/sub vs queue](/practice/system-design/concepts/035-pubsub-vs-queue/) · [Idempotency](/practice/system-design/concepts/021-idempotency/)
 
 **Build this in week 12.** Add Redis in front of Postgres. Measure the hit rate. Add Kafka or NATS. Move click-counting out of the request path into a background consumer.
 
@@ -217,6 +223,8 @@ flowchart TB
 | **Capacity planning** | Auto-scaling. Connection pools. Headroom. |
 | **Disaster recovery** | RTO, RPO. Backups vs replicas. Region failover. Blast radius. |
 
+**Related concepts.** [Horizontal vs vertical scaling](/practice/system-design/concepts/039-horizontal-vs-vertical/) · [Stateless vs stateful](/practice/system-design/concepts/040-stateless-vs-stateful/) · [Load balancer basics](/practice/system-design/concepts/028-load-balancer-basics/) · [L4 vs L7](/practice/system-design/concepts/029-l4-vs-l7/) · [LB algorithms](/practice/system-design/concepts/030-lb-algorithms/) · [Rate limiting strategies](/practice/system-design/concepts/053-rate-limiting-strategies/) · [Retry with backoff and jitter](/practice/system-design/concepts/046-retry-backoff-jitter/) · [Circuit breaker](/practice/system-design/concepts/045-circuit-breaker/) · [Bulkheads and rate limiting](/practice/system-design/concepts/047-bulkheads-and-rate-limiting/) · [Graceful degradation](/practice/system-design/concepts/048-graceful-degradation/) · [Disaster recovery: RTO vs RPO](/practice/system-design/concepts/050-disaster-recovery/)
+
 **Build this in week 16.** Put your service behind a load balancer. Run two copies. Kill one mid-request and watch what happens. Add a rate limiter on `POST /links`. Add a timeout and a retry on the cache call.
 
 **You are done when** you can take any system and answer "what happens if X dies?" for every box in the diagram.
@@ -258,6 +266,8 @@ flowchart LR
 | **Quorum** | N, R, W. Why R + W > N gives strong consistency. The availability cost. |
 | **Strong models** | Linearizability. Serializability. Why they are not the same. |
 | **Geo** | Data residency (GDPR forces this). Active-active vs active-passive. Follow-the-sun. |
+
+**Related concepts.** [CAP theorem](/practice/system-design/concepts/016-cap-theorem/) · [Consistency models](/practice/system-design/concepts/017-consistency-models/) · [Consensus: Raft and Paxos](/practice/system-design/concepts/018-consensus-raft-paxos/) · [Leader election](/practice/system-design/concepts/019-leader-election/) · [2PC vs sagas](/practice/system-design/concepts/020-2pc-vs-sagas/) · [Time, clocks, and ordering](/practice/system-design/concepts/022-time-clocks-ordering/) · [Multi-region](/practice/system-design/concepts/043-multi-region/)
 
 **Build this in week 20.** Set up Postgres replication with one primary and one replica. Force a failover. Time it. Read the Raft paper (the short one). Implement a tiny leader-election with three nodes using Redis (then realise why this is a bad idea, and remember that).
 

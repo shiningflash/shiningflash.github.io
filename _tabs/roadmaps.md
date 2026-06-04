@@ -134,4 +134,4 @@ permalink: /roadmaps/
   </section>
 </div>
 
-> **Looking for short answers instead of a long path?** The [Concept Library](/practice/system-design/concepts/) has 70 short, scenario-driven explanations you can hit before an interview.
+> **Looking for short answers instead of a long path?** The [Concept Library](/practice/system-design/concepts/) has {{ site.sd_concepts | where: "status", "live" | size }} short, scenario-driven explanations you can hit before an interview.

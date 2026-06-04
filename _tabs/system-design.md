@@ -15,7 +15,7 @@ feature_cards:
   - href: /practice/system-design/roadmap/
     icon: "🧭"
     eyebrow: "Start here"
-    title: "System Design Roadmap — Beginner to Expert"
+    title: "System Design Roadmap: Beginner to Senior"
     description: "A staged learning path covering every concept you need, in the order you need it. Foundations, storage, caching, messaging, scaling, distributed systems, and the interview craft."
     meta:
       - "7 stages"
@@ -24,10 +24,10 @@ feature_cards:
   - href: /practice/system-design/concepts/
     icon: "📚"
     eyebrow: "Reference library"
-    title: "System Design Concepts — Quick answers, in plain English"
-    description: "70 of the most common system design questions with short, scenario-driven explanations. Caching, queueing, consistency, load balancers, cloud trade-offs, and more."
+    title: "System Design Concepts: quick answers, in plain English"
+    description: "70+ of the most common system design questions with short, scenario-driven explanations. Caching, queueing, consistency, load balancers, cloud trade-offs, and more."
     meta:
-      - "70 topics"
+      - "70+ topics"
       - "12 sections"
       - "Including AWS / GCP / Azure"
 ---

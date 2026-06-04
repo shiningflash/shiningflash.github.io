@@ -6,11 +6,11 @@ order: 3
 hero_eyebrow: Data Engineering Track
 hero_title: Real production problems, not toy puzzles
 hero_subtitle: >-
-  94 hand-picked scenarios across SQL, modeling, databases, batch pipelines,
-  streaming, storage, cloud cost, system design and people work, plus a small
-  senior-interview track on schema drift, late data, stale freshness, and
-  versioning. Each one is short enough to solve in hours but real enough to
-  prepare you for production and for senior-level interviews.
+  102 hand-picked scenarios across SQL, modeling, databases, batch pipelines,
+  streaming, storage, cloud cost, system design and people work, plus a senior
+  interview track that walks through the everyday Monday-morning situations
+  and senior-level improvements. Each one is short enough to solve in hours
+  but real enough to prepare you for production and for senior interviews.
 track: data-engineering
 source_repo: https://github.com/shiningflash/data-engineering-practice-problems
 permalink: /practice/data-engineering/
