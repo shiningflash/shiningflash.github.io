@@ -1,6 +1,6 @@
 ---
 layout: sd-concepts-index
-title: Concept Library
+title: SD Concepts
 icon: fas fa-book
 order: 5
 permalink: /practice/system-design/concepts/

@@ -137,8 +137,10 @@ permalink: /practice/
 </div>
 
 <div class="home-section">
-  <h2 class="home-section-title">Concept library</h2>
-  <p class="home-section-lede">Short, scenario-driven answers to the questions that come up on every architecture review. A reference you can hit before an interview.</p>
+  <h2 class="home-section-title">Concept libraries</h2>
+  <p class="home-section-lede">Short, scenario-driven answers to the questions that come up on every team. A reference you can hit before an interview.</p>
+  {%- assign de_concept_total = site.de_concepts | size -%}
+  {%- assign de_concept_sections = site.de_concepts | group_by: "section" | size -%}
   <section class="pr-tracks">
     <a class="pr-track-card" href="/practice/system-design/concepts/">
       <div class="pr-track-emoji">📚</div>
@@ -153,6 +155,22 @@ permalink: /practice/
         <span><strong>{{ concept_count }}</strong> topics</span>
         <span>{{ concept_sections }} sections</span>
         <span>Cloud comparisons</span>
+      </div>
+    </a>
+
+    <a class="pr-track-card" href="/practice/data-engineering/concepts/">
+      <div class="pr-track-emoji">🧱</div>
+      <h2 class="pr-track-name">
+        Data Engineering Concepts
+        <span class="pr-track-status pr-track-status-live">Live</span>
+      </h2>
+      <p class="pr-track-desc">
+        {{ de_concept_total }} of the most common data engineering questions: SQL, modeling, file formats, batch, streaming, orchestration, quality, observability, cost, security, plus warehouse and lakehouse trade-offs.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>{{ de_concept_total }}</strong> topics</span>
+        <span>{{ de_concept_sections }} sections</span>
+        <span>Warehouse comparisons</span>
       </div>
     </a>
   </section>

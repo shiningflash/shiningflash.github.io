@@ -170,6 +170,10 @@ collections:
     output: true
     sort_by: concept_id
     permalink: /practice/system-design/concepts/:path/
+  de_concepts:
+    output: true
+    sort_by: concept_id
+    permalink: /practice/data-engineering/concepts/:path/
   energy_concepts:
     output: true
     sort_by: concept_id
@@ -207,6 +211,14 @@ defaults:
   - scope:
       path: ""
       type: sd_concepts
+    values:
+      layout: concept
+      comments: false
+      toc: false
+      mermaid: true
+  - scope:
+      path: ""
+      type: de_concepts
     values:
       layout: concept
       comments: false
