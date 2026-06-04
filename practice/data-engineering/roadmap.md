@@ -154,6 +154,8 @@ flowchart LR
 | **Grain** | What one row in this fact table means. The most underrated question in modeling. |
 | **Naming** | Consistent prefixes, plurals, tenses. Future you will thank present you. |
 
+**Related practice problems.** [#008 OLTP vs OLAP](/practice/data-engineering/008-oltp-vs-olap/) · [#010 Slowly Changing Dimensions](/practice/data-engineering/010-slowly-changing-dimensions/) · [#011 Data contracts in plain words](/practice/data-engineering/011-data-contracts-in-plain-words/) · [#086 Event tracking schema design](/practice/data-engineering/086-event-tracking-schema-design/) · [#094 Versioning a breaking grain change](/practice/data-engineering/094-versioning-a-breaking-grain-change/) · [#098 Same metric, three different numbers](/practice/data-engineering/098-same-metric-three-different-numbers/) · [#099 No staging layer: everything touches raw](/practice/data-engineering/099-no-staging-layer-everything-touches-raw/)
+
 **Build this in week 8.** Take your Stage 1 dataset. Design a small star schema for it: one fact table, two or three dimensions. Add a Type 2 SCD for one dimension. Write the load query that handles a row update without breaking history.
 
 **You are done when** someone asks "what is the grain of this table?" and you answer in one sentence without checking.
@@ -194,6 +196,8 @@ flowchart LR
 | **Testing data** | Schema tests, freshness tests, uniqueness tests. Where dbt tests fit. |
 | **Backfills** | How to backfill 6 months without melting the warehouse or blowing the budget. |
 
+**Related practice problems.** [#003 Transform and clean raw data for analytics](/practice/data-engineering/003-transform-and-clean-raw-data-for-analytics/) · [#005 Merging messy CSVs from multiple partners](/practice/data-engineering/005-merging-messy-csvs-from-multiple-partners/) · [#007 ETL vs ELT and why ELT won](/practice/data-engineering/007-etl-vs-elt-and-why-elt-won/) · [#009 Idempotency in data pipelines](/practice/data-engineering/009-idempotency-in-data-pipelines/) · [#091 Partner CSV schema drift on a Monday morning](/practice/data-engineering/091-partner-csv-schema-drift-monday-morning/) · [#095 Duplicate rows from a successful pipeline](/practice/data-engineering/095-duplicate-rows-from-a-successful-pipeline/) · [#097 Backfill 90 days without blowing the budget](/practice/data-engineering/097-backfill-ninety-days-without-blowing-the-budget/)
+
 **Build this in week 12.** Wrap your Stage 2 work in dbt or Airflow. Add: a daily refresh, one incremental model with a watermark, three data tests, and a backfill command. Run it on a free Airflow image or in dbt Cloud.
 
 **You are done when** you can take any source-to-dashboard pipeline request, sketch the DAG on a napkin in 5 minutes, and confidently estimate it in days, not weeks.
@@ -230,6 +234,8 @@ flowchart LR
 | **Stateful streaming** | Joins, windows (tumbling, sliding, session), state stores. |
 | **Tools** | Kafka Streams, Flink, Spark Structured Streaming, ksqlDB. What each is for. |
 
+**Related practice problems.** [#002 Rolling average of sensor readings](/practice/data-engineering/002-rolling-average-of-sensor-readings/) · [#004 Schema evolution and validation for streaming events](/practice/data-engineering/004-schema-evolution-and-validation-for-streaming-events/) · [#014 Exactly-once delivery](/practice/data-engineering/014-exactly-once-delivery/) · [#023 Ride-hailing surge pricing](/practice/data-engineering/023-ride-hailing-surge-pricing/) · [#026 Delivery idle driver tracking](/practice/data-engineering/026-delivery-idle-driver-tracking/) · [#092 Late events after the partition closed](/practice/data-engineering/092-late-events-after-the-partition-closed/)
+
 **Build this in week 16.** Stand up local Kafka (Docker is fine). Produce events with a script. Consume them with Kafka Streams or Flink. Compute a tumbling 1-minute count. Send one event late, see what happens. Add a schema registry and break compatibility on purpose.
 
 **You are done when** someone says "let us add streaming" and your first three questions are about ordering, late events, and what happens when a consumer falls behind, not about which tool to pick.
@@ -265,6 +271,8 @@ flowchart LR
 | **Object storage** | S3, GCS, ADLS. Consistency model. Cost of LIST. |
 | **Lakehouse** | Iceberg, Delta Lake, Hudi. ACID on top of files, table format, time travel. |
 | **Hot vs cold** | Tiers. Lifecycle policies. Glacier and what it actually costs to read back. |
+
+**Related practice problems.** [#006 Partitioning vs clustering in BigQuery](/practice/data-engineering/006-partitioning-vs-clustering-in-bigquery/) · [#012 Parquet vs CSV vs JSON](/practice/data-engineering/012-parquet-vs-csv-vs-json/) · [#013 Data lake vs warehouse vs lakehouse](/practice/data-engineering/013-data-lake-vs-warehouse-vs-lakehouse/) · [#087 DuckDB for single-machine analytics](/practice/data-engineering/087-duckdb-for-single-machine-analytics/) · [#088 Polars vs Pandas for ETL](/practice/data-engineering/088-polars-vs-pandas-for-etl/)
 
 **Build this in week 20.** Take your Stage 3 output. Save it as Parquet to local disk or S3 (Minio is fine locally). Partition by date. Query it with DuckDB. Convert one table to Iceberg or Delta. Do a time-travel query. Read the small file count and fix it.
 
@@ -305,6 +313,8 @@ flowchart LR
 | **Cost** | Reading a query bill. Killing the top three offenders. Warehouse auto-scaling vs fixed. |
 | **Incident response** | Postmortems that change something. Blameless writing. The one-pager template. |
 
+**Related practice problems.** [#029 Daily report quietly wrong for two weeks](/practice/data-engineering/029-daily-report-quietly-wrong-for-two-weeks/) · [#030 Warehouse cost doubled in two months](/practice/data-engineering/030-warehouse-cost-doubled-in-two-months/) · [#084 Data observability: freshness, volume, drift](/practice/data-engineering/084-data-observability-freshness-volume-drift/) · [#089 Great Expectations vs dbt tests](/practice/data-engineering/089-great-expectations-vs-dbt-tests/) · [#090 OpenLineage and data discovery](/practice/data-engineering/090-openlineage-and-data-discovery/) · [#093 Dashboard stale despite a healthy job](/practice/data-engineering/093-dashboard-stale-despite-healthy-job/) · [#101 No dev environment, everyone tests in prod](/practice/data-engineering/101-no-dev-environment-everyone-tests-in-prod/) · [#102 Critical model, no tests, nobody dares touch it](/practice/data-engineering/102-critical-model-no-tests-nobody-dares-touch-it/)
+
 **Build this in week 24.** Add monitoring to your Stage 3 pipeline. Pick three things you would page yourself for and three you would not. Wire them up. Trigger a fake incident: change a source schema. Write a one-page postmortem.
 
 **You are done when** you can take a vague "the dashboard is wrong" complaint and trace it to the exact query, table, or upstream change in under an hour.
@@ -326,6 +336,8 @@ This stage runs alongside Stages 1 to 6. Spend one hour a week on it from day on
 | **Estimation** | Rows per day. Bytes per row. Storage cost per month. Doing this in your head. |
 | **Narrating debugging** | Walking through a real incident out loud, with the wrong turns. |
 | **Behaviour interviews** | STAR stories about ownership, conflict, and the worst day you had at work. |
+
+**Architecture-style practice problems to drill.** [#021 Data platform for an electricity retailer](/practice/data-engineering/021-data-platform-for-an-electricity-retailer/) · [#022 Banking app monthly spending widget](/practice/data-engineering/022-banking-app-monthly-spending-widget/) · [#023 Ride-hailing surge pricing](/practice/data-engineering/023-ride-hailing-surge-pricing/) · [#024 Spotify minutes listened this week](/practice/data-engineering/024-spotify-minutes-listened-this-week/) · [#025 Smart meter to monthly bill PDF](/practice/data-engineering/025-smart-meter-to-monthly-bill-pdf/) · [#027 Year in Review recap](/practice/data-engineering/027-year-in-review-recap/) · [#028 Low-balance notification pipeline](/practice/data-engineering/028-low-balance-notification-pipeline/)
 
 **Build this every week.** One mock interview a week. Record yourself answering one DE design question, then watch it back the next day. The first three times will hurt; that is the point.
 
