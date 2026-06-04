@@ -7,8 +7,11 @@ refactor: true
 
 {%- assign sd_count = site.practice | where: "track", "system-design" | size -%}
 {%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
-{%- assign concept_count = site.sd_concepts | where: "status", "live" | size -%}
+{%- assign sd_concept_count = site.sd_concepts | where: "status", "live" | size -%}
+{%- assign de_concept_count = site.de_concepts | where: "status", "live" | size -%}
 {%- assign energy_count = site.energy_concepts | size -%}
+{%- assign concept_total = sd_concept_count | plus: de_concept_count | plus: energy_count -%}
+{%- assign practice_total = sd_count | plus: de_count -%}
 {%- assign post_count = site.posts | where_exp: "p", "p.hidden != true" | size -%}
 {%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
 
@@ -23,7 +26,7 @@ refactor: true
       My notes on system design and data engineering.
     </h1>
     <p class="lp-subtitle">
-      In interviews I've watched everyone, senior and junior, get stuck on the same two topics: system design and real production data engineering. I wanted a clearer way through, so I started writing this. A six-month roadmap, plain-English answers to <strong>70+ common concepts</strong>, and <strong>20+ complete senior-level interview problems</strong>. All free, updated regularly. Worth a bookmark.
+      In interviews I've watched everyone, senior and junior, get stuck on the same two topics: system design and real production data engineering. I wanted a clearer way through, so I started writing this. A six-month roadmap, plain-English answers to <strong>{{ concept_total }} core concepts</strong>, and <strong>{{ practice_total }} hands-on practice problems</strong>. All free, updated regularly. Worth a bookmark.
     </p>
     <div class="lp-hero-meta">
       <span><strong>6+</strong> yrs shipping</span>
@@ -172,7 +175,7 @@ refactor: true
         <span class="lp-mini-emoji">🧭</span>
         <div>
           <div class="lp-mini-name">System Design</div>
-          <div class="lp-mini-meta">7 stages · 60+ topics</div>
+          <div class="lp-mini-meta">7 stages · {{ sd_concept_count }} topics</div>
         </div>
         <span class="lp-mini-arrow">→</span>
       </div>
@@ -180,7 +183,7 @@ refactor: true
         <span class="lp-mini-emoji">🗺️</span>
         <div>
           <div class="lp-mini-name">Data Engineering</div>
-          <div class="lp-mini-meta">7 stages · 60+ topics</div>
+          <div class="lp-mini-meta">7 stages · {{ de_concept_count }} topics</div>
         </div>
         <span class="lp-mini-arrow">→</span>
       </div>
@@ -188,7 +191,7 @@ refactor: true
         <span class="lp-mini-emoji">🤖</span>
         <div>
           <div class="lp-mini-name">AI Engineering</div>
-          <div class="lp-mini-meta">7 stages · 60+ topics</div>
+          <div class="lp-mini-meta">7 stages · roadmap only</div>
         </div>
         <span class="lp-mini-arrow">→</span>
       </div>
@@ -223,33 +226,42 @@ refactor: true
     </div>
   </a>
 
-  <!-- Concept Library -->
-  <a class="lp-tile lp-tile-concepts" href="/practice/system-design/concepts/">
-    <div class="lp-tile-head">
-      <h3 class="lp-tile-name">Concept Library</h3>
-      <span class="lp-tile-badge">Reference</span>
+  <!-- Concept Libraries: three reference libraries side by side -->
+  <div class="lp-tile lp-tile-libraries">
+    <div class="lp-tile-eyebrow">
+      <span class="lp-pulse lp-pulse-libraries"></span> Reference libraries
     </div>
-    <p class="lp-tile-tag">Short, plain-English answers to questions that come up on every design review.</p>
-    <div class="lp-tile-foot">
-      <span class="lp-stat-num">{{ concept_count }}</span>
-      <span class="lp-stat-lbl">topics</span>
-      <span class="lp-arrow">→</span>
+    <h2 class="lp-tile-title">{{ concept_total }} answers in plain English.<br>Pick a library.</h2>
+    <p class="lp-tile-desc">
+      Short, opinionated explainers across system design, data engineering, and the Swedish energy market. Built for fast lookups during interview prep or a design review.
+    </p>
+    <div class="lp-mini-cards">
+      <a class="lp-mini-card lp-mini-card-link" href="/practice/system-design/concepts/">
+        <span class="lp-mini-emoji">🧭</span>
+        <div>
+          <div class="lp-mini-name">System Design</div>
+          <div class="lp-mini-meta">{{ sd_concept_count }} concepts</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
+      </a>
+      <a class="lp-mini-card lp-mini-card-link" href="/practice/data-engineering/concepts/">
+        <span class="lp-mini-emoji">🗺️</span>
+        <div>
+          <div class="lp-mini-name">Data Engineering</div>
+          <div class="lp-mini-meta">{{ de_concept_count }} concepts</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
+      </a>
+      <a class="lp-mini-card lp-mini-card-link" href="/energy/concepts/">
+        <span class="lp-mini-emoji">⚡</span>
+        <div>
+          <div class="lp-mini-name">Energy Markets</div>
+          <div class="lp-mini-meta">{{ energy_count }} concepts</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
+      </a>
     </div>
-  </a>
-
-  <!-- Energy Markets -->
-  <a class="lp-tile lp-tile-energy" href="/energy/concepts/">
-    <div class="lp-tile-head">
-      <h3 class="lp-tile-name">Energy Markets</h3>
-      <span class="lp-tile-badge">Reference</span>
-    </div>
-    <p class="lp-tile-tag">The Swedish power market for engineers crossing in. Plain English, real diagrams.</p>
-    <div class="lp-tile-foot">
-      <span class="lp-stat-num">{{ energy_count }}</span>
-      <span class="lp-stat-lbl">topics</span>
-      <span class="lp-arrow">→</span>
-    </div>
-  </a>
+  </div>
 
   <!-- Posts count -->
   <a class="lp-tile lp-tile-posts-num" href="/posts/">

@@ -202,10 +202,9 @@ a.lp-tile:hover {
 .lp-tile-hero       { grid-column: span 4; grid-row: span 2; }
 .lp-tile-sd         { grid-column: span 2; }
 .lp-tile-de         { grid-column: span 2; }
-.lp-tile-concepts   { grid-column: span 2; }
-.lp-tile-energy     { grid-column: span 2; }
+.lp-tile-libraries  { grid-column: span 4; }
 .lp-tile-posts-num  { grid-column: span 2; }
-.lp-tile-latest     { grid-column: span 2; }
+.lp-tile-latest     { grid-column: span 6; }
 
 /* ── Accents ── */
 .lp-tile-hero {
@@ -218,9 +217,33 @@ a.lp-tile:hover {
 
 a.lp-tile-sd:hover        { border-color: rgba(59,130,246,.45); }
 a.lp-tile-de:hover        { border-color: rgba(16,185,129,.45); }
-a.lp-tile-concepts:hover  { border-color: rgba(139,92,246,.45); }
-a.lp-tile-energy:hover    { border-color: rgba(14,165,233,.45); }
 a.lp-tile-posts-num:hover { border-color: rgba(245,158,11,.45); }
+
+/* Libraries tile: same gradient treatment as hero, in violet/sky. */
+.lp-tile-libraries {
+  --lp-accent: linear-gradient(90deg, var(--pr-c-violet), var(--pr-c-blue));
+  background:
+    radial-gradient(500px 180px at 100% 0%, rgba(14,165,233,.08), transparent 60%),
+    radial-gradient(420px 200px at 0% 100%, rgba(139,92,246,.10), transparent 60%),
+    var(--pr-card-bg, #fff);
+}
+.lp-pulse-libraries {
+  background: var(--pr-c-violet);
+  box-shadow: 0 0 0 0 rgba(139,92,246,.6);
+}
+
+/* The mini-cards inside the libraries tile are individual links, so they
+   need text-decoration removed and a per-card hover. Hero's mini-cards
+   are non-link divs, so this rule only applies to .lp-mini-card-link. */
+a.lp-mini-card-link {
+  text-decoration: none !important;
+  color: inherit;
+}
+a.lp-mini-card-link:hover {
+  background: rgba(99,102,241,.12);
+  transform: translateY(-1px);
+}
+a.lp-mini-card-link:hover .lp-mini-arrow { transform: translateX(3px); }
 
 /* ── Hero tile content ── */
 .lp-tile-eyebrow {
@@ -497,10 +520,9 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
   .lp-tile-hero      { grid-column: span 4; grid-row: span 1; }
   .lp-tile-sd        { grid-column: span 2; }
   .lp-tile-de        { grid-column: span 2; }
-  .lp-tile-concepts  { grid-column: span 2; }
-  .lp-tile-energy    { grid-column: span 2; }
+  .lp-tile-libraries { grid-column: span 4; }
   .lp-tile-posts-num { grid-column: span 2; }
-  .lp-tile-latest    { grid-column: span 4; }
+  .lp-tile-latest    { grid-column: span 2; }
   /* stack the footer card on tablets too if it gets cramped */
   .lp-footer { grid-template-columns: 1fr; gap: 1.2rem; }
   .lp-footer-divider { width: 100%; height: 1px; }
@@ -529,8 +551,7 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
   .lp-tile-hero,
   .lp-tile-sd,
   .lp-tile-de,
-  .lp-tile-concepts,
-  .lp-tile-energy,
+  .lp-tile-libraries,
   .lp-tile-posts-num,
   .lp-tile-latest { grid-column: span 1; grid-row: auto; }
   .lp-mini-cards { grid-template-columns: 1fr; }
@@ -546,6 +567,15 @@ a.lp-tile:hover .lp-arrow { transform: translateX(3px); }
     radial-gradient(600px 200px at 100% 0%, rgba(139,92,246,.20), transparent 60%),
     radial-gradient(500px 220px at 0% 100%, rgba(59,130,246,.20), transparent 60%),
     var(--pr-card-bg);
+}
+[data-mode="dark"] .lp-tile-libraries {
+  background:
+    radial-gradient(500px 180px at 100% 0%, rgba(14,165,233,.18), transparent 60%),
+    radial-gradient(420px 200px at 0% 100%, rgba(139,92,246,.20), transparent 60%),
+    var(--pr-card-bg);
+}
+[data-mode="dark"] a.lp-mini-card-link:hover {
+  background: rgba(139,92,246,.20);
 }
 [data-mode="dark"] .lp-hero {
   background:

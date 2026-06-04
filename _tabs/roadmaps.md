@@ -9,6 +9,11 @@ permalink: /roadmaps/
 <link rel="stylesheet" href="/assets/css/practice.css">
 <link rel="stylesheet" href="/assets/css/landing.css">
 
+{%- assign rm_sd = site.sd_concepts | where: "status", "live" | size -%}
+{%- assign rm_de = site.de_concepts | where: "status", "live" | size -%}
+{%- assign rm_energy = site.energy_concepts | size -%}
+{%- assign rm_total = rm_sd | plus: rm_de | plus: rm_energy -%}
+
 <section class="pr-hero">
   <div class="pr-hero-inner">
     <span class="pr-eyebrow">Learning Paths</span>
@@ -19,7 +24,7 @@ permalink: /roadmaps/
     <div class="pr-stats">
       <div class="pr-stat"><strong>3</strong><span>Roadmaps</span></div>
       <div class="pr-stat"><strong>7</strong><span>Stages each</span></div>
-      <div class="pr-stat"><strong>60+</strong><span>Topics each</span></div>
+      <div class="pr-stat"><strong>{{ rm_total }}</strong><span>Topics covered</span></div>
       <div class="pr-stat"><strong>0</strong><span>Prerequisites</span></div>
     </div>
   </div>
