@@ -4,6 +4,11 @@ source "https://rubygems.org"
 
 gem "jekyll-theme-chirpy", "~> 6.5", ">= 6.5.5"
 
+# Derives page.last_modified_at from the latest git commit that touched
+# the file. Used by concept and energy-concept layouts to render a
+# "Last updated" stamp without front-matter dates on every page.
+gem "jekyll-last-modified-at", "~> 1.3"
+
 group :test do
   gem "html-proofer", "~> 4.4"
 end

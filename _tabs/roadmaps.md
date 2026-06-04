@@ -85,10 +85,10 @@ permalink: /roadmaps/
       <div class="pr-track-emoji">🤖</div>
       <h2 class="pr-track-name">
         AI Engineering Roadmap
-        <span class="pr-track-status pr-track-status-live">Live</span>
+        <span class="pr-track-status pr-track-status-soon">Roadmap only</span>
       </h2>
       <p class="pr-track-desc">
-        From your first API call to LLM systems that hold up in production. LLM foundations, prompting, RAG, agents, evaluation, production, and the interview craft.
+        From your first API call to LLM systems that hold up in production. LLM foundations, prompting, RAG, agents, evaluation, production, and the interview craft. The roadmap is live; the concept library and practice problems are not built yet.
       </p>
       <div class="pr-track-meta">
         <span><strong>7</strong> stages</span>

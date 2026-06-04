@@ -1,0 +1,49 @@
+---
+layout: compress
+permalink: /energy/concepts/feed.xml
+sitemap: false
+---
+
+{% capture source %}
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>{{ "/energy/concepts/" | absolute_url }}</id>
+  <title>{{ site.title }} — Energy Markets</title>
+  <subtitle>The Swedish power market for engineers crossing in. Plain English, real diagrams.</subtitle>
+  <updated>{{ site.time | date_to_xmlschema }}</updated>
+  <author>
+    <name>{{ site.social.name }}</name>
+    <uri>{{ "/" | absolute_url }}</uri>
+  </author>
+  <link rel="self" type="application/atom+xml" href="{{ page.url | absolute_url }}"/>
+  <link rel="alternate" type="text/html" hreflang="{{ site.alt_lang | default: site.lang }}" href="{{ '/energy/concepts/' | absolute_url }}"/>
+  <generator uri="https://jekyllrb.com/" version="{{ jekyll.version }}">Jekyll</generator>
+  <rights> © {{ 'now' | date: '%Y' }} {{ site.social.name }} </rights>
+
+  {%- assign live = site.energy_concepts | sort: "last_modified_at" | reverse -%}
+  {% for c in live limit: 20 %}
+    {% assign c_url = c.url | absolute_url %}
+    <entry>
+      <title>{{ c.title }}</title>
+      <link href="{{ c_url }}" rel="alternate" type="text/html" title="{{ c.title | xml_escape }}" />
+      {%- if c.last_modified_at -%}
+        <published>{{ c.last_modified_at | date_to_xmlschema }}</published>
+        <updated>{{ c.last_modified_at | date_to_xmlschema }}</updated>
+      {%- else -%}
+        <published>{{ site.time | date_to_xmlschema }}</published>
+        <updated>{{ site.time | date_to_xmlschema }}</updated>
+      {%- endif %}
+      <id>{{ c_url }}</id>
+      <author>
+        <name>{{ site.social.name }}</name>
+      </author>
+      {%- if c.section %}
+      <category term="{{ c.section }}" />
+      {%- endif %}
+      {%- if c.tease %}
+      <summary>{{ c.tease | strip | xml_escape }}</summary>
+      {%- endif %}
+    </entry>
+  {% endfor %}
+</feed>
+{% endcapture %}
+{{ source | replace: '&', '&amp;' }}

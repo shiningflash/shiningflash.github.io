@@ -19,10 +19,6 @@ feature_card:
   href: /practice/data-engineering/roadmap/
   icon: "🧭"
   eyebrow: "Start here"
-  title: "Data Engineering Roadmap — Beginner to Expert"
+  title: "Data Engineering Roadmap: Beginner to Expert"
   description: "A staged learning path from SQL fluency to running data systems at scale. Six months, in order. Each stage ends with something you build, not a quiz."
-  meta:
-    - "7 stages"
-    - "60+ topics"
-    - "No prerequisites"
 ---

@@ -5,7 +5,25 @@ refactor: true
 
 <link rel="stylesheet" href="/assets/css/practice.css">
 
-{%- assign all = site.sd_concepts | sort: "concept_id" -%}
+{%- comment -%}
+  The concept layout is shared by both sd_concepts and de_concepts. Pick
+  the right collection, breadcrumb, and index URL from page.collection so
+  prev/next nav stays inside the right library and the breadcrumbs point
+  at the right track.
+{%- endcomment -%}
+
+{%- if page.collection == "de_concepts" -%}
+  {%- assign all = site.de_concepts | sort: "concept_id" -%}
+  {%- assign track_label = "Data Engineering" -%}
+  {%- assign track_url = "/practice/data-engineering/" -%}
+  {%- assign index_url = "/practice/data-engineering/concepts/" -%}
+{%- else -%}
+  {%- assign all = site.sd_concepts | sort: "concept_id" -%}
+  {%- assign track_label = "System Design" -%}
+  {%- assign track_url = "/practice/system-design/" -%}
+  {%- assign index_url = "/practice/system-design/concepts/" -%}
+{%- endif -%}
+
 {%- assign idx = 0 -%}
 {%- for c in all -%}
   {%- if c.concept_id == page.concept_id -%}
@@ -20,10 +38,25 @@ refactor: true
 {%- if prev_idx >= 0 -%}{%- assign prev = all[prev_idx] -%}{%- endif -%}
 {%- if next_idx < all.size -%}{%- assign nxt = all[next_idx] -%}{%- endif -%}
 
+{%- comment -%}
+  Build a "More in this section" list: other live concepts in the same
+  collection that share the page's section. Skipping the current page
+  and capping at 4 so the block stays scannable.
+{%- endcomment -%}
+{%- assign in_section = all | where: "section", page.section | where: "status", "live" -%}
+{%- assign related = "" | split: "" -%}
+{%- for c in in_section -%}
+  {%- if c.concept_id != page.concept_id -%}
+    {%- assign related = related | push: c -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign related_count = related | size -%}
+{%- assign related = related | slice: 0, 4 -%}
+
 <nav class="concept-breadcrumb" aria-label="Breadcrumb">
-  <a href="/practice/system-design/">System Design</a>
+  <a href="{{ track_url }}">{{ track_label }}</a>
   <span aria-hidden="true">›</span>
-  <a href="/practice/system-design/concepts/">Concepts</a>
+  <a href="{{ index_url }}">Concepts</a>
   <span aria-hidden="true">›</span>
   <span class="concept-breadcrumb-current">{{ page.section }}</span>
 </nav>
@@ -44,15 +77,41 @@ refactor: true
       The detailed explanation, examples, and diagrams for this topic are not published yet. In the meantime, here is what you can do:
     </p>
     <ul class="concept-placeholder-list">
-      <li>Browse the rest of the <a href="/practice/system-design/concepts/">System Design Concepts</a> library.</li>
-      <li>Follow the <a href="/practice/system-design/roadmap/">System Design Roadmap</a> for a structured path through these topics.</li>
-      <li>Try a <a href="/practice/system-design/">practice problem</a> that uses this concept in context.</li>
+      <li>Browse the rest of the <a href="{{ index_url }}">{{ track_label }} Concepts</a> library.</li>
+      <li>Follow the <a href="{{ track_url }}roadmap/">{{ track_label }} Roadmap</a> for a structured path through these topics.</li>
+      <li>Try a <a href="{{ track_url }}">practice problem</a> that uses this concept in context.</li>
     </ul>
   </section>
 {% else %}
   <article class="concept-body">
     {{ content }}
   </article>
+
+  {% if page.last_modified_at %}
+    <p class="concept-updated">
+      <span class="concept-updated-label">Last updated</span>
+      <time datetime="{{ page.last_modified_at | date: '%Y-%m-%d' }}">{{ page.last_modified_at | date: "%b %-d, %Y" }}</time>
+    </p>
+  {% endif %}
+{% endif %}
+
+{% if related_count > 0 %}
+  <section class="concept-related" aria-label="More in this section">
+    <div class="concept-related-head">
+      <h2 class="concept-related-title">More in {{ page.section }}</h2>
+      <a class="concept-related-all" href="{{ index_url }}">All concepts →</a>
+    </div>
+    <ul class="concept-related-list">
+      {% for r in related %}
+        <li class="concept-related-item">
+          <a href="{{ r.url | relative_url }}">
+            <span class="concept-related-name">{{ r.title }}</span>
+            {% if r.tease %}<span class="concept-related-tease">{{ r.tease }}</span>{% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
 {% endif %}
 
 <nav class="concept-nav" aria-label="Concept navigation">
@@ -65,7 +124,7 @@ refactor: true
     <span class="concept-nav-link concept-nav-empty"></span>
   {% endif %}
 
-  <a class="concept-nav-link concept-nav-index" href="/practice/system-design/concepts/">
+  <a class="concept-nav-link concept-nav-index" href="{{ index_url }}">
     <span class="concept-nav-direction">All concepts</span>
     <span class="concept-nav-title">Index</span>
   </a>

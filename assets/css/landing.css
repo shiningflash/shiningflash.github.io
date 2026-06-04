@@ -133,6 +133,49 @@
   margin-bottom: 1rem;
 }
 
+/* Small avatar + name + role chip that ties the brand to a face at the
+   top of the landing hero. Sits above the eyebrow so first-time
+   visitors see the human before the marketing pitch. */
+.lp-byline {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .35rem .85rem .35rem .35rem;
+  border: 1px solid var(--pr-border);
+  border-radius: 999px;
+  background: var(--pr-card-bg, #fff);
+  text-decoration: none !important;
+  color: inherit;
+  margin-bottom: .85rem;
+  transition: border-color .18s ease, transform .18s ease;
+}
+.lp-byline:hover {
+  border-color: rgba(139,92,246,.45);
+  transform: translateY(-1px);
+}
+.lp-byline-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.lp-byline-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.lp-byline-name {
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--heading-color);
+}
+.lp-byline-meta {
+  font-size: .72rem;
+  color: var(--pr-text-muted);
+  margin-top: .1rem;
+}
+
 .lp-title {
   margin: 0 0 .9rem;
   font-size: clamp(1.6rem, 3.2vw, 2.4rem);

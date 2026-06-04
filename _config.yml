@@ -142,6 +142,12 @@ pwa:
 
 paginate: 10
 
+# Search across posts and collections.
+# Chirpy ships a search-data.json template that indexes the categories
+# below; both concept libraries and Energy use the `concept` and
+# `energy-concept` layouts which inherit from `page`, so they get picked up.
+search: true
+
 # The base URL of your site
 baseurl: ""
 
@@ -174,6 +180,10 @@ collections:
     output: true
     sort_by: concept_id
     permalink: /practice/data-engineering/concepts/:path/
+  ai_concepts:
+    output: true
+    sort_by: concept_id
+    permalink: /practice/ai-engineering/concepts/:path/
   energy_concepts:
     output: true
     sort_by: concept_id
@@ -226,6 +236,14 @@ defaults:
       mermaid: true
   - scope:
       path: ""
+      type: ai_concepts
+    values:
+      layout: concept
+      comments: false
+      toc: false
+      mermaid: true
+  - scope:
+      path: ""
       type: energy_concepts
     values:
       layout: energy-concept
@@ -259,6 +277,20 @@ exclude:
   - rollup.config.js
   - package*.json
   - scripts
+
+plugins:
+  - jekyll-last-modified-at
+
+# Show the last-modified stamp only if the file changed in the last year
+# of commits. Older edits look stale and undersell the page; the layout
+# checks page.last_modified_at and just hides the stamp when missing.
+last-modified-at:
+  date-format: "%Y-%m-%d"
+
+# Per-collection RSS feeds live as standalone files next to the
+# collection root (see practice/{system-design,data-engineering}/concepts/feed.xml
+# and energy/concepts/feed.xml). Chirpy ships its own /feed.xml template
+# for posts, so the jekyll-feed plugin is not on the plugin list.
 
 jekyll-archives:
   enabled: [categories, tags]
