@@ -281,17 +281,19 @@ flowchart LR
 
 **Architectures to study.**
 
-| Architecture | What stresses the design | Where it lives in the real world |
-|--------------|--------------------------|----------------------------------|
-| **News feed** | Push vs pull fan-out. Celebrity problem. | Twitter, Instagram, LinkedIn. |
-| **Real-time chat** | WebSockets. Presence. Ordering. Mobile reconnect. | WhatsApp, Slack, Discord. |
-| **Search** | Inverted index. Ranking. Typo tolerance. | Google, Algolia, Elasticsearch. |
-| **Recommendations** | Online serving (not training). Cold-start. | Spotify, Netflix, TikTok. |
-| **Video streaming** | Transcoding ladder. Adaptive bitrate. CDN. | YouTube, Netflix, Twitch. |
-| **Ride sharing** | Real-time location. Matching. State machine. | Uber, Lyft, Bolt. |
-| **Payments** | Idempotency. Reconciliation. PCI scope. | Stripe, Adyen, every bank. |
-| **Notifications** | Fan-out. Channel routing. Quiet hours. Retries. | Push notifications, email blasts. |
-| **Approval workflows** | State machine. Role resolution. Audit. | Workday, ServiceNow, Jira. |
+| Architecture | What stresses the design | Where it lives in the real world | Practice problem |
+|--------------|--------------------------|----------------------------------|------------------|
+| **News feed** | Push vs pull fan-out. Celebrity problem. | Twitter, Instagram, LinkedIn. | [#002 News Feed](/practice/system-design/002-news-feed/) |
+| **Real-time chat** | WebSockets. Presence. Ordering. Mobile reconnect. | WhatsApp, Slack, Discord. | [#003 Chat System](/practice/system-design/003-chat-system/) |
+| **Search (typeahead)** | Inverted index. Ranking. Typo tolerance. | Google, Algolia, Elasticsearch. | [#005 Typeahead Autocomplete](/practice/system-design/005-typeahead-autocomplete/) |
+| **Recommendations** | Online serving (not training). Cold-start. | Spotify, Netflix, TikTok. | [#017 Read-Heavy Patterns](/practice/system-design/017-read-heavy-patterns/) |
+| **Video streaming** | Transcoding ladder. Adaptive bitrate. CDN. | YouTube, Netflix, Twitch. | [#006 Video Streaming](/practice/system-design/006-video-streaming/) |
+| **Ride sharing** | Real-time location. Matching. State machine. | Uber, Lyft, Bolt. | [#007 Ride Sharing](/practice/system-design/007-ride-sharing/) |
+| **Comments** | Threaded reads. Sort by score. Moderation. | Reddit, Hacker News. | [#015 Comment System](/practice/system-design/015-comment-system/) |
+| **Notifications** | Fan-out. Channel routing. Quiet hours. Retries. | Push notifications, email blasts. | [#010 Notification System](/practice/system-design/010-notification-system/) |
+| **Approval workflows** | State machine. Role resolution. Audit. | Workday, ServiceNow, Jira. | [#011 Approval Management](/practice/system-design/011-approval-management/) |
+| **Shopping cart** | Inventory. Idempotency. Soft delete. | Every e-commerce site. | [#012 Shopping Cart](/practice/system-design/012-shopping-cart/) |
+| **Coupon redemption** | Concurrency. Race conditions. Audit. | Stripe billing, every promo system. | [#014 Coupon Redemption](/practice/system-design/014-coupon-redemption/) |
 
 **Cross-cutting patterns.**
 

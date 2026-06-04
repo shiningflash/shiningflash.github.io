@@ -97,7 +97,7 @@ permalink: /practice/
       </p>
       <div class="pr-track-meta">
         <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
+        <span>Beginner to Senior</span>
         <span>No prerequisites</span>
       </div>
     </a>
@@ -113,7 +113,23 @@ permalink: /practice/
       </p>
       <div class="pr-track-meta">
         <span><strong>7</strong> stages</span>
-        <span>Beginner to Expert</span>
+        <span>Beginner to Senior</span>
+        <span>No prerequisites</span>
+      </div>
+    </a>
+
+    <a class="pr-track-card" href="/practice/ai-engineering/roadmap/">
+      <div class="pr-track-emoji">🤖</div>
+      <h2 class="pr-track-name">
+        AI Engineering Roadmap
+        <span class="pr-track-status pr-track-status-live">Live</span>
+      </h2>
+      <p class="pr-track-desc">
+        LLM foundations, prompting, RAG, agents, evaluation, production, and the interview craft. Six months, in order.
+      </p>
+      <div class="pr-track-meta">
+        <span><strong>7</strong> stages</span>
+        <span>Beginner to Senior</span>
         <span>No prerequisites</span>
       </div>
     </a>
@@ -131,7 +147,7 @@ permalink: /practice/
         <span class="pr-track-status pr-track-status-live">Live</span>
       </h2>
       <p class="pr-track-desc">
-        70 of the most common system design questions: caching, load balancers, consistency, queueing, plus AWS / GCP / Azure trade-offs. Filterable by section.
+        {{ concept_count }} of the most common system design questions: caching, load balancers, consistency, queueing, plus AWS / GCP / Azure trade-offs. Filterable by section.
       </p>
       <div class="pr-track-meta">
         <span><strong>{{ concept_count }}</strong> topics</span>
