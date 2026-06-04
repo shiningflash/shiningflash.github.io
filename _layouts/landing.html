@@ -9,8 +9,10 @@ refactor: true
 {%- assign de_count = site.practice | where: "track", "data-engineering" | size -%}
 {%- assign sd_concept_count = site.sd_concepts | where: "status", "live" | size -%}
 {%- assign de_concept_count = site.de_concepts | where: "status", "live" | size -%}
+{%- assign ai_concept_count_all = site.ai_concepts | size -%}
+{%- assign ai_concept_count = site.ai_concepts | where: "status", "live" | size -%}
 {%- assign energy_count = site.energy_concepts | size -%}
-{%- assign concept_total = sd_concept_count | plus: de_concept_count | plus: energy_count -%}
+{%- assign concept_total = sd_concept_count | plus: de_concept_count | plus: ai_concept_count | plus: energy_count -%}
 {%- assign practice_total = sd_count | plus: de_count -%}
 {%- assign post_count = site.posts | where_exp: "p", "p.hidden != true" | size -%}
 {%- assign latest_posts = site.posts | where_exp: "p", "p.hidden != true" -%}
@@ -197,7 +199,7 @@ refactor: true
         <span class="lp-mini-emoji">🤖</span>
         <div>
           <div class="lp-mini-name">AI Engineering</div>
-          <div class="lp-mini-meta">7 stages · roadmap only</div>
+          <div class="lp-mini-meta">7 stages · {{ ai_concept_count_all }} topics</div>
         </div>
         <span class="lp-mini-arrow">→</span>
       </div>
@@ -255,6 +257,14 @@ refactor: true
         <div>
           <div class="lp-mini-name">Data Engineering</div>
           <div class="lp-mini-meta">{{ de_concept_count }} concepts</div>
+        </div>
+        <span class="lp-mini-arrow">→</span>
+      </a>
+      <a class="lp-mini-card lp-mini-card-link" href="/practice/ai-engineering/concepts/">
+        <span class="lp-mini-emoji">🤖</span>
+        <div>
+          <div class="lp-mini-name">AI Engineering</div>
+          <div class="lp-mini-meta">{% if ai_concept_count > 0 %}{{ ai_concept_count }} concepts{% else %}{{ ai_concept_count_all }} scaffolded{% endif %}</div>
         </div>
         <span class="lp-mini-arrow">→</span>
       </a>

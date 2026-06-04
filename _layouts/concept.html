@@ -17,6 +17,11 @@ refactor: true
   {%- assign track_label = "Data Engineering" -%}
   {%- assign track_url = "/practice/data-engineering/" -%}
   {%- assign index_url = "/practice/data-engineering/concepts/" -%}
+{%- elsif page.collection == "ai_concepts" -%}
+  {%- assign all = site.ai_concepts | sort: "concept_id" -%}
+  {%- assign track_label = "AI Engineering" -%}
+  {%- assign track_url = "/practice/ai-engineering/" -%}
+  {%- assign index_url = "/practice/ai-engineering/concepts/" -%}
 {%- else -%}
   {%- assign all = site.sd_concepts | sort: "concept_id" -%}
   {%- assign track_label = "System Design" -%}
