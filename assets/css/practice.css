@@ -939,56 +939,121 @@
   .hp-prep-cta { margin-left: 0; }
 }
 
-/* --- Senior Interview Scenarios section ---------------------------------- */
-.pr-senior {
-  margin: 1rem 0 2rem;
-  padding: 1.25rem 1.4rem 1.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--pr-border);
-  background:
-    radial-gradient(800px 240px at 0% 0%, rgba(59,130,246,.07), transparent 60%),
-    radial-gradient(600px 200px at 100% 100%, rgba(29,78,216,.07), transparent 60%),
-    var(--pr-card-bg);
-}
-.pr-senior-head { margin-bottom: 1rem; }
-.pr-senior-title {
-  margin: 0 0 .35rem;
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -.01em;
-  color: var(--heading-color, inherit);
-}
-.pr-senior-desc {
-  margin: 0;
-  font-size: .9rem;
-  line-height: 1.55;
-  color: var(--pr-text-muted);
-  max-width: 68ch;
-}
-.pr-senior-grid {
+/* --- Curated Collections row -------------------------------------------- */
+/* A tight 1x3 row of small tiles above the toolbar. Each tile either links
+   to a curated subpage (roadmap) or applies a filter to the grid below
+   (senior scenarios, interview must-haves). Replaces the older bulky
+   feature card + separate senior section. */
+
+.pr-collections {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: .7rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: .75rem;
+  margin: .5rem 0 1.75rem;
 }
-.pr-senior-card {
-  position: relative;
+
+.pr-collection-tile {
   display: flex;
-  flex-direction: column;
-  padding: .85rem .95rem .9rem;
+  align-items: center;
+  gap: .9rem;
+  padding: 1rem 1.1rem;
   background: var(--pr-card-bg);
   border: 1px solid var(--pr-border);
   border-radius: 12px;
   text-decoration: none !important;
   color: inherit;
   transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  position: relative;
+  overflow: hidden;
 }
-.pr-senior-card:hover {
+.pr-collection-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59,130,246,.06), rgba(139,92,246,.06));
+  opacity: 0;
+  transition: opacity .2s ease;
+  pointer-events: none;
+}
+.pr-collection-tile:hover {
   transform: translateY(-2px);
   border-color: rgba(59,130,246,.4);
   box-shadow: var(--pr-card-shadow-hover);
 }
+.pr-collection-tile:hover::before { opacity: 1; }
 
-/* --- Feature card on practice-index pages -------------------------------- */
+.pr-collection-tile-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.pr-collection-tile-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+.pr-collection-tile-eyebrow {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--pr-c-blue);
+  margin-bottom: .25rem;
+}
+.pr-collection-tile-title {
+  margin: 0 0 .3rem;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--heading-color, inherit);
+  letter-spacing: -.005em;
+}
+.pr-collection-tile-desc {
+  margin: 0;
+  font-size: .82rem;
+  line-height: 1.45;
+  color: var(--pr-text-muted);
+}
+.pr-collection-tile-arrow {
+  font-size: 1.15rem;
+  color: var(--pr-text-muted);
+  flex: 0 0 auto;
+  transition: transform .18s ease, color .18s ease;
+  position: relative;
+}
+.pr-collection-tile:hover .pr-collection-tile-arrow {
+  transform: translateX(3px);
+  color: var(--pr-c-blue);
+}
+
+/* Variant eyebrow colors so each tile has a subtle visual identity */
+.pr-collection-tile-senior .pr-collection-tile-eyebrow { color: #1d4ed8; }
+.pr-collection-tile-must   .pr-collection-tile-eyebrow { color: #b45309; }
+[data-mode="dark"] .pr-collection-tile-senior .pr-collection-tile-eyebrow { color: #93c5fd; }
+[data-mode="dark"] .pr-collection-tile-must   .pr-collection-tile-eyebrow { color: #fbbf24; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .pr-collection-tile-senior .pr-collection-tile-eyebrow { color: #93c5fd; }
+  :root:not([data-mode="light"]) .pr-collection-tile-must   .pr-collection-tile-eyebrow { color: #fbbf24; }
+}
+
+/* Active state when the tile's filter is currently applied */
+.pr-collection-tile.is-active {
+  border-color: rgba(59,130,246,.55);
+  background:
+    linear-gradient(135deg, rgba(59,130,246,.08), rgba(139,92,246,.08)),
+    var(--pr-card-bg);
+}
+.pr-collection-tile.is-active .pr-collection-tile-arrow {
+  color: var(--pr-c-blue);
+  transform: translateX(2px);
+}
+
+@media (max-width: 640px) {
+  .pr-collection-tile { padding: .85rem 1rem; }
+  .pr-collection-tile-icon { font-size: 1.5rem; }
+}
+
+/* --- Feature card on practice-index pages (legacy, kept for other tracks) - */
 /* A single prominent card rendered above the filter toolbar when the index */
 /* declares page.feature_card. Visually distinct from problem cards.        */
 

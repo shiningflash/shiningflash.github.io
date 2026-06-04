@@ -54,53 +54,47 @@ layout: page
 {%- if page.feature_card -%}{%- assign fcards = fcards | push: page.feature_card -%}{%- endif -%}
 {%- if page.feature_cards -%}{%- for fc in page.feature_cards -%}{%- assign fcards = fcards | push: fc -%}{%- endfor -%}{%- endif -%}
 
-{% for fc in fcards %}
-<a class="pr-feature-card" href="{{ fc.href | relative_url }}">
-  <div class="pr-feature-card-inner">
-    <div class="pr-feature-card-icon">{{ fc.icon | default: "🧭" }}</div>
-    <div class="pr-feature-card-body">
-      <div class="pr-feature-card-eyebrow">{{ fc.eyebrow | default: "Start here" }}</div>
-      <h2 class="pr-feature-card-title">{{ fc.title }}</h2>
-      {% if fc.description %}
-        <p class="pr-feature-card-desc">{{ fc.description }}</p>
-      {% endif %}
-      {% if fc.meta %}
-        <div class="pr-feature-card-meta">
-          {% for item in fc.meta %}<span>{{ item }}</span>{% endfor %}
-        </div>
-      {% endif %}
-    </div>
-    <div class="pr-feature-card-arrow" aria-hidden="true">→</div>
-  </div>
-</a>
-{% endfor %}
+{%- assign senior_count = problems | where: "series", "senior-scenarios" | size -%}
 
-{%- assign senior = problems | where: "series", "senior-scenarios" | sort: "problem_id" -%}
-{% if senior.size > 0 %}
-<section class="pr-senior" aria-label="Senior interview scenarios">
-  <div class="pr-senior-head">
-    <h2 class="pr-senior-title">Senior Interview Scenarios</h2>
-    <p class="pr-senior-desc">Open-ended Monday-morning situations. Each one walks through plan, technology choices, and best practices for one real operational theme: schema drift, late data, stale freshness, and breaking-change versioning.</p>
-  </div>
-  <div class="pr-senior-grid">
-    {% for p in senior %}
-      {%- assign diff = p.difficulty | default: "Medium" -%}
-      <a class="pr-senior-card{% if p.interview_value == 'must-have' %} pr-card-must{% endif %}"
-         href="{{ p.url | relative_url }}">
-        <div class="pr-card-head">
-          <span class="pr-card-id">#{{ p.problem_id }}</span>
-          {% if p.interview_value == 'must-have' %}
-            <span class="pr-card-must-badge" title="Interview must-have">⭐</span>
-          {% endif %}
-          <span class="pr-diff pr-diff-{{ diff | downcase }}">{{ diff }}</span>
-        </div>
-        <h3 class="pr-card-title">{{ p.title }}</h3>
-        <div class="pr-card-cat">{{ p.category }}</div>
-      </a>
-    {% endfor %}
-  </div>
+<section class="pr-collections" aria-label="Curated collections">
+  {% for fc in fcards %}
+    <a class="pr-collection-tile" href="{{ fc.href | relative_url }}">
+      <div class="pr-collection-tile-icon">{{ fc.icon | default: "🧭" }}</div>
+      <div class="pr-collection-tile-body">
+        <div class="pr-collection-tile-eyebrow">{{ fc.eyebrow | default: "Start here" }}</div>
+        <h3 class="pr-collection-tile-title">{{ fc.title }}</h3>
+        {% if fc.description %}
+          <p class="pr-collection-tile-desc">{{ fc.description | truncate: 90 }}</p>
+        {% endif %}
+      </div>
+      <span class="pr-collection-tile-arrow" aria-hidden="true">→</span>
+    </a>
+  {% endfor %}
+
+  {% if senior_count > 0 %}
+    <a class="pr-collection-tile pr-collection-tile-senior" href="#series=senior-scenarios" data-filter-link="series=senior-scenarios">
+      <div class="pr-collection-tile-icon">🎯</div>
+      <div class="pr-collection-tile-body">
+        <div class="pr-collection-tile-eyebrow">Curated for seniors</div>
+        <h3 class="pr-collection-tile-title">Senior Interview Scenarios</h3>
+        <p class="pr-collection-tile-desc">{{ senior_count }} Monday-morning situations with the senior-level fix walked through</p>
+      </div>
+      <span class="pr-collection-tile-arrow" aria-hidden="true">→</span>
+    </a>
+  {% endif %}
+
+  {% if must_have_count > 0 %}
+    <a class="pr-collection-tile pr-collection-tile-must" href="#interview=1" data-filter-link="interview=1">
+      <div class="pr-collection-tile-icon">⭐</div>
+      <div class="pr-collection-tile-body">
+        <div class="pr-collection-tile-eyebrow">Interview prep</div>
+        <h3 class="pr-collection-tile-title">Interview Must-Haves</h3>
+        <p class="pr-collection-tile-desc">{{ must_have_count }} problems that show up in almost every senior interview loop</p>
+      </div>
+      <span class="pr-collection-tile-arrow" aria-hidden="true">→</span>
+    </a>
+  {% endif %}
 </section>
-{% endif %}
 
 <section class="pr-toolbar" aria-label="Filter problems">
 
@@ -169,6 +163,7 @@ layout: page
        data-category="{{ p.category }}"
        data-difficulty="{{ diff }}"
        data-interview="{{ p.interview_value }}"
+       data-series="{{ p.series }}"
        data-topics="{{ topics_csv | downcase }}">
       <div class="pr-card-head">
         <span class="pr-card-id">#{{ p.problem_id }}</span>

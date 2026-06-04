@@ -18,6 +18,7 @@
   const diffChips = Array.from(document.querySelectorAll('[data-filter-difficulty]'));
   const catChips = Array.from(document.querySelectorAll('[data-filter-category]'));
   const interviewChip = document.querySelector('[data-filter-interview]');
+  const collectionTiles = Array.from(document.querySelectorAll('[data-filter-link]'));
   const catGroup = document.getElementById('pr-cat-chips');
   const catExpandBtn = document.getElementById('pr-cat-expand');
   const total = cards.length;
@@ -27,6 +28,7 @@
     difficulties: new Set(),
     categories: new Set(),
     interviewOnly: false,
+    series: '',
   };
 
   // ---------- URL hash sync ----------
@@ -43,6 +45,9 @@
     if (params.get('interview') === '1') {
       state.interviewOnly = true;
       interviewChip?.classList.add('is-active');
+    }
+    if (params.get('series')) {
+      state.series = params.get('series');
     }
     diffChips.forEach(c => {
       if (state.difficulties.has(c.dataset.filterDifficulty)) c.classList.add('is-active');
@@ -67,11 +72,22 @@
     state.difficulties.forEach(d => params.append('diff', d));
     state.categories.forEach(c => params.append('cat', c));
     if (state.interviewOnly) params.set('interview', '1');
+    if (state.series) params.set('series', state.series);
     const s = params.toString();
     const newHash = s ? '#' + s : '';
     if (window.location.hash !== newHash) {
       history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
     }
+  }
+
+  function syncCollectionTiles() {
+    collectionTiles.forEach(tile => {
+      const link = tile.dataset.filterLink;
+      let active = false;
+      if (link === 'series=senior-scenarios') active = state.series === 'senior-scenarios';
+      else if (link === 'interview=1') active = state.interviewOnly;
+      tile.classList.toggle('is-active', active);
+    });
   }
 
   // ---------- Filtering ----------
@@ -86,12 +102,15 @@
       const interview = card.dataset.interview || '';
       const topics = card.dataset.topics || '';
 
+      const series = card.dataset.series || '';
+
       const matchesSearch = !q || title.includes(q) || topics.includes(q);
       const matchesDiff = state.difficulties.size === 0 || state.difficulties.has(diff);
       const matchesCat = state.categories.size === 0 || state.categories.has(cat);
       const matchesInterview = !state.interviewOnly || interview === 'must-have';
+      const matchesSeries = !state.series || series === state.series;
 
-      const show = matchesSearch && matchesDiff && matchesCat && matchesInterview;
+      const show = matchesSearch && matchesDiff && matchesCat && matchesInterview && matchesSeries;
       card.style.display = show ? '' : 'none';
       if (show) visible++;
     });
@@ -100,18 +119,20 @@
     empty.hidden = visible !== 0;
     grid.hidden = visible === 0;
 
-    const anyFilter = state.search || state.difficulties.size || state.categories.size || state.interviewOnly;
+    const anyFilter = state.search || state.difficulties.size || state.categories.size || state.interviewOnly || state.series;
     resetBtn.hidden = !anyFilter;
     clearBtn.hidden = !state.search;
 
     // Active-filters summary text
     const parts = [];
     if (state.interviewOnly) parts.push('Interview must-haves');
+    if (state.series === 'senior-scenarios') parts.push('Senior scenarios');
     if (state.difficulties.size) parts.push([...state.difficulties].join(' · '));
     if (state.categories.size) parts.push([...state.categories].join(' · '));
     if (state.search) parts.push(`"${state.search}"`);
     activeFiltersEl.textContent = parts.length ? '· ' + parts.join(' · ') : '';
 
+    syncCollectionTiles();
     writeHash();
   }
 
@@ -163,6 +184,7 @@
     state.difficulties.clear();
     state.categories.clear();
     state.interviewOnly = false;
+    state.series = '';
     searchInput.value = '';
     diffChips.forEach(c => c.classList.remove('is-active'));
     catChips.forEach(c => c.classList.remove('is-active'));
@@ -173,6 +195,27 @@
   }
   resetBtn.addEventListener('click', resetAll);
   empty.querySelector('[data-reset]')?.addEventListener('click', resetAll);
+
+  // Collection tiles: clicking acts as "switch to this view." Reset other
+  // filters, apply the tile's filter, scroll the grid into view. A second
+  // click on the same active tile clears it.
+  collectionTiles.forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      e.preventDefault();
+      const link = tile.dataset.filterLink;
+      const wasActive = tile.classList.contains('is-active');
+      resetAll();
+      if (!wasActive) {
+        if (link === 'series=senior-scenarios') state.series = 'senior-scenarios';
+        else if (link === 'interview=1') {
+          state.interviewOnly = true;
+          interviewChip?.classList.add('is-active');
+        }
+      }
+      applyFilters();
+      document.querySelector('.pr-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
 
   // Keyboard: "/" focuses search (skip when typing in another field)
   document.addEventListener('keydown', e => {

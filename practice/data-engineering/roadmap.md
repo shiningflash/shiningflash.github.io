@@ -115,6 +115,8 @@ flowchart LR
 | **Reading a plan** | EXPLAIN, EXPLAIN ANALYZE, seq scan vs index scan, hash join vs nested loop. |
 | **Set theory and dates** | UNION vs UNION ALL, INTERSECT, EXCEPT, date arithmetic, time zones. |
 
+**Related practice problems.** [#015 Teaching SQL performance to a junior](/practice/data-engineering/015-teaching-sql-performance-to-a-junior/) · [#016 SELECT DISTINCT hiding join bugs](/practice/data-engineering/016-select-distinct-hiding-join-bugs/) · [#017 Reading an EXPLAIN plan](/practice/data-engineering/017-reading-an-explain-plan/) · [#018 CTE vs subquery](/practice/data-engineering/018-cte-vs-subquery/) · [#019 Same query, different answers](/practice/data-engineering/019-same-query-different-answers/) · [#020 Window functions vs GROUP BY](/practice/data-engineering/020-window-functions-vs-group-by/) · [#096 The twenty-minute query that should be two seconds](/practice/data-engineering/096-the-twenty-minute-query-that-should-be-two-seconds/) · [#100 Timezones silently wrong across the warehouse](/practice/data-engineering/100-timezones-silently-wrong-across-the-warehouse/)
+
 **Build this in week 4.** Find a small public dataset (NYC taxi, Stack Overflow dump, anything 1 to 5 GB). Load it into Postgres or DuckDB. Write 10 queries that answer real questions about it. Run EXPLAIN on each. Add one index that makes a slow query 10x faster.
 
 **You are done when** you can look at any reasonable SQL query and predict roughly how long it will take to run on a given table size, before you press execute.
