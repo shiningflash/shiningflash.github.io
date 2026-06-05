@@ -92,7 +92,7 @@ permalink: /practice/
         <span class="pr-track-status pr-track-status-soon">Roadmap & Concepts</span>
       </h2>
       <p class="pr-track-desc">
-        No practice problems yet on this track. The <a href="/practice/ai-engineering/roadmap/">roadmap</a> and <a href="/practice/ai-engineering/concepts/">concept library</a> cover the patterns; production problems are on the way.
+        No practice problems yet on this track. The roadmap and concept library cover the patterns; production problems are on the way.
       </p>
       <div class="pr-track-meta">
         <span>Roadmap available</span>
